@@ -48,8 +48,6 @@ export default function HandCanvas({
   onChangeProfile,
 }: HandCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
-  const [imageAspectRatio, setImageAspectRatio] = useState(1.0);
   const [mode, setMode] = useState<'pin' | 'draw' | 'measure'>('pin');
   const [currentColor, setCurrentColor] = useState('#b88d21');
   const [isDrawing, setIsDrawing] = useState(false);
@@ -72,15 +70,20 @@ export default function HandCanvas({
   const vedicData = profile ? parseVedicData(profile.general_notes) : null;
   const measurements = vedicData?.measurements;
 
-  const palmDist_percent = measurements
-    ? Math.sqrt(
-        Math.pow((measurements.palm_end.x - measurements.palm_start.x) * imageAspectRatio, 2) +
-        Math.pow(measurements.palm_end.y - measurements.palm_start.y, 2)
-      )
-    : 25;
-  const displayPalmLength = (vedicData && typeof vedicData.palm_length === 'number')
-    ? vedicData.palm_length
-    : parseFloat((palmDist_percent * 0.4).toFixed(1));
+  // Helper: pixel-accurate distance between two percent-coordinate points
+  const pxDist = (ax: number, ay: number, bx: number, by: number): number => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const W = rect?.width ?? 500;
+    const H = rect?.height ?? 600;
+    return Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
+  };
+
+  const displayPalmLength = measurements
+    ? parseFloat((pxDist(
+        measurements.palm_start.x, measurements.palm_start.y,
+        measurements.palm_end.x,   measurements.palm_end.y
+      ) * 0.04).toFixed(1))
+    : 10.0;
 
 
   const imageUrl = images[activeView] || '';
@@ -122,15 +125,6 @@ export default function HandCanvas({
           updatedMeasurements.palm_end = coords;
         }
 
-        const palmDist_percent = Math.sqrt(
-          Math.pow((updatedMeasurements.palm_end.x - updatedMeasurements.palm_start.x) * imageAspectRatio, 2) +
-          Math.pow(updatedMeasurements.palm_end.y - updatedMeasurements.palm_start.y, 2)
-        );
-        const fingerDist_percent = Math.sqrt(
-          Math.pow((updatedMeasurements.finger_end.x - updatedMeasurements.finger_start.x) * imageAspectRatio, 2) +
-          Math.pow(updatedMeasurements.finger_end.y - updatedMeasurements.finger_start.y, 2)
-        );
-
         // Fallback for missing width coordinates in older profiles
         if (!updatedMeasurements.width_start) {
           updatedMeasurements.width_start = { ...DEFAULT_MEASUREMENTS.width_start };
@@ -139,18 +133,20 @@ export default function HandCanvas({
           updatedMeasurements.width_end = { ...DEFAULT_MEASUREMENTS.width_end };
         }
 
-        const widthDist_percent = Math.sqrt(
-          Math.pow((updatedMeasurements.width_end.x - updatedMeasurements.width_start.x) * imageAspectRatio, 2) +
-          Math.pow(updatedMeasurements.width_end.y - updatedMeasurements.width_start.y, 2)
-        );
+        // Get real container pixel dimensions for accurate distance
+        const rect = containerRef.current!.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+        const px = (ax: number, ay: number, bx: number, by: number) =>
+          Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
 
         const currentVedic = parseVedicData(profile.general_notes);
         currentVedic.measurements = updatedMeasurements;
 
-        // Calculate all measurements as simple, independent lengths in space scaled by 0.4
-        const calculatedPalmLength = parseFloat((palmDist_percent * 0.4).toFixed(1));
-        const calculatedFingerLength = parseFloat((fingerDist_percent * 0.4).toFixed(1));
-        const calculatedPalmWidth = parseFloat((widthDist_percent * 0.4).toFixed(1));
+        // Independent pixel-accurate distances, scaled to display units (0.04 = 4 units per 100px)
+        const calculatedPalmLength   = parseFloat((px(updatedMeasurements.palm_start.x,  updatedMeasurements.palm_start.y,  updatedMeasurements.palm_end.x,    updatedMeasurements.palm_end.y)   * 0.04).toFixed(1));
+        const calculatedFingerLength = parseFloat((px(updatedMeasurements.finger_start.x, updatedMeasurements.finger_start.y, updatedMeasurements.finger_end.x, updatedMeasurements.finger_end.y) * 0.04).toFixed(1));
+        const calculatedPalmWidth    = parseFloat((px(updatedMeasurements.width_start.x,  updatedMeasurements.width_start.y,  updatedMeasurements.width_end.x,  updatedMeasurements.width_end.y)   * 0.04).toFixed(1));
 
         currentVedic.palm_length = calculatedPalmLength;
         currentVedic.finger_length = calculatedFingerLength;
@@ -277,21 +273,16 @@ export default function HandCanvas({
       if (!currentVedic.measurements) {
         currentVedic.measurements = { ...DEFAULT_MEASUREMENTS };
         
-        const palm_dx = (DEFAULT_MEASUREMENTS.palm_end.x - DEFAULT_MEASUREMENTS.palm_start.x) * imageAspectRatio;
-        const palm_dy = DEFAULT_MEASUREMENTS.palm_end.y - DEFAULT_MEASUREMENTS.palm_start.y;
-        const palmDist_percent = Math.sqrt(palm_dx * palm_dx + palm_dy * palm_dy);
+        // Use real container pixel dimensions so distances are accurate regardless of aspect ratio
+        const initRect = containerRef.current?.getBoundingClientRect();
+        const W = initRect?.width ?? 500;
+        const H = initRect?.height ?? 600;
+        const initPx = (ax: number, ay: number, bx: number, by: number) =>
+          Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
 
-        const finger_dx = (DEFAULT_MEASUREMENTS.finger_end.x - DEFAULT_MEASUREMENTS.finger_start.x) * imageAspectRatio;
-        const finger_dy = DEFAULT_MEASUREMENTS.finger_end.y - DEFAULT_MEASUREMENTS.finger_start.y;
-        const fingerDist_percent = Math.sqrt(finger_dx * finger_dx + finger_dy * finger_dy);
-
-        const width_dx = (DEFAULT_MEASUREMENTS.width_end.x - DEFAULT_MEASUREMENTS.width_start.x) * imageAspectRatio;
-        const width_dy = DEFAULT_MEASUREMENTS.width_end.y - DEFAULT_MEASUREMENTS.width_start.y;
-        const widthDist_percent = Math.sqrt(width_dx * width_dx + width_dy * width_dy);
-
-        currentVedic.palm_length = parseFloat((palmDist_percent * 0.4).toFixed(1));
-        currentVedic.finger_length = parseFloat((fingerDist_percent * 0.4).toFixed(1));
-        currentVedic.palm_width = parseFloat((widthDist_percent * 0.4).toFixed(1));
+        currentVedic.palm_length   = parseFloat((initPx(DEFAULT_MEASUREMENTS.palm_start.x,   DEFAULT_MEASUREMENTS.palm_start.y,   DEFAULT_MEASUREMENTS.palm_end.x,    DEFAULT_MEASUREMENTS.palm_end.y)   * 0.04).toFixed(1));
+        currentVedic.finger_length = parseFloat((initPx(DEFAULT_MEASUREMENTS.finger_start.x, DEFAULT_MEASUREMENTS.finger_start.y, DEFAULT_MEASUREMENTS.finger_end.x, DEFAULT_MEASUREMENTS.finger_end.y) * 0.04).toFixed(1));
+        currentVedic.palm_width    = parseFloat((initPx(DEFAULT_MEASUREMENTS.width_start.x,  DEFAULT_MEASUREMENTS.width_start.y,  DEFAULT_MEASUREMENTS.width_end.x,  DEFAULT_MEASUREMENTS.width_end.y)   * 0.04).toFixed(1));
 
         // Auto-classify shape: width / length >= 0.9 => Square, else Rectangular
         const shapeRatio = currentVedic.palm_width / Math.max(0.1, currentVedic.palm_length);
@@ -565,7 +556,6 @@ export default function HandCanvas({
             {/* The Base Hand Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              ref={imageRef}
               src={imageUrl}
               alt={HAND_VIEW_LABELS[activeView]}
               className="w-full h-full object-contain pointer-events-none max-h-[70vh]"

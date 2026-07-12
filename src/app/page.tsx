@@ -26,6 +26,7 @@ const INITIAL_PROFILE = (id: string): HandProfile => ({
 
 export default function Home() {
   const [profiles, setProfiles] = useState<HandProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<HandProfile | null>(null);
   const [activeView, setActiveView] = useState<HandView>('right_palm');
@@ -40,6 +41,7 @@ export default function Home() {
   // Initialize and load profiles
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true);
       if (isSupabaseConfigured) {
         try {
           const res = await fetch('/api/hands');
@@ -47,6 +49,7 @@ export default function Home() {
           if (res.ok && !data.isDemo) {
             setProfiles(data);
             setIsSupabaseConnected(true);
+            setIsLoading(false);
             return;
           }
         } catch (e) {
@@ -55,6 +58,7 @@ export default function Home() {
       }
       setProfiles(getDemoProfiles());
       setIsSupabaseConnected(false);
+      setIsLoading(false);
     }
     loadData();
   }, []);
@@ -352,6 +356,7 @@ export default function Home() {
                   onDeleteProfile={handleDeleteProfile}
                   onImportData={handleImportData}
                   isSupabaseConnected={isSupabaseConnected}
+                  isLoading={isLoading}
                 />
               ) : (
                 <LectureNotes />

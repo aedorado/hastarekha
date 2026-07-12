@@ -11,6 +11,7 @@ interface DashboardProps {
   onDeleteProfile: (id: string) => void;
   onImportData: (imported: HandProfile[]) => void;
   isSupabaseConnected: boolean;
+  isLoading: boolean;
 }
 
 export default function Dashboard({
@@ -20,6 +21,7 @@ export default function Dashboard({
   onDeleteProfile,
   onImportData,
   isSupabaseConnected,
+  isLoading,
 }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHandType, setSelectedHandType] = useState('');
@@ -310,8 +312,19 @@ export default function Dashboard({
         })}
       </div>
 
-      {/* Empty State Centering */}
-      {filteredProfiles.length === 0 && (
+      {/* Loading or Empty State Centering */}
+      {isLoading ? (
+        <div className="text-center py-28 bg-stone-50/50 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center space-y-4">
+          <div className="relative w-12 h-12 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-stone-200/80"></div>
+            <div className="absolute inset-0 rounded-full border-4 border-t-accent-gold animate-spin"></div>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-stone-850 text-sm font-serif tracking-wider animate-pulse">Connecting to Databank</h3>
+            <p className="text-stone-400 text-[10px]">Retrieving secure analysis profiles...</p>
+          </div>
+        </div>
+      ) : filteredProfiles.length === 0 && (
         <div className="text-center py-24 bg-white rounded-2xl border-2 border-dashed border-stone-200 shadow-sm flex flex-col items-center justify-center">
           <HelpCircle className="w-12 h-12 text-stone-400 mb-3 block" />
           <h3 className="font-bold text-stone-850 text-lg">No Profiles Found</h3>
