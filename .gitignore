@@ -1,0 +1,63 @@
+# =============================================================================
+# HastaRekhā Databank — .gitignore
+# =============================================================================
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ── Next.js Build Output ──────────────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+# Never commit credentials or API keys
+.env
+.env.*
+!.env.example
+
+# ── Compiled / Generated CSS ──────────────────────────────────────────────────
+# These are build artifacts, not source files
+src/app/globals-compiled.css
+src/app/style-v2.css
+test-output.css
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+coverage/
+
+# ── Debug Logs ────────────────────────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Vercel ────────────────────────────────────────────────────────────────────
+.vercel
+
+# ── OS & Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# VSCode
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.local
