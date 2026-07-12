@@ -11,7 +11,7 @@ date: 2026-07-10
 ---
 
 ---
-# Hasta Sāmudrika Śāstra: Deep Dive into Air, Earth, Fingers, & Color
+# Hasta Sāmudrika Śāstra: Deep Dive into Air, Earth, Fingers, & Hand Color
 
 ## 1. The Airy Hand (Vāyu Tattva) - Exhaustive Profile
 

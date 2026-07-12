@@ -70,12 +70,13 @@ export default function HandCanvas({
   const vedicData = profile ? parseVedicData(profile.general_notes) : null;
   const measurements = vedicData?.measurements;
 
-  // Helper: pixel-accurate distance between two percent-coordinate points
+  // Helper: Euclidean distance between two percent-coordinate points.
+  // Both axes are scaled by W so that 1% in X == 1% in Y in pixel space,
+  // giving consistent unit sizes for vertical, horizontal, and diagonal lines.
   const pxDist = (ax: number, ay: number, bx: number, by: number): number => {
     const rect = containerRef.current?.getBoundingClientRect();
     const W = rect?.width ?? 500;
-    const H = rect?.height ?? 600;
-    return Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
+    return Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * W / 100, 2));
   };
 
   const displayPalmLength = measurements
@@ -133,12 +134,11 @@ export default function HandCanvas({
           updatedMeasurements.width_end = { ...DEFAULT_MEASUREMENTS.width_end };
         }
 
-        // Get real container pixel dimensions for accurate distance
+        // Use W for both axes so 1% horizontal == 1% vertical in pixel space
         const rect = containerRef.current!.getBoundingClientRect();
         const W = rect.width;
-        const H = rect.height;
         const px = (ax: number, ay: number, bx: number, by: number) =>
-          Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
+          Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * W / 100, 2));
 
         const currentVedic = parseVedicData(profile.general_notes);
         currentVedic.measurements = updatedMeasurements;

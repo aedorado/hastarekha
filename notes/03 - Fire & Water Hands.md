@@ -8,7 +8,7 @@ tags:
 date: 2026-07-10
 ---
 
-# Hasta Sāmudrika Śāstra: Tattvas & Hand Types
+# Hasta Sāmudrika Śāstra: Firey & Watery Hand Types
 
 ## 1. Sequential Lecture Notes (Flow-Preserving)
 

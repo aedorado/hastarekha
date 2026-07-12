@@ -1,4 +1,4 @@
-# Hasta Sāmudrika Śāstra — Lecture 2: Structured Study Notes
+# Hasta Sāmudrika Śāstra: Structure of the Hand
 
 ---
 

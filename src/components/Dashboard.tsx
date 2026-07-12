@@ -95,20 +95,21 @@ export default function Dashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Top Header Block */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
-        <div>
-          <h1 className="mystic-title text-3xl font-bold">Hasta-Rekhā Databank</h1>
-          <p className="text-stone-600 text-sm mt-1">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-8 rounded-2xl border border-stone-200/80 shadow-md">
+        <div className="flex-1">
+          <h1 className="mystic-title text-4xl font-bold mb-2">Hasta-Rekhā Databank</h1>
+          <p className="text-stone-600 text-base mb-3">
             Analyze, annotate, and catalog hand profiles for your Sāmudrika Śāstra course.
           </p>
-          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
             {isSupabaseConnected ? 'Connected to Cloud DB' : 'Offline Demo Mode (Local Storage)'}
           </div>
         </div>
-        
-        <div className="flex gap-2">
+
+        <div className="flex gap-3 flex-wrap justify-end">
           <button
             onClick={onCreateNew}
             className="btn-gold text-sm shadow"
@@ -143,7 +144,7 @@ export default function Dashboard({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-stone-50 p-4 rounded-xl border border-stone-200 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 bg-stone-50/60 p-6 rounded-xl border border-stone-200/60 shadow-sm backdrop-blur-sm">
         <div className="md:col-span-2 search-input-wrapper">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
@@ -184,7 +185,7 @@ export default function Dashboard({
       </div>
 
       {/* Hand Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filteredProfiles.map((p) => {
           const vedic = parseVedicData(p.general_notes);
           const handType = vedic.hand_type || 'Unspecified';
@@ -199,13 +200,11 @@ export default function Dashboard({
           return (
             <div
               key={p.id}
-              className="glass-panel glass-panel-hover flex flex-col h-[400px] overflow-hidden group border border-stone-200 bg-white"
+              className="glass-panel glass-panel-hover flex flex-row overflow-hidden group border border-stone-200/80 bg-white cursor-pointer hover:shadow-lg transition-all duration-300"
+              onClick={() => onSelectProfile(p.id)}
             >
-              {/* Image Preview Thumbnail */}
-              <div 
-                className="h-44 relative bg-stone-100 cursor-pointer overflow-hidden flex justify-center items-center border-b border-stone-200"
-                onClick={() => onSelectProfile(p.id)}
-              >
+              {/* Small Square Thumbnail */}
+              <div className="w-28 h-28 shrink-0 relative bg-stone-100/50 overflow-hidden self-center mx-4 my-3 rounded-lg border border-stone-200/60">
                 {thumbnailUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
@@ -214,68 +213,57 @@ export default function Dashboard({
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
-                  <div className="w-full h-full bg-stone-50 flex flex-col items-center justify-center text-stone-400 gap-1.5">
-                    <ImageIcon className="w-8 h-8 text-stone-300" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">No Photo Uploaded</span>
+                  <div className="w-full h-full bg-stone-50 flex flex-col items-center justify-center text-stone-300 gap-1">
+                    <ImageIcon className="w-6 h-6" />
                   </div>
                 )}
-                
-                {/* Image overlay badge */}
-                <div className="absolute top-3 left-3 bg-stone-900/90 backdrop-blur px-2.5 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
-                  {p.dominant_hand} Hand
-                </div>
-
-                <div className="absolute bottom-3 left-3 flex gap-1.5">
-                  {totalPhotos > 0 && (
-                    <div className="bg-stone-900/90 backdrop-blur px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
-                      📸 {totalPhotos} {totalPhotos === 1 ? 'Photo' : 'Photos'}
-                    </div>
-                  )}
-                  {p.pins.length > 0 && (
-                    <div className="bg-stone-900/90 backdrop-blur px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-sm">
-                      📍 {p.pins.length} Markers
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Card Metadata Details */}
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h3 
-                      onClick={() => onSelectProfile(p.id)}
-                      className="font-bold text-lg text-stone-900 hover:text-accent-gold transition-colors cursor-pointer line-clamp-1"
-                    >
+              <div className="flex-1 py-4 pr-4 pl-2 flex flex-col justify-between min-w-0">
+                <div className="space-y-0.5">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-bold text-sm text-stone-900 group-hover:text-accent-gold transition-colors line-clamp-1">
                       {p.name}
                     </h3>
-                    <span className="text-xs text-stone-500 flex items-center gap-1 font-medium">
-                      <Calendar className="w-3.5 h-3.5" />
+                    <span className="text-[10px] text-stone-400 flex items-center gap-1 font-medium shrink-0">
+                      <Calendar className="w-3 h-3" />
                       {dateStr}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-stone-500 font-semibold">
-                    <span>Age: {p.age || 'N/A'}</span>
-                    <span>•</span>
-                    <span>Gender: {p.gender || 'N/A'}</span>
+                  <div className="flex items-center gap-1.5 text-[10px] text-stone-500 font-semibold">
+                    <span>{p.dominant_hand} Hand</span>
+                    <span>·</span>
+                    <span>Age {p.age || 'N/A'}</span>
+                    <span>·</span>
+                    <span>{p.gender || 'N/A'}</span>
                   </div>
 
-                  <p className="text-[11px] font-bold text-accent-gold uppercase tracking-wider mt-1">{handType}</p>
+                  <p className="text-[10px] font-bold text-accent-gold uppercase tracking-wider">{handType}</p>
                   
-                  <p className="text-stone-600 text-xs line-clamp-3 mt-1 leading-normal">
+                  <p className="text-stone-500 text-[11px] line-clamp-2 leading-normal">
                     {description}
                   </p>
                 </div>
 
-                {/* Bottom Tags and Actions */}
-                <div className="pt-3 border-t border-stone-200 space-y-3">
-                  {/* Tag List */}
-                  <div className="flex flex-wrap gap-1 h-6 overflow-hidden">
-                    {p.tags.map((tag) => (
+                {/* Bottom Badges and Actions */}
+                <div className="flex items-center justify-between pt-1.5">
+                  <div className="flex gap-1 flex-wrap">
+                    {totalPhotos > 0 && (
+                      <span className="bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                        📸 {totalPhotos}
+                      </span>
+                    )}
+                    {p.pins.length > 0 && (
+                      <span className="bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                        📍 {p.pins.length}
+                      </span>
+                    )}
+                    {p.tags.slice(0, 2).map((tag) => (
                       <span
                         key={tag}
-                        className="bg-amber-500/10 text-accent-gold border border-amber-500/20 px-2 py-0.2 rounded text-[10px] font-semibold"
+                        className="bg-amber-500/10 text-accent-gold border border-amber-500/20 px-1.5 py-0.5 rounded text-[10px] font-semibold"
                       >
                         #{tag}
                       </span>
@@ -283,10 +271,10 @@ export default function Dashboard({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-between items-center pt-1">
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => onSelectProfile(p.id)}
-                      className="text-xs font-bold text-accent-gold hover:text-stone-950 flex items-center gap-1 transition-colors"
+                      className="text-[10px] font-bold text-accent-gold hover:text-stone-950 flex items-center gap-0.5 transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       View & Edit
@@ -314,28 +302,30 @@ export default function Dashboard({
 
       {/* Loading or Empty State Centering */}
       {isLoading ? (
-        <div className="text-center py-28 bg-stone-50/50 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center space-y-4">
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-4 border-stone-200/80"></div>
+        <div className="text-center py-32 bg-gradient-to-b from-stone-50/80 to-stone-50/40 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center space-y-6">
+          <div className="relative w-14 h-14 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full border-4 border-stone-200/60"></div>
             <div className="absolute inset-0 rounded-full border-4 border-t-accent-gold animate-spin"></div>
           </div>
-          <div className="space-y-1">
-            <h3 className="font-bold text-stone-850 text-sm font-serif tracking-wider animate-pulse">Connecting to Databank</h3>
-            <p className="text-stone-400 text-[10px]">Retrieving secure analysis profiles...</p>
+          <div className="space-y-2">
+            <h3 className="font-bold text-stone-850 text-base font-serif tracking-wider">Connecting to Databank</h3>
+            <p className="text-stone-500 text-sm">Retrieving secure analysis profiles...</p>
           </div>
         </div>
       ) : filteredProfiles.length === 0 && (
-        <div className="text-center py-24 bg-white rounded-2xl border-2 border-dashed border-stone-200 shadow-sm flex flex-col items-center justify-center">
-          <HelpCircle className="w-12 h-12 text-stone-400 mb-3 block" />
-          <h3 className="font-bold text-stone-850 text-lg">No Profiles Found</h3>
-          <p className="text-stone-500 text-xs mt-1.5 max-w-sm mx-auto text-center leading-relaxed">
-            Try adjusting your search query, selecting different filters, or upload your first hand analysis card!
-          </p>
+        <div className="text-center py-28 bg-white rounded-2xl border-2 border-dashed border-stone-300/60 shadow-sm flex flex-col items-center justify-center space-y-5">
+          <HelpCircle className="w-14 h-14 text-stone-300 block" />
+          <div className="space-y-2">
+            <h3 className="font-bold text-stone-850 text-xl font-serif">No Profiles Found</h3>
+            <p className="text-stone-500 text-sm max-w-sm mx-auto leading-relaxed">
+              Try adjusting your search query, selecting different filters, or create your first hand analysis profile!
+            </p>
+          </div>
           <button
             onClick={onCreateNew}
-            className="btn-gold mt-6 text-xs shadow-sm"
+            className="btn-gold text-sm px-6 py-2.5 mt-2 shadow-md"
           >
-            Create New Profile
+            + Create New Profile
           </button>
         </div>
       )}

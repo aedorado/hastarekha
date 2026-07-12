@@ -1,4 +1,4 @@
-# Hasta Sāmudrika Śāstra (Palmistry) – Lecture 1 Notes
+# Hasta Sāmudrika Śāstra: Introduction
 
 ## 1. Sequential Lecture Notes
 
