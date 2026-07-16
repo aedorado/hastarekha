@@ -156,58 +156,62 @@ export default function Dashboard({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 bg-stone-50/60 p-6 rounded-xl border border-stone-200/60 shadow-sm backdrop-blur-sm">
-        <div className="md:col-span-2 search-input-wrapper">
+      <div className="space-y-4 bg-stone-50/60 p-6 rounded-xl border border-stone-200/60 shadow-sm backdrop-blur-sm">
+        {/* Search input (full width) */}
+        <div className="search-input-wrapper w-full relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
-            className="form-input search-input-field text-sm"
+            className="form-input search-input-field text-sm w-full pl-10"
             placeholder="Search by name, tag (e.g. #fish-sign) or details..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div>
-          <select
-            className="form-input bg-white border border-stone-200 text-sm text-stone-850"
-            value={selectedHandType}
-            onChange={(e) => setSelectedHandType(e.target.value)}
-          >
-            <option value="">All Classical Types</option>
-            {handTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Dropdowns Row (3 equal-width columns) */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <select
+              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              value={selectedHandType}
+              onChange={(e) => setSelectedHandType(e.target.value)}
+            >
+              <option value="">All Classical Types</option>
+              {handTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <select
-            className="form-input bg-white border border-stone-200 text-sm text-stone-850"
-            value={selectedHandTattva}
-            onChange={(e) => setSelectedHandTattva(e.target.value)}
-          >
-            <option value="">All Tattvas</option>
-            {handTattvas.map((tattva) => (
-              <option key={tattva} value={tattva}>
-                {tattva}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <select
+              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              value={selectedHandTattva}
+              onChange={(e) => setSelectedHandTattva(e.target.value)}
+            >
+              <option value="">All Tattvas</option>
+              {handTattvas.map((tattva) => (
+                <option key={tattva} value={tattva}>
+                  {tattva}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <select
-            className="form-input bg-white border border-stone-200 text-sm text-stone-850"
-            value={selectedDominant}
-            onChange={(e) => setSelectedDominant(e.target.value)}
-          >
-            <option value="">All Dominance</option>
-            <option value="Right">Right Handed</option>
-            <option value="Left">Left Handed</option>
-          </select>
+          <div>
+            <select
+              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              value={selectedDominant}
+              onChange={(e) => setSelectedDominant(e.target.value)}
+            >
+              <option value="">All Dominance</option>
+              <option value="Right">Right Handed</option>
+              <option value="Left">Left Handed</option>
+            </select>
+          </div>
         </div>
       </div>
 

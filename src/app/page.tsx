@@ -30,7 +30,7 @@ export default function Home() {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [activeProfile, setActiveProfile] = useState<HandProfile | null>(null);
   const [activeView, setActiveView] = useState<HandView>('right_palm');
-  
+
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -114,7 +114,7 @@ export default function Home() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          
+
           const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
           resolve(dataUrl);
         };
@@ -127,7 +127,7 @@ export default function Home() {
   // Handle image upload specifically for a selected view (Right Palm, Left Back, etc.)
   const handleUploadImageForView = async (view: HandView, file: File) => {
     if (!activeProfile) return;
-    
+
     setIsUploading(true);
     try {
       const compressedDataUrl = await compressAndResizeImage(file);
@@ -189,7 +189,7 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(activeProfile),
         });
-        
+
         if (res.ok) {
           const savedData = await res.json();
           setProfiles((prev) => {
@@ -318,9 +318,8 @@ export default function Home() {
       {/* Main Content + Drawer Shifting Wrapper */}
       <div className="flex flex-1 relative overflow-hidden">
         {/* Main Body */}
-        <main className={`flex-1 px-6 md:px-12 py-8 max-w-7xl mx-auto w-full transition-all duration-300 pb-20 ${
-          isReferenceOpen ? 'lg:pr-[384px]' : ''
-        }`}>
+        <main className={`flex-1 px-6 md:px-12 py-8 max-w-7xl mx-auto w-full transition-all duration-300 pb-20 ${isReferenceOpen ? 'lg:pr-[384px]' : ''
+          }`}>
           {activeProfileId === null ? (
             /* Dashboard Mode */
             <div className="space-y-6">
@@ -328,21 +327,19 @@ export default function Home() {
               <div className="flex justify-start gap-4 border-b border-stone-200 pb-px mb-2">
                 <button
                   onClick={() => setDashboardTab('profiles')}
-                  className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
-                    dashboardTab === 'profiles'
-                      ? 'border-accent-gold text-accent-gold'
-                      : 'border-transparent text-stone-500 hover:text-stone-850'
-                  }`}
+                  className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${dashboardTab === 'profiles'
+                    ? 'border-accent-gold text-accent-gold'
+                    : 'border-transparent text-stone-500 hover:text-stone-850'
+                    }`}
                 >
                   Hand Profiles
                 </button>
                 <button
                   onClick={() => setDashboardTab('study')}
-                  className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
-                    dashboardTab === 'study'
-                      ? 'border-accent-gold text-accent-gold'
-                      : 'border-transparent text-stone-500 hover:text-stone-850'
-                  }`}
+                  className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${dashboardTab === 'study'
+                    ? 'border-accent-gold text-accent-gold'
+                    : 'border-transparent text-stone-500 hover:text-stone-850'
+                    }`}
                 >
                   Study Guide & Lectures
                 </button>
@@ -392,10 +389,10 @@ export default function Home() {
                 </div>
 
                 {/* Editor Workspace Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
                   {/* Canvas Workspace Column */}
-                  <div className="lg:col-span-7 h-full flex flex-col">
-                    <div className="glass-panel p-4 flex-1 bg-white border border-stone-200">
+                  <div className="lg:col-span-7 w-full h-full flex flex-col">
+                    <div className="flex flex-col h-full w-full bg-white rounded-2xl border border-stone-200/80 overflow-hidden shadow-md">
                       <HandCanvas
                         images={activeProfile.images}
                         activeView={activeView}
@@ -416,7 +413,7 @@ export default function Home() {
                   </div>
 
                   {/* Form Metadata Column */}
-                  <div className="lg:col-span-5">
+                  <div className="lg:col-span-7 w-full">
                     <AnalysisForm
                       profile={activeProfile}
                       onChangeProfile={(prof) => setActiveProfile(prof)}

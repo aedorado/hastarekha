@@ -122,9 +122,9 @@ export default function LectureNotes() {
             <GraduationCap className="w-8 h-8 text-accent-gold" />
             Hasta-Sāmudrika Study Guide
           </h1>
-          <p className="text-stone-600 text-sm mt-1">
+          {/* <p className="text-stone-600 text-sm mt-1">
             Browse structured notes, explore hand elements, and search cross-reference terms.
-          </p>
+          </p> */}
         </div>
 
         {searchQuery && (
