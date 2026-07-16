@@ -48,6 +48,7 @@ export interface VedicData {
   manibandha_lines: number | '';
   notes: string;
   hand_type: string;
+  hand_tattva: string;
   measurements: {
     palm_start: { x: number; y: number };
     palm_end: { x: number; y: number };
@@ -71,6 +72,7 @@ export const parseVedicData = (notesField: string): VedicData => {
     manibandha_lines: '',
     notes: '',
     hand_type: '',
+    hand_tattva: '',
     measurements: null,
   };
 

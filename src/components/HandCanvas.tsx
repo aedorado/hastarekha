@@ -168,7 +168,7 @@ export default function HandCanvas({
           else if (ratio >= 0.9) computedType = 'Vāyu Tattva (Airy Hand)';
           else computedType = 'Mixed Hand (Air-Earth Blend)';
         }
-        currentVedic.hand_type = computedType;
+        currentVedic.hand_tattva = computedType;
 
         onChangeProfile({
           ...profile,
@@ -792,9 +792,14 @@ export default function HandCanvas({
                     </span>
                   </div>
                 </div>
-                {vedicData.hand_type && (
+                {vedicData.hand_tattva && (
                   <div className="mt-2 text-[10px] bg-amber-500/15 text-accent-gold font-bold px-2.5 py-1 rounded text-center border border-amber-500/25">
-                    ✨ {vedicData.hand_type}
+                    ✨ {vedicData.hand_tattva}
+                  </div>
+                )}
+                {vedicData.hand_type && (
+                  <div className="mt-1 text-[10px] bg-purple-500/15 text-purple-300 font-bold px-2.5 py-1 rounded text-center border border-purple-500/25">
+                    ✋ {vedicData.hand_type}
                   </div>
                 )}
               </div>

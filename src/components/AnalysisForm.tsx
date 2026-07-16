@@ -128,7 +128,7 @@ export default function AnalysisForm({
           else if (ratio >= 0.9) computedType = 'Vāyu Tattva (Airy Hand)';
           else computedType = 'Mixed Hand (Air-Earth Blend)';
         }
-        updatedVedic.hand_type = computedType;
+        updatedVedic.hand_tattva = computedType;
       }
     }
 
@@ -267,7 +267,7 @@ export default function AnalysisForm({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">Dominant Hand (Active)</label>
                 <select
@@ -281,7 +281,7 @@ export default function AnalysisForm({
               </div>
 
               <div className="form-group">
-                <label className="form-label">Hand Shape Type</label>
+                <label className="form-label">Classical Hand Type</label>
                 <select
                   className="form-input bg-white border border-stone-200"
                   value={vedicData.hand_type || ''}
@@ -289,16 +289,31 @@ export default function AnalysisForm({
                     updateVedicField('hand_type', e.target.value);
                   }}
                 >
-                  <option value="">Select Hand Type...</option>
+                  <option value="">Select Classic Type...</option>
                   {HAND_TYPES.map((type) => (
                     <option key={type} value={type}>
                       {type}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Elemental Hand (Tattva)</label>
+                <select
+                  className="form-input bg-white border border-stone-200"
+                  value={vedicData.hand_tattva || ''}
+                  onChange={(e) => {
+                    updateVedicField('hand_tattva', e.target.value);
+                  }}
+                >
+                  <option value="">Select Tattva...</option>
                   <option value="Agni Tattva (Fiery Hand)">Agni Tattva (Fiery Hand)</option>
                   <option value="Jala Tattva (Watery Hand)">Jala Tattva (Watery Hand)</option>
                   <option value="Pṛthvī Tattva (Earthy Hand)">Pṛthvī Tattva (Earthy Hand)</option>
                   <option value="Vāyu Tattva (Airy Hand)">Vāyu Tattva (Airy Hand)</option>
+                  <option value="Mixed Hand (Agni-Jala Blend)">Mixed Hand (Agni-Jala Blend)</option>
+                  <option value="Mixed Hand (Air-Earth Blend)">Mixed Hand (Air-Earth Blend)</option>
                   <option value="Mixed Hand">Mixed Hand</option>
                 </select>
               </div>
@@ -474,9 +489,9 @@ export default function AnalysisForm({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">Hand Type (Computed)</label>
+                  <label className="form-label text-xs">Elemental Hand Tattva (Computed)</label>
                   <div className="form-input bg-stone-50 text-xs font-bold flex items-center h-9 px-3 border border-stone-200 text-stone-850 truncate">
-                    {vedicData.hand_type || 'Set shape & lengths...'}
+                    {vedicData.hand_tattva || 'Set shape & lengths...'}
                   </div>
                 </div>
               </div>
@@ -526,43 +541,43 @@ export default function AnalysisForm({
               )}
 
               {/* Tattva details display */}
-              {vedicData.hand_type && (
+              {vedicData.hand_tattva && (
                 <div className="p-3.5 rounded-xl border space-y-2.5 shadow-sm text-xs transition-all duration-300" style={{
                   backgroundColor:
-                    vedicData.hand_type.includes('Agni') ? '#fef2f2' :
-                      vedicData.hand_type.includes('Jala') ? '#eff6ff' :
-                        vedicData.hand_type.includes('Pṛthvī') ? '#fff7ed' :
-                          vedicData.hand_type.includes('Vāyu') ? '#f0fdfa' : '#fffbeb',
+                    vedicData.hand_tattva.includes('Agni') ? '#fef2f2' :
+                      vedicData.hand_tattva.includes('Jala') ? '#eff6ff' :
+                        vedicData.hand_tattva.includes('Pṛthvī') ? '#fff7ed' :
+                          vedicData.hand_tattva.includes('Vāyu') ? '#f0fdfa' : '#fffbeb',
                   borderColor:
-                    vedicData.hand_type.includes('Agni') ? '#fee2e2' :
-                      vedicData.hand_type.includes('Jala') ? '#dbeafe' :
-                        vedicData.hand_type.includes('Pṛthvī') ? '#ffedd5' :
-                          vedicData.hand_type.includes('Vāyu') ? '#ccfbf1' : '#fef3c7',
+                    vedicData.hand_tattva.includes('Agni') ? '#fee2e2' :
+                      vedicData.hand_tattva.includes('Jala') ? '#dbeafe' :
+                        vedicData.hand_tattva.includes('Pṛthvī') ? '#ffedd5' :
+                          vedicData.hand_tattva.includes('Vāyu') ? '#ccfbf1' : '#fef3c7',
                   color:
-                    vedicData.hand_type.includes('Agni') ? '#991b1b' :
-                      vedicData.hand_type.includes('Jala') ? '#1e40af' :
-                        vedicData.hand_type.includes('Pṛthvī') ? '#9a3412' :
-                          vedicData.hand_type.includes('Vāyu') ? '#115e59' : '#854d0e'
+                    vedicData.hand_tattva.includes('Agni') ? '#991b1b' :
+                      vedicData.hand_tattva.includes('Jala') ? '#1e40af' :
+                        vedicData.hand_tattva.includes('Pṛthvī') ? '#9a3412' :
+                          vedicData.hand_tattva.includes('Vāyu') ? '#115e59' : '#854d0e'
                 }}>
                   <div>
                     <span className="font-bold uppercase tracking-wider block text-[10px]">
-                      {vedicData.hand_type} Profile
+                      {vedicData.hand_tattva} Profile
                     </span>
                     <p className="mt-1 font-semibold leading-relaxed">
-                      {vedicData.hand_type.includes('Agni') ? '🔥 Agni Tattva (Fire): rectangular palm + short fingers. Energetic, impulsive, social. Horizontal learner (skims topics), wedding/party coordinator potential, instant decider. Strong Mars/Sun traits.' :
-                        vedicData.hand_type.includes('Jala') ? '💧 Jala Tattva (Water): rectangular palm + long fingers. Sensitive, imaginative, feminine. Adapts to shape of surroundings. Suppresses anger if thumb is weak. Craves stability/routine.' :
-                          vedicData.hand_type.includes('Pṛthvī') ? '🪵 Pṛthvī Tattva (Earth): square palm + short fingers. Highly stubborn, stable, generational planner (secures future children). Rigid rituals. Prefers fixed/guaranteed income.' :
-                            vedicData.hand_type.includes('Vāyu') ? '💨 Vāyu Tattva (Air): square palm + long fingers. Fact-finder, investigator. Micro-manages, notices tiny flaws. Ketu-driven deep learning (learns topics to roots). Job over business.' :
+                      {vedicData.hand_tattva.includes('Agni') ? '🔥 Agni Tattva (Fire): rectangular palm + short fingers. Energetic, impulsive, social. Horizontal learner (skims topics), wedding/party coordinator potential, instant decider. Strong Mars/Sun traits.' :
+                        vedicData.hand_tattva.includes('Jala') ? '💧 Jala Tattva (Water): rectangular palm + long fingers. Sensitive, imaginative, feminine. Adapts to shape of surroundings. Suppresses anger if thumb is weak. Craves stability/routine.' :
+                          vedicData.hand_tattva.includes('Pṛthvī') ? '🪵 Pṛthvī Tattva (Earth): square palm + short fingers. Highly stubborn, stable, generational planner (secures future children). Rigid rituals. Prefers fixed/guaranteed income.' :
+                            vedicData.hand_tattva.includes('Vāyu') ? '💨 Vāyu Tattva (Air): square palm + long fingers. Fact-finder, investigator. Micro-manages, notices tiny flaws. Ketu-driven deep learning (learns topics to roots). Job over business.' :
                               '✨ Mixed Hand Tattva: Blended temperament. Synthesize dominant mounts to resolve career and relationship patterns.'}
                     </p>
                   </div>
                   <div className="border-t border-stone-200/20 pt-2 space-y-1">
                     <span className="font-bold uppercase tracking-wider block text-[9px]">Vedic Remedial Guidance (Upāyas):</span>
                     <p className="italic leading-normal font-medium">
-                      {vedicData.hand_type.includes('Agni') ? '• Must finish one task fully before starting another. Practice self-discipline (waking to 4 AM alarms). Engage in Ketu-like deep research to calm the fire.' :
-                        vedicData.hand_type.includes('Jala') ? '• Practice saying "no" to guard boundaries. Drastically lower expectations of others to prevent stomach stress. Seek counsel from elder relatives before decisions.' :
-                          vedicData.hand_type.includes('Pṛthvī') ? '• Intentionally enjoy life, step out of rigid routines. Try doing random selfless tasks outside of standard ancestral rulebooks.' :
-                            vedicData.hand_type.includes('Vāyu') ? '• Regulate Din Charya (daily routines). Practice deep active listening rather than cross-examination. Step-by-step build trust with close relatives.' :
+                      {vedicData.hand_tattva.includes('Agni') ? '• Must finish one task fully before starting another. Practice self-discipline (waking to 4 AM alarms). Engage in Ketu-like deep research to calm the fire.' :
+                        vedicData.hand_tattva.includes('Jala') ? '• Practice saying "no" to guard boundaries. Drastically lower expectations of others to prevent stomach stress. Seek counsel from elder relatives before decisions.' :
+                          vedicData.hand_tattva.includes('Pṛthvī') ? '• Intentionally enjoy life, step out of rigid routines. Try doing random selfless tasks outside of standard ancestral rulebooks.' :
+                            vedicData.hand_tattva.includes('Vāyu') ? '• Regulate Din Charya (daily routines). Practice deep active listening rather than cross-examination. Step-by-step build trust with close relatives.' :
                               '• Synthesize multiple elements and mounts. Ground with routine and regular meditation.'}
                     </p>
                   </div>

@@ -25,6 +25,7 @@ export default function Dashboard({
 }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHandType, setSelectedHandType] = useState('');
+  const [selectedHandTattva, setSelectedHandTattva] = useState('');
   const [selectedDominant, setSelectedDominant] = useState('');
 
   // Filter profiles based on search/filters
@@ -35,24 +36,35 @@ export default function Dashboard({
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
         vedic.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vedic.hand_type.toLowerCase().includes(searchQuery.toLowerCase());
+        vedic.hand_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vedic.hand_tattva.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesHandType = !selectedHandType || vedic.hand_type === selectedHandType;
-      
+      const matchesHandTattva = !selectedHandTattva || vedic.hand_tattva === selectedHandTattva;
       const matchesDominant = !selectedDominant || p.dominant_hand === selectedDominant;
 
-      return matchesSearch && matchesHandType && matchesDominant;
+      return matchesSearch && matchesHandType && matchesHandTattva && matchesDominant;
     });
-  }, [profiles, searchQuery, selectedHandType, selectedDominant]);
+  }, [profiles, searchQuery, selectedHandType, selectedHandTattva, selectedDominant]);
 
-  // Hand shape types present in data
+  // Classical Hand types present in data
   const handTypes = useMemo(() => {
     const types = new Set<string>();
     profiles.forEach((p) => {
       const vedic = parseVedicData(p.general_notes);
       if (vedic.hand_type) types.add(vedic.hand_type);
     });
-    return Array.from(types);
+    return Array.from(types).sort();
+  }, [profiles]);
+
+  // Hand Tattvas present in data
+  const handTattvas = useMemo(() => {
+    const tattvas = new Set<string>();
+    profiles.forEach((p) => {
+      const vedic = parseVedicData(p.general_notes);
+      if (vedic.hand_tattva) tattvas.add(vedic.hand_tattva);
+    });
+    return Array.from(tattvas).sort();
   }, [profiles]);
 
   // JSON export backup
@@ -144,7 +156,7 @@ export default function Dashboard({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 bg-stone-50/60 p-6 rounded-xl border border-stone-200/60 shadow-sm backdrop-blur-sm">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 bg-stone-50/60 p-6 rounded-xl border border-stone-200/60 shadow-sm backdrop-blur-sm">
         <div className="md:col-span-2 search-input-wrapper">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
@@ -162,10 +174,25 @@ export default function Dashboard({
             value={selectedHandType}
             onChange={(e) => setSelectedHandType(e.target.value)}
           >
-            <option value="">All Hand Shapes</option>
+            <option value="">All Classical Types</option>
             {handTypes.map((type) => (
               <option key={type} value={type}>
                 {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <select
+            className="form-input bg-white border border-stone-200 text-sm text-stone-850"
+            value={selectedHandTattva}
+            onChange={(e) => setSelectedHandTattva(e.target.value)}
+          >
+            <option value="">All Tattvas</option>
+            {handTattvas.map((tattva) => (
+              <option key={tattva} value={tattva}>
+                {tattva}
               </option>
             ))}
           </select>
@@ -240,7 +267,18 @@ export default function Dashboard({
                     <span>{p.gender || 'N/A'}</span>
                   </div>
 
-                  <p className="text-[10px] font-bold text-accent-gold uppercase tracking-wider">{handType}</p>
+                  <div className="flex flex-wrap items-center gap-1.5 py-0.5">
+                    {vedic.hand_type && (
+                      <span className="text-[9px] bg-purple-50 text-purple-700 border border-purple-200/50 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        🤚 {vedic.hand_type}
+                      </span>
+                    )}
+                    {vedic.hand_tattva && (
+                      <span className="text-[9px] bg-amber-50 text-accent-gold border border-amber-200/50 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        ✨ {vedic.hand_tattva}
+                      </span>
+                    )}
+                  </div>
                   
                   <p className="text-stone-500 text-[11px] line-clamp-2 leading-normal">
                     {description}
