@@ -1,10 +1,9 @@
 ---
 tags: [hasta-samudrika, palmistry, elemental-hands, airy-hand, earthy-hand, back-hand-preview, palm-colour, study-notes]
-source: Live Zoom Lecture (Hindi) — Lecture 4
 topic: "Airy Hand (continued) → Earthy Hand → Back-Palm Types Overview → Palm Colour"
 ---
 
-# 🖐️ Lecture 4 — Airy Hand (contd.), Earthy Hand, Back-Palm Type Names, & Palm Colour
+# Airy Hand (contd.), Earthy Hand, Back-Palm Type Names, & Palm Colour
 
 > [!INFO] Context
 > This session continues the **four elemental front-palm hand types** (Fiery, Earthy, Airy, Watery). It picks up **mid-way through Airy Hand**, completes it, moves to **Earthy Hand**, briefly touches an **ego/finger-comparison technique** (Jupiter vs. Sun finger), gives a **preview list of the 6 back-palm hand types**, and closes with an introduction to **palm colour reading**.
@@ -68,7 +67,7 @@ topic: "Airy Hand (continued) → Earthy Hand → Back-Palm Types Overview → P
 
 ---
 
-### B. Earthy Hand (अर्धी हस्त — "Earthy" Hand) [Note: transcript renders this as "अर्धी", contextually = **Earthy Hand**, the Saturn/stability-oriented elemental type]
+### B. Earthy Hand (अर्धी हस्त — "Earthy" Hand) [Note: contextually = **Earthy Hand**, the Saturn/stability-oriented elemental type]
 
 > [!EXAMPLE] Live Hand Identified as "Guruji's Hand"
 > A hand photo was shown (initially mis-guessed as belonging to "Anu Rādhā jī" — corrected: the photo was labeled "Guruji" at the top, i.e., it belonged to the group's teacher/guru figure). Photo clarity was noted as **not very clear**, but the class proceeded to interpret it as: **Square shape with short fingers** → indicates traits below.
@@ -212,7 +211,7 @@ Various Palm Colors
 
 > [!EXAMPLE] Anu Rādhā jī's Hand — Long Middle Finger
 > - Participant (Speaker 3/Anu Rādhā jī) noted that **Arvind jī** had earlier messaged her saying her hand looked **watery/soft**, but she felt her hand wasn't *that* soft.
-> - Teacher observed: her **middle finger (Saturn finger) is notably long** — this is a distinguishing feature under discussion (explanation trails off in transcript, to be revisited).
+> - Teacher observed: her **middle finger (Saturn finger) is notably long** — this is a distinguishing feature under discussion (explanation trails off, to be revisited).
 
 ---
 
@@ -267,7 +266,7 @@ Various Palm Colors
 
 > [!EXAMPLE] Anu Rādhā jī's Hand
 > - Previously assessed by a peer (Arvind jī) as **watery/soft** — participant disagreed, feeling her hand wasn't that soft.
-> - Teacher noted a **long middle (Saturn) finger** as a key feature (further explanation not completed in transcript).
+> - Teacher noted a **long middle (Saturn) finger** as a key feature (further explanation not completed).
 
 ---
 
@@ -286,15 +285,15 @@ Various Palm Colors
 > **A (Speaker 4's own answer, affirmed by teacher):** Learn to enjoy life more, occasionally break from routine and try something new, and make more effort toward understanding/helping others. Speaker 4 self-identified as Virgo/Capricorn (Earth signs) and noted the described traits matched her own personality — teacher agreed this would likely be reflected in her hand and asked her to send a photo to confirm.
 
 > [!FAQ]- Q5 (Speaker 2): Asked whether money (which they had been waiting on) would come through, as they had been going through a hard/stuck financial period.
-> **A:** Brief exchange — confirmed among participants that the money did in fact come through ("āgayā paisā" — "the money arrived") shortly after; no formal palmistry reading was given for this specific question in the visible transcript.
+> **A:** Brief exchange — confirmed among participants that the money did in fact come through ("āgayā paisā" — "the money arrived") shortly after; no formal palmistry reading was given for this specific question.
 
 > [!FAQ]- Q6 (Speaker 6): "You mentioned in the last class you'd explain how to take the hand photo properly, but didn't yet — please explain now, since everyone has already sent their photos."
-> **A:** Teacher explained: **thumb positioning while photographing matters** — since the thumb is a "self" indicator (even though it's part of the same hand, it represents oneself/self-image), how it's held (loosely, "self-consciously" positioned, deliberately stretched/tensed, etc.) can subtly reflect the person's **confidence level** in how they naturally present their hand — differences in thumb placement during the photo can introduce small variations worth being aware of. (Full "correct" photographing method was being demonstrated live/interactively; not fully captured in transcript text.)
+> **A:** Teacher explained: **thumb positioning while photographing matters** — since the thumb is a "self" indicator (even though it's part of the same hand, it represents oneself/self-image), how it's held (loosely, "self-consciously" positioned, deliberately stretched/tensed, etc.) can subtly reflect the person's **confidence level** in how they naturally present their hand — differences in thumb placement during the photo can introduce small variations worth being aware of. (Full "correct" photographing method was being demonstrated live/interactively; not fully captured)
 
 ---
 
 > [!SUMMARY] Session Wrap-up
-> - **Airy Hand** and **Earthy Hand** now complete the full **four-elemental front-palm system** (Fiery, Earthy, Airy, Watery — Fiery and Watery covered in earlier sessions not included in this transcript).
+> - **Airy Hand** and **Earthy Hand** now complete the full **four-elemental front-palm system** (Fiery, Earthy, Airy, Watery — Fiery and Watery covered in earlier sessions).
 > - **Back-palm system preview** given: **Square, Spatulate, Conical, Knotty/Naughty, Pointed (Psychic), Elemental** — 6 types to be detailed in the **next class**, using photos of the **back of the hand**.
 > - **Palm colour** topic begun — body-colour-relative benchmarking, patch-location-specific interpretation, and **Pink Palm** introduced; to be continued/expanded in a future class alongside Moon and Venus mount study.
 > - Participants instructed to **download/save class PDFs**, and to prepare **marked, labeled back-palm photos** for the next session.

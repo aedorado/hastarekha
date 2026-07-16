@@ -3,7 +3,7 @@ tags: [hasta-samudrika, palmistry, back-hand, cheiro-system, hand-types, study-n
 topic: "Back Hand (Peeth Pam) Classification — Cheiro/Western System"
 ---
 
-# 🖐️ Back Hand (पृष्ठ हस्त) Classification — Cheiro's/Western System
+# Back Hand (पृष्ठ हस्त) Classification — Cheiro's/Western System
 
 > [!INFO] Context
 > Earlier sessions covered the **four types of hands from the front palm (front pam)** view. This session moves to **back-hand (peeth pam / bैक pam)** classification — attributed to **Cheiro**, hence also called the **Western Division**.
