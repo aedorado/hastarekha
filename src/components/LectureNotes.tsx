@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, BookOpen, GraduationCap, X } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Note {
   id: string;
@@ -12,10 +13,34 @@ interface Note {
 }
 
 export default function LectureNotes() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
-  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const activeNoteId = searchParams.get('note') || (notes.length > 0 ? notes[0].id : null);
+  const searchQuery = searchParams.get('q') || '';
+
+  const setActiveNoteId = (id: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id) {
+      params.set('note', id);
+    } else {
+      params.delete('note');
+    }
+    router.replace(`/study?${params.toString()}`);
+  };
+
+  const setSearchQuery = (query: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (query) {
+      params.set('q', query);
+    } else {
+      params.delete('q');
+    }
+    // Retain selected note if any, or let dynamic fallback handle it
+    router.replace(`/study?${params.toString()}`);
+  };
 
   useEffect(() => {
     async function fetchNotes() {
@@ -24,9 +49,6 @@ export default function LectureNotes() {
         if (res.ok) {
           const data = await res.json();
           setNotes(data);
-          if (data.length > 0) {
-            setActiveNoteId(data[0].id);
-          }
         }
       } catch (err) {
         console.error('Failed to load notes', err);
@@ -160,8 +182,8 @@ export default function LectureNotes() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
             {/* Left Column: Compact Lecture Grid */}
             <div className="md:col-span-4 lg:col-span-3 space-y-3">
-              {/* Note Cards: 2-col compact tiles */}
-              <div className="grid grid-cols-2 gap-1.5 max-h-[65vh] overflow-y-auto pr-1">
+              {/* Note Cards: 3-col compact tiles */}
+              <div className="grid grid-cols-3 gap-1.5 max-h-[65vh] overflow-y-auto pr-1">
                 {searchResults.length === 0 ? (
                   <div className="col-span-2 text-center py-8 border border-dashed border-stone-200 rounded-xl bg-stone-50/50">
                     <p className="text-stone-400 text-xs font-medium">No matches found.</p>
@@ -180,8 +202,8 @@ export default function LectureNotes() {
                         key={note.id}
                         onClick={() => setActiveNoteId(note.id)}
                         className={`rounded-lg border transition-all cursor-pointer flex items-center gap-2 px-2.5 py-2 ${isActive
-                            ? 'bg-amber-500/10 border-accent-gold shadow-sm'
-                            : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
+                          ? 'bg-amber-500/10 border-accent-gold shadow-sm'
+                          : 'bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300'
                           }`}
                       >
                         <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${isActive ? 'bg-accent-gold text-white' : 'bg-stone-100 text-stone-500'

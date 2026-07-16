@@ -38,7 +38,7 @@ export default function Dashboard({
         vedic.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vedic.hand_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vedic.hand_tattva.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesHandType = !selectedHandType || vedic.hand_type === selectedHandType;
       const matchesHandTattva = !selectedHandTattva || vedic.hand_tattva === selectedHandTattva;
       const matchesDominant = !selectedDominant || p.dominant_hand === selectedDominant;
@@ -71,10 +71,10 @@ export default function Dashboard({
   const handleExport = () => {
     try {
       const dataStr = JSON.stringify(profiles, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
       const exportFileDefaultName = `hastarekha-databank-backup-${new Date().toISOString().split('T')[0]}.json`;
-      
+
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
@@ -129,7 +129,7 @@ export default function Dashboard({
             <Plus className="w-4 h-4" />
             Analyze New Hand
           </button>
-          
+
           <button
             onClick={handleExport}
             className="btn-outline text-xs px-3 py-2"
@@ -283,7 +283,7 @@ export default function Dashboard({
                       </span>
                     )}
                   </div>
-                  
+
                   <p className="text-stone-500 text-[11px] line-clamp-2 leading-normal">
                     {description}
                   </p>
@@ -344,7 +344,7 @@ export default function Dashboard({
 
       {/* Loading or Empty State Centering */}
       {isLoading ? (
-        <div className="text-center py-32 bg-gradient-to-b from-stone-50/80 to-stone-50/40 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center space-y-6">
+        <div className="text-center py-32 px-6 bg-gradient-to-b from-stone-50/80 to-stone-50/40 rounded-2xl border border-stone-200/60 shadow-sm flex flex-col items-center justify-center space-y-6 p-8">
           <div className="relative w-14 h-14 flex items-center justify-center">
             <div className="absolute inset-0 rounded-full border-4 border-stone-200/60"></div>
             <div className="absolute inset-0 rounded-full border-4 border-t-accent-gold animate-spin"></div>
@@ -355,7 +355,7 @@ export default function Dashboard({
           </div>
         </div>
       ) : filteredProfiles.length === 0 && (
-        <div className="text-center py-28 bg-white rounded-2xl border-2 border-dashed border-stone-300/60 shadow-sm flex flex-col items-center justify-center space-y-5">
+        <div className="text-center py-28 px-6 bg-white rounded-2xl border-2 border-dashed border-stone-300/60 shadow-sm flex flex-col items-center justify-center space-y-5 p-8">
           <HelpCircle className="w-14 h-14 text-stone-300 block" />
           <div className="space-y-2">
             <h3 className="font-bold text-stone-850 text-xl font-serif">No Profiles Found</h3>
