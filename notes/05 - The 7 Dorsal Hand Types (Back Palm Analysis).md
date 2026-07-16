@@ -22,7 +22,7 @@ date: 2026-07-16
 
 # Hasta Sāmudrika Śāstra: The 7 Dorsal Hand Types (Back Palm Analysis)
 
-
+![The 7 Dorsal Hand Types](/lecture-notes-images/05/01-dorsal-hand-types.jpeg)
 
 ## Introduction to Back Palm Analysis
 
@@ -222,46 +222,25 @@ Risk-taking is not determined by the back of the hand alone. It requires analyzi
 
 
 
-## Audience Q&A and Case Studies
+## Q&A and Case Studies
 
-
-
-> [!example] Case 1: Preetu's Hand (Conical/Soft)
-
+> [!example]- Case 1: Preetu's Hand (Conical/Soft)
 > - **Analysis:** The speaker noted struggles around age 3 (calculated by reading the timeline on the palm lines). 
-
 > - **Astrological Alignment:** Preetu has a high Sun finger (matching her numerological Destiny Number 1) and a soft, moody disposition (matching her Root Number 2 / Moon).
-
 > - **Confirmation:** Preetu confirmed the Conical trait of hating staying in other people's homes, stating she refuses to even stay at her mother's house, preferring hotels.
 
-
-
-> [!example] Case 2: Arvind's Hand (Square)
-
+> [!example]- Case 2: Arvind's Hand (Square)
 > - **Analysis:** Clear Square hand with short nails. Possesses a remarkably strong Mercury (Buddha) finger, indicating high business acumen and communication.
-
 > - **Detail:** Arvind wears a ring on this finger based on a priest's advice, which the speaker notes is working well for him. 
 
-
-
-> [!example] Case 3: Dravin's Hand (Square + Mixed)
-
+> [!example]- Case 3: Dravin's Hand (Square + Mixed)
 > - **Analysis:** Initially misidentified by students as Spatulate or Elementary. 
-
 > - **Correction:** The speaker identified it as a Square palm with Mixed fingers. The hand is remarkably soft with very long fingers, looking almost like a female hand if viewed in isolation.
-
 > - **Key Feature:** He possesses an unusually massive Mercury (Buddha) finger, indicating an incredibly sharp mind hiding behind a "simple/innocent" appearance. 
 
-
-
-> [!example] Case 4: Gopal's Hand (Elementary)
-
+> [!example]- Case 4: Gopal's Hand (Elementary)
 > - **Analysis:** An Elementary hand with a very small thumb.
-
 > - **The Exception Rule:** Despite the small thumb (usually indicating low willpower/speed), the *upper phalange* of the thumb is highly swollen/fat. This specific swelling explains why he is always the fastest person to type messages in the class group chat. 
 
-
-
-> [!example] Case 5: Abhijeet's Hand (Square)
-
+> [!example]- Case 5: Abhijeet's Hand (Square)
 > - **Analysis:** Initially, some thought it was Elementary. The speaker corrected this: the nails are large/round, the skin is soft, and the fingers indicate strong business understanding. It is firmly a Square hand.

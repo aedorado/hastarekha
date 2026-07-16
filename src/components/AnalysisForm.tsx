@@ -17,14 +17,74 @@ interface AnalysisFormProps {
 }
 
 const HAND_TYPES = [
-  'Elementary',
-  'Square (Useful)',
-  'Spatulate (Active)',
-  'Conical (Artistic)',
-  'Psychic (Idealistic)',
-  'Philosophical (Intellectual)',
-  'Mixed Type',
+  'Elementary Hand (Primitive/Labor Hand)',
+  'Spatulate Hand (Spoon Hand)',
+  'Square Hand (Vertical Hand)',
+  'Conical Hand (Conic Hand)',
+  'Philosophical Hand (Knotty Hand)',
+  'Psychic Hand',
+  'Mixed Hand',
 ];
+
+interface HandTypeDetail {
+  title: string;
+  identification: string;
+  mentality: string;
+  struggleOrStrength: string;
+  modifiers: string;
+}
+
+const HAND_TYPE_DETAILS: Record<string, HandTypeDetail> = {
+  'Elementary Hand (Primitive/Labor Hand)': {
+    title: 'Elementary Hand (Primitive/Labor Hand)',
+    identification: 'Looks thick, heavy, and stiff. Palm appears highly prominent, resembling a square (Mars-driven). Fingers look short and less prominent compared to the massive palm space. Wrist is thick and wide. Nails are typically small.',
+    mentality: 'Core focus on short-term survival ("Work, eat, drink, sleep"). Refuses self-investment, lacks ambition, and declines training opportunities. Low emotional sensitivity and creativity appreciation.',
+    struggleOrStrength: 'Success requires grueling physical labor. Stiff skin blocks positive yogas from bearing fruit easily without massive struggle.',
+    modifiers: 'Skin texture is usually hard, rough, and stiff. Nails are small.',
+  },
+  'Spatulate Hand (Spoon Hand)': {
+    title: 'Spatulate Hand (Spoon Hand)',
+    identification: 'Shaped like a spatula or spoon (flares out wider at the top or bottom). Similar to the Elementary hand, but the wrist is noticeably thinner and the nails are not as small.',
+    mentality: 'Hardworking and practical, but fiercely independent and highly disciplined with strict boundaries. Formula: "Learn first, then make money from that learning."',
+    struggleOrStrength: 'One of the best categories. Combines extreme physical capacity/action with mental sharpness. Highly organized and time-sensitive.',
+    modifiers: 'Skin is less rough than Elementary; nails are larger. Willpower is heavily tied to the strength of the Thumb.',
+  },
+  'Square Hand (Vertical Hand)': {
+    title: 'Square Hand (Vertical Hand)',
+    identification: 'The entire hand (palm + fingers combined) visually forms a square. Nails often naturally take a square shape as well.',
+    mentality: 'Innate, natural business acumen. Can figure out how to make money and run businesses without prior formal training. Excellent long-term planner, highly determined but flexible enough to pivot.',
+    struggleOrStrength: 'Extremely good category for prosperity. Possesses excellent social etiquette and grace, and often works/donates for social welfare.',
+    modifiers: 'Small nails on a Square hand indicate a researcher/investigative mindset but may bring minor health issues.',
+  },
+  'Conical Hand (Conic Hand)': {
+    title: 'Conical Hand (Conic Hand)',
+    identification: 'Long and thin hand. Fingers are long and taper smoothly forward, with a notably long middle finger. Beautiful fingernails.',
+    mentality: 'Deeply desires a luxurious, comfortable life. Highly moody with rapidly fluctuating emotions and low patience. Sun/Mercury creativity (ambiguous clever communication, managing networks, hosting beautifully).',
+    struggleOrStrength: 'Attains luxury but struggles to "settle" in foreign environments. Dislikes staying in other people\'s houses (prefers neutral spaces like hotels).',
+    modifiers: 'Tapering fingers and beautiful nails. Associated with Sun/Mercury planetary lines.',
+  },
+  'Philosophical Hand (Knotty Hand)': {
+    title: 'Philosophical Hand (Knotty Hand)',
+    identification: 'Long and tapering hand similar to Conical, but features prominent, visible knots at the finger joints.',
+    mentality: 'Deep analytical/philosophical mind. Abhors mindless entertainment. Message deliverers found in character actors, stand-up comedians, and motivational speakers. Particular about comfort and secretive.',
+    struggleOrStrength: 'Very intellectual and precise. Limits their space, preferring quiet corners to remain calm.',
+    modifiers: 'Knots do not need to be on all fingers—traits apply specifically to the planet of the knotted finger (e.g., Jupiter or Saturn). Thin-skinned (visible nerves) adds extreme sensitivity. Crooked fingers amplify planetary energy intensely.',
+  },
+  'Psychic Hand': {
+    title: 'Psychic Hand',
+    identification: 'Extremely long, delicate, and "super soft." Looks fragile, like the hand of a royal princess or a newborn baby.',
+    mentality: 'Highly sensitive, physically and emotionally fragile. Catch colds/coughs easily and have weak digestion. Break easily under pressure if not praised.',
+    struggleOrStrength: 'With finger knots: can ascend to the absolute highest levels of spiritual healing. Without finger knots: prone to comfort zone traps, extreme laziness, and chaos under minor routine changes.',
+    modifiers: 'Should have very light, fine lines. If a super soft hand has thick, dark lines, it indicates a tragic paradox of a delicate person forced into a harsh, struggling life.',
+  },
+  'Mixed Hand': {
+    title: 'Mixed Hand',
+    identification: 'A blend that does not fit one category (e.g. Square palm with Conical fingers).',
+    mentality: 'Ultimate multitaskers and full of diverse ideas. Seamlessly blend practicality, emotion, and creativity.',
+    struggleOrStrength: 'Versatile and adaptable, but career path cannot be determined by shape alone.',
+    modifiers: 'Must identify the major type first, then blend traits. Rely heavily on palm lines and fingerprints for specific career predictions.',
+  },
+};
 
 export default function AnalysisForm({
   profile,
@@ -53,6 +113,8 @@ export default function AnalysisForm({
     nailsSeparate: false,
     relaxedPosture: false,
     restingWaited: false,
+    noNailPolish: false,
+    noMorningSwelling: false,
   });
 
   useEffect(() => {
@@ -319,6 +381,35 @@ export default function AnalysisForm({
               </div>
             </div>
 
+            {vedicData.hand_type && HAND_TYPE_DETAILS[vedicData.hand_type] && (
+              <div className="p-4 rounded-xl border border-stone-200/80 bg-stone-50/50 shadow-sm text-xs space-y-2.5 transition-all duration-300">
+                <div className="flex items-center gap-2 border-b border-stone-200/40 pb-2">
+                  <Sparkles className="w-4 h-4 text-accent-gold" />
+                  <span className="font-bold text-stone-900 text-xs tracking-wide">
+                    {HAND_TYPE_DETAILS[vedicData.hand_type].title} Details
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Identification:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].identification}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Mentality:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].mentality}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Prosperity & Struggle:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].struggleOrStrength}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Nail/Skin Modifiers:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].modifiers}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Hand Pictures Catalog Grid */}
             <div className="sidebar-section">
               <label className="form-label mb-2">Subject Photos</label>
@@ -427,7 +518,9 @@ export default function AnalysisForm({
                     { key: 'thumbSeparate', label: 'Thumb separately' },
                     { key: 'nailsSeparate', label: 'Nails separately' },
                     { key: 'relaxedPosture', label: 'Relaxed natural gaps' },
-                    { key: 'restingWaited', label: 'Wait 5-10m resting' }
+                    { key: 'restingWaited', label: 'Wait 5-10m resting' },
+                    { key: 'noNailPolish', label: 'No Nail Polish (needs vertical/horizontal lines)' },
+                    { key: 'noMorningSwelling', label: 'No Morning Swelling (distorts shape)' }
                   ].map((item) => (
                     <label key={item.key} className="flex items-center gap-1.5 text-[9px] font-semibold text-stone-600 cursor-pointer select-none">
                       <input
@@ -713,6 +806,107 @@ export default function AnalysisForm({
                       {vedicData.mercury_length === 'Long'
                         ? '🐍 Mercury Modifier (Snake Dies, Stick Intact): Excellent diplomacy. Can express stubbornness or deliver harsh truths elegantly without breaking relationships ("snake dies, stick intact").'
                         : '⚠️ Mercury Modifier: Struggles to communicate will/ego effectively. May struggle to say "no" or might create severe relational friction.'
+                      }
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Dorsal Hand Analysis (Back Palm Modifiers) */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Activity className="w-4 h-4 text-violet-500" />
+                Dorsal Hand Analysis (Back Palm Modifiers)
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">
+                Nails, skin texture, and knuckle knots act as massive modifiers that alter the core readings of the palm.
+              </p>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="form-group">
+                  <label className="form-label text-xs">Skin Texture (Dorsal)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.skin_texture || ''}
+                    onChange={(e) => updateVedicField('skin_texture', e.target.value)}
+                  >
+                    <option value="">Select Skin...</option>
+                    <option value="Soft/Moisturized">Soft & Moisturized (Fertile/Easy)</option>
+                    <option value="Medium">Medium Texture</option>
+                    <option value="Hard/Stiff">Hard & Stiff (Struggles/Stiff wrist)</option>
+                    <option value="Rough">Rough/Labor-worn (Struggle/Raw)</option>
+                    <option value="Thin-skinned (Nerves visible)">Thin-skinned (Visible nerves/Sensitive)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Nail Shape</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.nail_shape || ''}
+                    onChange={(e) => updateVedicField('nail_shape', e.target.value)}
+                  >
+                    <option value="">Select Nail Shape...</option>
+                    <option value="Wide/Small">Wide & Small (Elementary traits)</option>
+                    <option value="Long/Small">Long & Small</option>
+                    <option value="Wide/Big">Wide & Big</option>
+                    <option value="Square">Square Nails (Square hand matches)</option>
+                    <option value="Beautiful">Beautiful & Long-tapering (Conical/Psychic)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Finger Joints (Knots)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.finger_knots || ''}
+                    onChange={(e) => updateVedicField('finger_knots', e.target.value)}
+                  >
+                    <option value="">Select Joints...</option>
+                    <option value="Smooth">Smooth & Tapering</option>
+                    <option value="Jupiter & Saturn Knots">Knots on Jupiter & Saturn only</option>
+                    <option value="Fully Philosophical (Knotty)">Fully Knotty (Philosophical/Message deliverer)</option>
+                    <option value="Crooked Fingers">Crooked Fingers (Amplified planet energy)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Dynamic Modifiers interpretation based on lecture */}
+              {(vedicData.skin_texture || vedicData.nail_shape || vedicData.finger_knots) && (
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs space-y-1.5 leading-relaxed">
+                  <span className="font-bold text-stone-800 uppercase tracking-wider block text-[9px]">Dorsal Modification Profile:</span>
+                  
+                  {vedicData.skin_texture && (
+                    <p className="text-stone-600 font-medium">
+                      <strong>Skin:</strong> {
+                        vedicData.skin_texture === 'Soft/Moisturized' ? '✨ Soft & supple skin represents fertile ease and higher responsiveness to favorable yogas.' :
+                        vedicData.skin_texture === 'Hard/Stiff' ? '⚠️ Hard, stiff skin blocks flexibility and implies high physical struggle. Represents a lack of pampered care.' :
+                        vedicData.skin_texture === 'Rough' ? '⚠️ Rough skin indicates a mindset centered on raw struggle and manual routine. Prone to rejecting self-improvement.' :
+                        vedicData.skin_texture === 'Thin-skinned (Nerves visible)' ? '🧠 Thin skin with visible nerves indicates extreme mental/emotional sensitivity and vulnerability.' :
+                        'Standard skin elasticity and texture.'
+                      }
+                    </p>
+                  )}
+
+                  {vedicData.nail_shape && (
+                    <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
+                      <strong>Nails:</strong> {
+                        vedicData.nail_shape === 'Wide/Small' ? '🔍 Small nails indicate low ambition, short-term planning, or focus on manual tasks.' :
+                        vedicData.nail_shape === 'Square' ? '💼 Square nails complement natural business acumen and support strong determination.' :
+                        vedicData.nail_shape === 'Beautiful' ? '🎨 Beautiful tapering nails align with creative Sun/Mercury energy or high psychic sensitivity.' :
+                        'Nails act as modifiers to determine physical details and health patterns.'
+                      }
+                    </p>
+                  )}
+
+                  {vedicData.finger_knots && (
+                    <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
+                      <strong>Finger Joints:</strong> {
+                        vedicData.finger_knots === 'Fully Philosophical (Knotty)' ? '📖 Knotty joints add an analytical filter, showing a Message Deliverer who abhors mindless entertainment.' :
+                        vedicData.finger_knots === 'Jupiter & Saturn Knots' ? '🪐 Knots localized on Jupiter and Saturn restrict philosophical contemplation specifically to wisdom, ambition, and focus.' :
+                        vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crooked fingers amplify the energy of their respective planets in an intense or distorted way (e.g. Sage Ashtavakra).' :
+                        'Smooth joints indicate swift, intuitive thinking without heavy analytical filters.'
                       }
                     </p>
                   )}

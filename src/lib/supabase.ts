@@ -49,6 +49,9 @@ export interface VedicData {
   notes: string;
   hand_type: string;
   hand_tattva: string;
+  nail_shape: 'Wide/Small' | 'Long/Small' | 'Wide/Big' | 'Square' | 'Beautiful' | '';
+  skin_texture: 'Soft/Moisturized' | 'Medium' | 'Hard/Stiff' | 'Rough' | 'Thin-skinned (Nerves visible)' | '';
+  finger_knots: 'Smooth' | 'Jupiter & Saturn Knots' | 'Fully Philosophical (Knotty)' | 'Crooked Fingers' | '';
   measurements: {
     palm_start: { x: number; y: number };
     palm_end: { x: number; y: number };
@@ -73,6 +76,9 @@ export const parseVedicData = (notesField: string): VedicData => {
     notes: '',
     hand_type: '',
     hand_tattva: '',
+    nail_shape: '',
+    skin_texture: '',
+    finger_knots: '',
     measurements: null,
   };
 

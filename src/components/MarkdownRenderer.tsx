@@ -157,7 +157,28 @@ export default function MarkdownRenderer({ content, onWikilinkClick }: MarkdownR
         continue;
       }
 
-      // 6. Default paragraph
+      // 6. Handle Images: ![Alt](Url)
+      if (trimmed.startsWith('![') && trimmed.endsWith(')')) {
+        const match = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+          const [, alt, src] = match;
+          blocks.push(
+            <div key={`img-${i}`} className="my-6 flex flex-col items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={alt}
+                className="rounded-xl border border-stone-200/80 shadow-md max-w-full h-auto max-h-[500px] object-contain bg-white p-2"
+              />
+              {alt && <span className="text-[11px] text-stone-500 italic font-medium">{alt}</span>}
+            </div>
+          );
+          i++;
+          continue;
+        }
+      }
+
+      // 7. Default paragraph
       blocks.push(
         <p key={`p-${i}`} className="text-stone-650 text-sm leading-relaxed mb-4">
           {parseInline(trimmed)}
