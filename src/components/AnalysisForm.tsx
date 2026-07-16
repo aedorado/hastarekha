@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData } from '@/lib/supabase';
+import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData, calculateAge } from '@/lib/supabase';
 import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText } from 'lucide-react';
 
 interface AnalysisFormProps {
@@ -296,20 +296,34 @@ export default function AnalysisForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Age</label>
+                <div className="flex justify-between items-center">
+                  <label className="form-label">Date of Birth</label>
+                  {profile.age !== '' && (
+                    <span className="text-[10px] bg-amber-500/10 text-accent-gold px-2 py-0.5 rounded-full font-bold">
+                      Age: {profile.age} years
+                    </span>
+                  )}
+                </div>
                 <input
-                  type="number"
-                  className="form-input"
-                  placeholder="Age"
-                  value={profile.age}
-                  onChange={(e) => updateProfileField('age', e.target.value ? parseInt(e.target.value, 10) : '')}
+                  type="date"
+                  className="form-input text-stone-850"
+                  value={profile.dob || ''}
+                  onChange={(e) => {
+                    const dobVal = e.target.value;
+                    const computedAge = calculateAge(dobVal);
+                    onChangeProfile({
+                      ...profile,
+                      dob: dobVal,
+                      age: computedAge,
+                    });
+                  }}
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Gender</label>
                 <select
-                  className="form-input bg-white border border-stone-200"
+                  className="form-input bg-white border border-stone-200 text-stone-850"
                   value={profile.gender}
                   onChange={(e) => updateProfileField('gender', e.target.value)}
                 >
@@ -317,6 +331,29 @@ export default function AnalysisForm({
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-group">
+                <label className="form-label">Time of Birth</label>
+                <input
+                  type="time"
+                  className="form-input text-stone-850"
+                  value={profile.tob || ''}
+                  onChange={(e) => updateProfileField('tob', e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Place of Birth</label>
+                <input
+                  type="text"
+                  className="form-input text-stone-850"
+                  placeholder="e.g. New Delhi, India"
+                  value={profile.pob || ''}
+                  onChange={(e) => updateProfileField('pob', e.target.value)}
+                />
               </div>
             </div>
 

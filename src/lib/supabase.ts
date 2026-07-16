@@ -113,6 +113,19 @@ export const serializeVedicData = (data: VedicData): string => {
   return JSON.stringify(data);
 };
 
+export function calculateAge(dobString: string): number | '' {
+  if (!dobString) return '';
+  const dob = new Date(dobString);
+  if (isNaN(dob.getTime())) return '';
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 0 ? age : '';
+}
+
 export interface HandProfile {
   id: string;
   name: string;
@@ -127,6 +140,9 @@ export interface HandProfile {
   drawings: Drawing[];
   tags: string[];
   created_at?: string;
+  dob?: string;
+  tob?: string;
+  pob?: string;
 }
 
 
@@ -142,13 +158,13 @@ export const saveDemoProfile = (profile: HandProfile): HandProfile[] => {
   if (typeof window === 'undefined') return [];
   const current = getDemoProfiles();
   const existingIndex = current.findIndex(p => p.id === profile.id);
-  
+
   if (existingIndex >= 0) {
     current[existingIndex] = { ...profile, created_at: current[existingIndex].created_at || new Date().toISOString() };
   } else {
     current.push({ ...profile, created_at: new Date().toISOString() });
   }
-  
+
   localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(current));
   return current;
 };

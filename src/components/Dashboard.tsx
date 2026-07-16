@@ -113,7 +113,7 @@ export default function Dashboard({
         <div className="flex-1">
           <h1 className="mystic-title text-4xl font-bold mb-2">Hasta-Rekhā Databank</h1>
           <p className="text-stone-600 text-base mb-3">
-            Analyze, annotate, and catalog hand profiles for your Sāmudrika Śāstra course.
+            Analyze, annotate, and catalog hand profiles for your Sāmudrika Śāstra study.
           </p>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60 shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
@@ -267,6 +267,18 @@ export default function Dashboard({
                     <span>{p.dominant_hand} Hand</span>
                     <span>·</span>
                     <span>Age {p.age || 'N/A'}</span>
+                    {p.dob && (
+                      <>
+                        <span>·</span>
+                        <span>🎂 {p.dob}</span>
+                      </>
+                    )}
+                    {p.pob && (
+                      <>
+                        <span>·</span>
+                        <span>📍 {p.pob}</span>
+                      </>
+                    )}
                     <span>·</span>
                     <span>{p.gender || 'N/A'}</span>
                   </div>

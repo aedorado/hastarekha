@@ -5,6 +5,9 @@ CREATE TABLE IF NOT EXISTS public.hands (
   id UUID PRIMARY KEY,
   name TEXT NOT NULL,
   age INTEGER,
+  dob TEXT,
+  tob TEXT,
+  pob TEXT,
   gender TEXT,
   dominant_hand TEXT NOT NULL,
   images JSONB DEFAULT '{}'::jsonb, -- Stores {"right_palm": "url", "right_back": "url", "left_palm": "url", "left_back": "url"}

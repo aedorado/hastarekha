@@ -7,6 +7,7 @@ import HandCanvas from '@/components/HandCanvas';
 import AnalysisForm from '@/components/AnalysisForm';
 import PageLayout from '@/components/PageLayout';
 import { ChevronLeft } from 'lucide-react';
+import ImageCropperModal from './ImageCropperModal';
 
 interface AnalysisEditorProps {
   initialProfile: HandProfile;
@@ -20,6 +21,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState<{ view: HandView; file: File } | null>(null);
 
   // Check Supabase connection on mount
   useEffect(() => {
@@ -82,11 +84,17 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     });
   };
 
-  // Handle image upload for a selected view (Right Palm, Left Back, etc.)
+  // Intercept raw image upload to trigger the crop/rotate modal
   const handleUploadImageForView = async (view: HandView, file: File) => {
+    setPendingUpload({ view, file });
+  };
+
+  // Process the file after user crops/rotates it in the modal
+  const handleUploadImageAfterCrop = async (view: HandView, croppedFile: File) => {
+    setPendingUpload(null);
     setIsUploading(true);
     try {
-      const compressedDataUrl = await compressAndResizeImage(file);
+      const compressedDataUrl = await compressAndResizeImage(croppedFile);
       let finalUrl = compressedDataUrl;
 
       if (isSupabaseConnected) {
@@ -255,6 +263,13 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           </div>
         </div>
       </div>
+      {pendingUpload && (
+        <ImageCropperModal
+          file={pendingUpload.file}
+          onConfirm={(croppedFile) => handleUploadImageAfterCrop(pendingUpload.view, croppedFile)}
+          onCancel={() => setPendingUpload(null)}
+        />
+      )}
     </PageLayout>
   );
 }

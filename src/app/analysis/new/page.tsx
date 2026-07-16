@@ -18,6 +18,9 @@ const INITIAL_PROFILE = (id: string): HandProfile => ({
   pins: [],
   drawings: [],
   tags: [],
+  dob: '',
+  tob: '',
+  pob: '',
 });
 
 export default function NewAnalysisPage() {

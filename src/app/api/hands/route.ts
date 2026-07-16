@@ -47,6 +47,9 @@ export async function POST(request: Request) {
       pins: body.pins,
       drawings: body.drawings,
       tags: body.tags,
+      dob: body.dob || null,
+      tob: body.tob || null,
+      pob: body.pob || null,
     };
 
     const { data, error } = await supabase

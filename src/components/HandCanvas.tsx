@@ -80,9 +80,9 @@ export default function HandCanvas({
 
   const displayPalmLength = measurements
     ? parseFloat((pxDist(
-        measurements.palm_start.x, measurements.palm_start.y,
-        measurements.palm_end.x,   measurements.palm_end.y
-      ) * 0.04).toFixed(1))
+      measurements.palm_start.x, measurements.palm_start.y,
+      measurements.palm_end.x, measurements.palm_end.y
+    ) * 0.04).toFixed(1))
     : 10.0;
 
 
@@ -144,9 +144,9 @@ export default function HandCanvas({
         currentVedic.measurements = updatedMeasurements;
 
         // Independent pixel-accurate distances, scaled to display units (0.04 = 4 units per 100px)
-        const calculatedPalmLength   = parseFloat((px(updatedMeasurements.palm_start.x,  updatedMeasurements.palm_start.y,  updatedMeasurements.palm_end.x,    updatedMeasurements.palm_end.y)   * 0.04).toFixed(1));
+        const calculatedPalmLength = parseFloat((px(updatedMeasurements.palm_start.x, updatedMeasurements.palm_start.y, updatedMeasurements.palm_end.x, updatedMeasurements.palm_end.y) * 0.04).toFixed(1));
         const calculatedFingerLength = parseFloat((px(updatedMeasurements.finger_start.x, updatedMeasurements.finger_start.y, updatedMeasurements.finger_end.x, updatedMeasurements.finger_end.y) * 0.04).toFixed(1));
-        const calculatedPalmWidth    = parseFloat((px(updatedMeasurements.width_start.x,  updatedMeasurements.width_start.y,  updatedMeasurements.width_end.x,  updatedMeasurements.width_end.y)   * 0.04).toFixed(1));
+        const calculatedPalmWidth = parseFloat((px(updatedMeasurements.width_start.x, updatedMeasurements.width_start.y, updatedMeasurements.width_end.x, updatedMeasurements.width_end.y) * 0.04).toFixed(1));
 
         currentVedic.palm_length = calculatedPalmLength;
         currentVedic.finger_length = calculatedFingerLength;
@@ -272,7 +272,7 @@ export default function HandCanvas({
       const currentVedic = parseVedicData(profile.general_notes);
       if (!currentVedic.measurements) {
         currentVedic.measurements = { ...DEFAULT_MEASUREMENTS };
-        
+
         // Use real container pixel dimensions so distances are accurate regardless of aspect ratio
         const initRect = containerRef.current?.getBoundingClientRect();
         const W = initRect?.width ?? 500;
@@ -280,9 +280,9 @@ export default function HandCanvas({
         const initPx = (ax: number, ay: number, bx: number, by: number) =>
           Math.sqrt(Math.pow((bx - ax) * W / 100, 2) + Math.pow((by - ay) * H / 100, 2));
 
-        currentVedic.palm_length   = parseFloat((initPx(DEFAULT_MEASUREMENTS.palm_start.x,   DEFAULT_MEASUREMENTS.palm_start.y,   DEFAULT_MEASUREMENTS.palm_end.x,    DEFAULT_MEASUREMENTS.palm_end.y)   * 0.04).toFixed(1));
+        currentVedic.palm_length = parseFloat((initPx(DEFAULT_MEASUREMENTS.palm_start.x, DEFAULT_MEASUREMENTS.palm_start.y, DEFAULT_MEASUREMENTS.palm_end.x, DEFAULT_MEASUREMENTS.palm_end.y) * 0.04).toFixed(1));
         currentVedic.finger_length = parseFloat((initPx(DEFAULT_MEASUREMENTS.finger_start.x, DEFAULT_MEASUREMENTS.finger_start.y, DEFAULT_MEASUREMENTS.finger_end.x, DEFAULT_MEASUREMENTS.finger_end.y) * 0.04).toFixed(1));
-        currentVedic.palm_width    = parseFloat((initPx(DEFAULT_MEASUREMENTS.width_start.x,  DEFAULT_MEASUREMENTS.width_start.y,  DEFAULT_MEASUREMENTS.width_end.x,  DEFAULT_MEASUREMENTS.width_end.y)   * 0.04).toFixed(1));
+        currentVedic.palm_width = parseFloat((initPx(DEFAULT_MEASUREMENTS.width_start.x, DEFAULT_MEASUREMENTS.width_start.y, DEFAULT_MEASUREMENTS.width_end.x, DEFAULT_MEASUREMENTS.width_end.y) * 0.04).toFixed(1));
 
         // Auto-classify shape: width / length >= 0.9 => Square, else Rectangular
         const shapeRatio = currentVedic.palm_width / Math.max(0.1, currentVedic.palm_length);
@@ -299,7 +299,7 @@ export default function HandCanvas({
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Hand View Selector Tab Header */}
-      <div className="flex flex-wrap gap-1 border-b border-stone-200 pb-2">
+      <div className="flex flex-wrap gap-1 border-b border-stone-200 pb-2 p-2">
         {VIEWS.map((view) => (
           <button
             key={view}
@@ -325,7 +325,7 @@ export default function HandCanvas({
       {imageUrl ? (
         <>
           {/* Toolbars */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-50 p-3 rounded-xl border border-stone-200 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-50 p-3 rounded-xl border border-stone-200 shadow-sm m-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -548,7 +548,7 @@ export default function HandCanvas({
           {/* Canvas Area */}
           <div
             ref={containerRef}
-            className="canvas-wrapper flex-1 relative min-h-[400px] shadow-sm select-none border border-stone-200 rounded-xl bg-stone-50/50"
+            className="canvas-wrapper flex-1 relative min-h-[400px] shadow-sm select-none border border-stone-200 rounded-xl bg-stone-50/50 m-2"
             onMouseMove={handleSvgMouseMove}
             onMouseUp={handleSvgMouseUp}
             onMouseLeave={() => setDraggingNode(null)}
@@ -964,7 +964,7 @@ export default function HandCanvas({
             ))}
           </div>
 
-          <div className="text-center text-xs text-stone-500 font-medium">
+          <div className="text-center text-xs text-stone-500 font-medium p-2">
             {mode === 'pin'
               ? `Pin Mode: Click on the ${HAND_VIEW_LAB_ATTR(activeView)} to drop an analytical marker.`
               : mode === 'draw'
