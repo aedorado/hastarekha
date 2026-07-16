@@ -1,49 +1,27 @@
 ---
-
 aliases: [Hasta Sāmudrika Śāstra Lecture 5 - Dorsal Hand Types]
-
 tags: 
-
   - palmistry/notes
-
   - hasta-samudrika-sastra
-
   - dorsal-hands
-
   - back-palm-analysis
-
   - nail-analysis
-
 date: 2026-07-16
-
 ---
 
-
-
 # Hasta Sāmudrika Śāstra: The 7 Dorsal Hand Types (Back Palm Analysis)
-
 ![The 7 Dorsal Hand Types](/lecture-notes-images/05/01-dorsal-hand-types.jpeg)
 
 ## Introduction to Back Palm Analysis
-
 While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, Water), the dorsal (back) side of the hand provides a different layer of classification. 
-
 * **The Western Division:** Western palmistry divides hands into 8 to 11 types. To avoid confusion, this system streamlines them into **7 practical types**.
-
 * **The Importance of Nails & Skin:** You cannot make a final prediction based *only* on the shape of the dorsal hand. The texture of the skin (soft/hard) and the shape of the nails (wide/small, long/small, wide/big) play a massive modifying role in the final reading.
-
-
 
 ---
 
-
-
 ## 1. The Elementary Hand (Primitive / Labor Hand)
 
-
-
 > [!INFO] Core Identification
-
 > Looks thick, heavy, and stiff. The palm appears highly prominent, resembling a **square** (driven heavily by a prominent Mars mount). The fingers look less prominent compared to the massive space of the palm. The wrist is thick and wide. Nails are typically small.
 
 
@@ -65,7 +43,6 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 
 > [!INFO] Core Identification
-
 > Shaped like a spatula or a spoon (flaring out wider at the top or bottom). Similar to the Elementary hand, but the wrist is noticeably **thinner**, the skin is less rough, and the nails are not as small.
 
 
@@ -85,7 +62,6 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 
 > [!INFO] Core Identification
-
 > The entire hand (palm + fingers combined) visually forms a square. Even if mathematically rectangular, the visual "look" is square. Nails often naturally take a square shape as well.
 
 
@@ -107,7 +83,6 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 
 > [!INFO] Core Identification
-
 > Long and thin hand. The fingers are long, thin, and taper smoothly forward. The middle finger is generally notably long. The nails are usually beautiful.
 
 
@@ -127,7 +102,6 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 
 > [!INFO] Core Identification
-
 > Similar to the Conical hand (long and tapering), but features prominent, visible **knots** at the finger joints. 
 
 
@@ -152,10 +126,7 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 ## 6. The Psychic Hand
 
-
-
 > [!INFO] Core Identification
-
 > Extremely long, delicate, and "super soft." Looks like the hand of a royal princess or a newborn baby—so fragile you are afraid to squeeze it.
 
 
@@ -174,13 +145,8 @@ While the palmar (front) side gives us the 4 basic elements (Fire, Earth, Air, W
 
 ## 7. The Mixed Hand
 
-
-
 > [!INFO] Core Identification
-
 > Does not perfectly fit any of the above 6 categories. It is a blend. 
-
-
 
 * **How to Read:** Identify the "Major" type first (e.g., "This is mostly a Square hand, but with Conical long fingers"), then blend the traits.
 
