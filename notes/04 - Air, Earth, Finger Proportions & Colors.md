@@ -1,8 +1,3 @@
----
-tags: [hasta-samudrika, palmistry, elemental-hands, airy-hand, earthy-hand, back-hand-preview, palm-colour, study-notes]
-topic: "Airy Hand (continued) → Earthy Hand → Back-Palm Types Overview → Palm Colour"
----
-
 # Airy Hand (contd.), Earthy Hand, Back-Palm Type Names, & Palm Colour
 
 > [!INFO] Context

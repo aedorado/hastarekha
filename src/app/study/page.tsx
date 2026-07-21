@@ -19,6 +19,12 @@ function StudyPageContent() {
           Hand Profiles
         </button>
         <button
+          onClick={() => router.push('/?tab=all-hands')}
+          className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850"
+        >
+          All Hands
+        </button>
+        <button
           className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold"
         >
           Study Guide & Lectures

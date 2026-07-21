@@ -1,9 +1,3 @@
----
-tags: [hasta-samudrika, palmistry, thumb, angushtha, will-power, thumb-angle, phalanges, study-notes]
-source: Live Zoom Lecture (Hindi) — Lecture 6
-topic: "The Thumb (Angūṭhā) — Importance, Length, Angle System, and First Phalange Reading"
----
-
 # The Thumb (अंगूठा): Will Power, Length, Angle, & Phalange Reading
 
 > [!INFO] Context

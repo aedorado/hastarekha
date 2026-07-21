@@ -1,16 +1,31 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { HandProfile, getDemoProfiles, saveDemoProfile, deleteDemoProfile, isSupabaseConfigured } from '@/lib/supabase';
 import Dashboard from '@/components/Dashboard';
+import AllHandsView from '@/components/AllHandsView';
 import PageLayout from '@/components/PageLayout';
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<HandProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
+
+  const activeTab = (searchParams.get('tab') as 'profiles' | 'all-hands') || 'profiles';
+
+  const setActiveTab = (tab: 'profiles' | 'all-hands') => {
+    const params = new URLSearchParams(window.location.search);
+    if (tab === 'profiles') {
+      params.delete('tab');
+    } else {
+      params.set('tab', tab);
+    }
+    const search = params.toString();
+    router.replace(search ? `/?${search}` : '/');
+  };
 
   // Initialize and load profiles
   useEffect(() => {
@@ -95,9 +110,24 @@ export default function Home() {
         {/* Tab Selector */}
         <div className="flex justify-start gap-4 border-b border-stone-200 pb-px mb-2">
           <button
-            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold"
+            onClick={() => setActiveTab('profiles')}
+            className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
+              activeTab === 'profiles'
+                ? 'border-accent-gold text-accent-gold'
+                : 'border-transparent text-stone-500 hover:text-stone-850'
+            }`}
           >
             Hand Profiles
+          </button>
+          <button
+            onClick={() => setActiveTab('all-hands')}
+            className={`pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer ${
+              activeTab === 'all-hands'
+                ? 'border-accent-gold text-accent-gold'
+                : 'border-transparent text-stone-500 hover:text-stone-850'
+            }`}
+          >
+            All Hands
           </button>
           <button
             onClick={() => router.push('/study')}
@@ -107,16 +137,41 @@ export default function Home() {
           </button>
         </div>
 
-        <Dashboard
-          profiles={profiles}
-          onSelectProfile={handleSelectProfile}
-          onCreateNew={handleCreateNew}
-          onDeleteProfile={handleDeleteProfile}
-          onImportData={handleImportData}
-          isSupabaseConnected={isSupabaseConnected}
-          isLoading={isLoading}
-        />
+        {activeTab === 'profiles' ? (
+          <Dashboard
+            profiles={profiles}
+            onSelectProfile={handleSelectProfile}
+            onCreateNew={handleCreateNew}
+            onDeleteProfile={handleDeleteProfile}
+            onImportData={handleImportData}
+            isSupabaseConnected={isSupabaseConnected}
+            isLoading={isLoading}
+          />
+        ) : (
+          <AllHandsView
+            profiles={profiles}
+            isLoading={isLoading}
+          />
+        )}
       </div>
     </PageLayout>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center h-72 gap-4 text-stone-400">
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 rounded-full border-4 border-stone-200/60" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-accent-gold animate-spin" />
+          </div>
+          <p className="text-sm font-medium">Loading Databank...</p>
+        </div>
+      </PageLayout>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

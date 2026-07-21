@@ -43,6 +43,21 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     checkConnection();
   }, []);
 
+  // Warn user on window unload if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isProfileChanged(initialProfile, activeProfile)) {
+        e.preventDefault();
+        e.returnValue = 'Discard unsaved modifications and return to dashboard?';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [initialProfile, activeProfile]);
+
   // Local client-side image compression/resizing
   const compressAndResizeImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -204,7 +219,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (confirm('Discard unsaved modifications and return to dashboard?')) {
+                if (!isProfileChanged(initialProfile, activeProfile) || confirm('Discard unsaved modifications and return to dashboard?')) {
                   router.push('/');
                 }
               }}
@@ -272,4 +287,96 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
       )}
     </PageLayout>
   );
+}
+
+function isProfileChanged(initial: HandProfile, active: HandProfile): boolean {
+  const normStr = (val: any) => (val === null || val === undefined ? '' : String(val).trim());
+  const normNum = (val: any) => (val === null || val === undefined || val === '' ? '' : Number(val));
+
+  if (normStr(initial.name) !== normStr(active.name)) return true;
+  if (normNum(initial.age) !== normNum(active.age)) return true;
+  if (normStr(initial.gender) !== normStr(active.gender)) return true;
+  if (normStr(initial.dominant_hand) !== normStr(active.dominant_hand)) return true;
+  if (normStr(initial.general_notes) !== normStr(active.general_notes)) return true;
+  if (normStr(initial.dob) !== normStr(active.dob)) return true;
+  if (normStr(initial.tob) !== normStr(active.tob)) return true;
+  if (normStr(initial.pob) !== normStr(active.pob)) return true;
+
+  // Compare images keys & values
+  const initImages = initial.images || {};
+  const activeImages = active.images || {};
+  const allImageKeys = Array.from(new Set([...Object.keys(initImages), ...Object.keys(activeImages)]));
+  for (const k of allImageKeys) {
+    if (normStr(initImages[k]) !== normStr(activeImages[k])) return true;
+  }
+
+  // Compare mounts_data
+  const initMounts = initial.mounts_data || {};
+  const activeMounts = active.mounts_data || {};
+  const allMountsKeys = Array.from(new Set([...Object.keys(initMounts), ...Object.keys(activeMounts)]));
+  for (const k of allMountsKeys) {
+    if (normStr(initMounts[k]) !== normStr(activeMounts[k])) return true;
+  }
+
+  // Compare lines_data
+  const initLines = initial.lines_data || {};
+  const activeLines = active.lines_data || {};
+  const allLinesKeys = Array.from(new Set([...Object.keys(initLines), ...Object.keys(activeLines)]));
+  for (const k of allLinesKeys) {
+    if (normStr(initLines[k]) !== normStr(activeLines[k])) return true;
+  }
+
+  // Compare tags
+  const initTags = (initial.tags || []).map((t) => normStr(t)).filter(Boolean);
+  const activeTags = (active.tags || []).map((t) => normStr(t)).filter(Boolean);
+  if (initTags.length !== activeTags.length) return true;
+  for (let i = 0; i < initTags.length; i++) {
+    if (initTags[i] !== activeTags[i]) return true;
+  }
+
+  // Compare pins
+  const initPins = initial.pins || [];
+  const activePins = active.pins || [];
+  if (initPins.length !== activePins.length) return true;
+  for (let i = 0; i < initPins.length; i++) {
+    const ip = initPins[i];
+    const ap = activePins[i];
+    if (
+      ip.id !== ap.id ||
+      ip.view !== ap.view ||
+      ip.x !== ap.x ||
+      ip.y !== ap.y ||
+      normStr(ip.label) !== normStr(ap.label) ||
+      normStr(ip.description) !== normStr(ap.description) ||
+      normStr(ip.color) !== normStr(ap.color)
+    ) {
+      return true;
+    }
+  }
+
+  // Compare drawings
+  const initDrawings = initial.drawings || [];
+  const activeDrawings = active.drawings || [];
+  if (initDrawings.length !== activeDrawings.length) return true;
+  for (let i = 0; i < initDrawings.length; i++) {
+    const id = initDrawings[i];
+    const ad = activeDrawings[i];
+    if (
+      id.id !== ad.id ||
+      id.view !== ad.view ||
+      normStr(id.color) !== normStr(ad.color) ||
+      id.thickness !== ad.thickness ||
+      normStr(id.label) !== normStr(ad.label)
+    ) {
+      return true;
+    }
+    const ip = id.points || [];
+    const ap = ad.points || [];
+    if (ip.length !== ap.length) return true;
+    for (let j = 0; j < ip.length; j++) {
+      if (ip[j].x !== ap[j].x || ip[j].y !== ap[j].y) return true;
+    }
+  }
+
+  return false;
 }

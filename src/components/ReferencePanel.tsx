@@ -37,7 +37,7 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
           <BookOpen className="w-5 h-5 text-accent-gold" />
           Sāmudrika Guide
         </h2>
-        <button 
+        <button
           onClick={onClose}
           className="text-stone-400 hover:text-accent-gold transition-colors p-1"
         >
@@ -50,11 +50,10 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-1.5 px-1 text-[10px] font-bold rounded-md uppercase tracking-wider transition-all text-center cursor-pointer ${
-              activeTab === tab 
-                ? 'bg-accent-gold text-white shadow-sm' 
-                : 'text-stone-500 hover:text-stone-850'
-            }`}
+            className={`flex-1 py-1.5 px-1 text-[10px] font-bold rounded-md uppercase tracking-wider transition-all text-center cursor-pointer ${activeTab === tab
+              ? 'bg-accent-gold text-white shadow-sm'
+              : 'text-stone-500 hover:text-stone-850'
+              }`}
           >
             {tab}
           </button>
@@ -65,7 +64,7 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
         {activeTab === 'mounts' && (
           <div className="space-y-4">
             <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Mounts of the Hand</h3>
-            
+
             <div className="space-y-3">
               <div>
                 <strong className="text-stone-900 font-bold">Jupiter (Bṛhaspati)</strong>
@@ -109,7 +108,7 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
         {activeTab === 'lines' && (
           <div className="space-y-4">
             <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Major & Minor Lines</h3>
-            
+
             <div className="space-y-3">
               <div>
                 <strong className="text-stone-900 font-bold">Heart Line (Āyuṣya Rekhā)</strong>
@@ -138,7 +137,7 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
         {activeTab === 'signs' && (
           <div className="space-y-4">
             <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Special Signs (Auspicious / Inauspicious)</h3>
-            
+
             <div className="space-y-3">
               <div>
                 <strong className="text-stone-900 font-bold flex items-center gap-1">
@@ -179,9 +178,9 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
                   onChange={(e) => setSelectedNoteId(e.target.value)}
                   className="w-full p-2 text-xs border border-stone-200 rounded-lg bg-stone-50 text-stone-800 focus:outline-none focus:border-accent-gold font-semibold"
                 >
-                  {notes.map(n => (
+                  {notes.map((n, i) => (
                     <option key={n.id} value={n.id}>
-                      {n.title.replace(/Hasta Sāmudrika Śāstra (Palmistry) –\s*/, '')}
+                      {(i + 1) + " - " + n.title.replace(/Hasta Sāmudrika Śāstra (Palmistry) –\s*/, '')}
                     </option>
                   ))}
                 </select>

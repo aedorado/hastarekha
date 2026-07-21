@@ -1,7 +1,3 @@
----
-tags: [hasta-samudrika, palmistry, fiery-hand, watery-hand, measurement-method, soft-hard-hand, study-notes]
-topic: "Fiery Hand (detailed) + Measurement Method + Soft/Hard Hand + Intro to Watery Hand"
----
 
 # Measurement Method, Soft vs. Hard Hand, Fiery Hand (Full), Watery Hand (Intro)
 

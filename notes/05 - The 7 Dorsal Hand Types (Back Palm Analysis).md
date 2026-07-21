@@ -1,8 +1,3 @@
----
-tags: [hasta-samudrika, palmistry, back-hand, cheiro-system, hand-types, study-notes]
-topic: "Back Hand (Peeth Pam) Classification — Cheiro/Western System"
----
-
 # Back Hand (पृष्ठ हस्त) Classification — Cheiro's/Western System
 
 > [!INFO] Context

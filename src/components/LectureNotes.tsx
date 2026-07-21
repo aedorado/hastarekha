@@ -235,9 +235,6 @@ export default function LectureNotes() {
                       <span className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
                         Lecture Material
                       </span>
-                      <h2 className="mystic-title text-xl md:text-2xl mt-2 leading-snug">
-                        {activeNote.title}
-                      </h2>
                     </div>
                   </div>
 
