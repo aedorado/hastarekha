@@ -5,6 +5,7 @@ import { RotateCw, RotateCcw, Check, X, RefreshCw } from 'lucide-react';
 
 interface ImageCropperModalProps {
   file: File;
+  view?: string;
   onConfirm: (croppedFile: File) => void;
   onCancel: () => void;
 }
@@ -24,7 +25,7 @@ interface DragState {
   startCrop: Crop;
 }
 
-export default function ImageCropperModal({ file, onConfirm, onCancel }: ImageCropperModalProps) {
+export default function ImageCropperModal({ file, view, onConfirm, onCancel }: ImageCropperModalProps) {
   const [imageElement, setImageElement] = useState<HTMLImageElement | null>(null);
   const [rotation, setRotation] = useState<number>(0); // 0, 90, 180, 270
   const [flipH, setFlipH] = useState<boolean>(false);
@@ -334,9 +335,13 @@ export default function ImageCropperModal({ file, onConfirm, onCancel }: ImageCr
         {/* Header */}
         <div className="p-4 md:p-5 border-b border-stone-850 flex items-center justify-between bg-stone-900">
           <div>
-            <h3 className="font-bold text-base md:text-lg text-white">Adjust Hand Photo</h3>
+            <h3 className="font-bold text-base md:text-lg text-white">
+              {view === 'd1_chart' ? 'Adjust D-1 Chart Photo' : 'Adjust Hand Photo'}
+            </h3>
             <p className="text-stone-400 text-[11px] md:text-xs mt-0.5">
-              Orient and crop the photo to center the hand before performing palmistry annotations.
+              {view === 'd1_chart'
+                ? 'Orient and crop the photo to center the astrological chart.'
+                : 'Orient and crop the photo to center the hand before performing palmistry annotations.'}
             </p>
           </div>
           <button

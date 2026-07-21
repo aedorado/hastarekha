@@ -14,8 +14,8 @@ interface HandCanvasProps {
   onChangeDrawings: (drawings: Drawing[]) => void;
   onSelectPin: (pin: Pin | null) => void;
   selectedPinId: string | null;
-  onUploadImageForView: (view: HandView, file: File) => Promise<void>;
-  onRemoveImageForView: (view: HandView) => void;
+  onUploadImageForView: (view: HandView | 'd1_chart', file: File) => Promise<void>;
+  onRemoveImageForView: (view: HandView | 'd1_chart') => void;
   isUploading: boolean;
   profile?: HandProfile;
   onChangeProfile?: (profile: HandProfile) => void;
@@ -29,7 +29,7 @@ const COLORS = [
   { name: 'Green', value: '#16a34a' },
 ];
 
-const VIEWS: HandView[] = ['right_palm', 'right_back', 'left_palm', 'left_back'];
+const VIEWS: HandView[] = ['right_palm', 'right_back', 'left_palm', 'left_back', 'd1_chart'];
 
 export default function HandCanvas({
   images,
@@ -325,8 +325,54 @@ export default function HandCanvas({
       {imageUrl ? (
         <>
           {/* Toolbars */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-50 p-3 rounded-xl border border-stone-200 shadow-sm m-2">
-            <div className="flex items-center gap-2">
+          {activeView === 'd1_chart' ? (
+            <div className="flex items-center justify-end p-2 bg-stone-50 rounded-xl border border-stone-200 shadow-sm m-2">
+              {confirmRemovePhoto ? (
+                <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg p-1 animate-pulse">
+                  <span className="text-[10px] text-rose-700 font-bold px-1">Remove D-1 Chart?</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onRemoveImageForView(activeView);
+                      setConfirmRemovePhoto(false);
+                    }}
+                    className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 text-[10px] font-bold rounded shadow-sm"
+                  >
+                    Yes, Remove
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmRemovePhoto(false);
+                    }}
+                    className="text-stone-500 hover:text-stone-700 px-2 py-1 text-[10px] font-bold rounded"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setConfirmRemovePhoto(true);
+                    setTimeout(() => setConfirmRemovePhoto(false), 5000);
+                  }}
+                  className="btn-outline border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-2 text-xs flex items-center gap-1 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Remove D-1 Chart
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-stone-50 p-3 rounded-xl border border-stone-200 shadow-sm m-2">
+              <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={(e) => {
@@ -544,6 +590,7 @@ export default function HandCanvas({
               )}
             </div>
           </div>
+          )}
 
           {/* Canvas Area */}
           <div
@@ -561,7 +608,7 @@ export default function HandCanvas({
               className="w-full h-full object-contain pointer-events-none max-h-[70vh]"
             />
 
-            {/* SVG Drawing Layer & Interactions */}
+            {activeView !== 'd1_chart' && (
             <svg
               className="canvas-element"
               viewBox="0 0 100 100"
@@ -755,9 +802,10 @@ export default function HandCanvas({
                 </g>
               )}
             </svg>
+            )}
 
             {/* Live Vedic Tattva Ratio HUD Overlay */}
-            {mode === 'measure' && measurements && vedicData && (
+            {activeView !== 'd1_chart' && mode === 'measure' && measurements && vedicData && (
               <div className="absolute top-4 left-4 bg-stone-900/95 backdrop-blur border border-stone-800 text-white rounded-xl p-3.5 shadow-2xl z-30 text-xs space-y-2 font-sans w-52 pointer-events-none select-none">
                 <div className="flex items-center gap-1.5 text-accent-gold font-bold">
                   <Sparkles className="w-4 h-4 text-accent-gold" />
@@ -806,7 +854,7 @@ export default function HandCanvas({
             )}
 
             {/* Measurement Handles (HTML Overlay to prevent aspect ratio stretching) */}
-            {mode === 'measure' && measurements && (
+            {activeView !== 'd1_chart' && mode === 'measure' && measurements && (
               <>
                 {/* Palm Start (Wrist Crease) */}
                 <div
@@ -916,7 +964,7 @@ export default function HandCanvas({
             )}
 
             {/* Marker Pins Overlay */}
-            {visiblePins.map((pin) => (
+            {activeView !== 'd1_chart' && visiblePins.map((pin) => (
               <div
                 key={pin.id}
                 className="absolute annotation-pin-trigger group z-20"
@@ -965,16 +1013,18 @@ export default function HandCanvas({
           </div>
 
           <div className="text-center text-xs text-stone-500 font-medium p-2">
-            {mode === 'pin'
-              ? `Pin Mode: Click on the ${HAND_VIEW_LAB_ATTR(activeView)} to drop an analytical marker.`
-              : mode === 'draw'
-                ? `Trace Mode: Click and drag to draw lines along lines and mounts.`
-                : `Measure Mode: Drag the Blue line (Palm Height) and Green line (Finger Length) endpoints to align them on the hand photo.`}
+            {activeView === 'd1_chart'
+              ? '☸️ Viewing D-1 Rasi Chart. Drawing and marking tools are disabled.'
+              : mode === 'pin'
+                ? `Pin Mode: Click on the ${HAND_VIEW_LAB_ATTR(activeView)} to drop an analytical marker.`
+                : mode === 'draw'
+                  ? `Trace Mode: Click and drag to draw lines along lines and mounts.`
+                  : `Measure Mode: Drag the Blue line (Palm Height) and Green line (Finger Length) endpoints to align them on the hand photo.`}
           </div>
         </>
       ) : (
         /* Upload Photo Placeholder */
-        <div className="flex-1 min-h-[400px] border-2 border-dashed border-stone-250 bg-stone-50/50 rounded-xl flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="flex-1 min-h-[400px] border-2 border-dashed border-stone-250 bg-stone-50/50 rounded-xl flex flex-col items-center justify-center p-6 text-center gap-4 m-1">
           {isUploading ? (
             <div className="space-y-3">
               <div className="w-10 h-10 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mx-auto" />
@@ -1010,5 +1060,6 @@ export default function HandCanvas({
 
 // Quick helper
 function HAND_VIEW_LAB_ATTR(view: HandView): string {
+  if (view === 'd1_chart') return 'D-1 Rasi Chart';
   return view.includes('palm') ? 'palm' : 'back of hand';
 }

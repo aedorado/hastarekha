@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData, calculateAge } from '@/lib/supabase';
-import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText } from 'lucide-react';
+import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye } from 'lucide-react';
 
 interface AnalysisFormProps {
   profile: HandProfile;
@@ -12,8 +12,10 @@ interface AnalysisFormProps {
   onDeletePin: (pinId: string) => void;
   onSave: () => void;
   isSaving: boolean;
-  onUploadImageForView: (view: HandView, file: File) => Promise<void>;
+  onUploadImageForView: (view: HandView | 'd1_chart', file: File) => Promise<void>;
   isUploading: boolean;
+  hasChanges: boolean;
+  onChangeActiveView?: (view: HandView) => void;
 }
 
 const HAND_TYPES = [
@@ -96,6 +98,8 @@ export default function AnalysisForm({
   isSaving,
   onUploadImageForView,
   isUploading,
+  hasChanges,
+  onChangeActiveView,
 }: AnalysisFormProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'samudrika' | 'mounts' | 'lines' | 'pins' | 'tags'>('profile');
   const [newTag, setNewTag] = useState('');
@@ -251,8 +255,8 @@ export default function AnalysisForm({
         <h3 className="mystic-title text-sm tracking-wider uppercase font-bold">Analysis Details</h3>
         <button
           onClick={onSave}
-          disabled={isSaving || !profile.name}
-          className="btn-gold px-5 py-2.5 text-sm flex items-center gap-2 shadow-md"
+          disabled={isSaving || !hasChanges || !profile.name}
+          className="btn-gold px-5 py-2.5 text-sm flex items-center gap-2 shadow-md disabled:opacity-55 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           {isSaving ? 'Saving...' : 'Save Profile'}
@@ -284,7 +288,7 @@ export default function AnalysisForm({
         {activeTab === 'profile' && (
           <div className="space-y-4">
             <div className="form-group">
-              <label className="form-label">Subject Identifier / Name</label>
+              <label className="form-label">Subject Identifier / Name <span className="text-rose-500">*</span></label>
               <input
                 type="text"
                 className="form-input"
@@ -357,6 +361,8 @@ export default function AnalysisForm({
               </div>
             </div>
 
+
+
             {profile.age !== '' && Number(profile.age) < 12 && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2 shadow-sm">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
@@ -366,86 +372,7 @@ export default function AnalysisForm({
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="form-group">
-                <label className="form-label">Dominant Hand (Active)</label>
-                <select
-                  className="form-input bg-white border border-stone-200"
-                  value={profile.dominant_hand}
-                  onChange={(e) => updateProfileField('dominant_hand', e.target.value)}
-                >
-                  <option value="Right">Right Handed</option>
-                  <option value="Left">Left Handed</option>
-                </select>
-              </div>
 
-              <div className="form-group">
-                <label className="form-label">Classical Hand Type</label>
-                <select
-                  className="form-input bg-white border border-stone-200"
-                  value={vedicData.hand_type || ''}
-                  onChange={(e) => {
-                    updateVedicField('hand_type', e.target.value);
-                  }}
-                >
-                  <option value="">Select Classic Type...</option>
-                  {HAND_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Elemental Hand (Tattva)</label>
-                <select
-                  className="form-input bg-white border border-stone-200"
-                  value={vedicData.hand_tattva || ''}
-                  onChange={(e) => {
-                    updateVedicField('hand_tattva', e.target.value);
-                  }}
-                >
-                  <option value="">Select Tattva...</option>
-                  <option value="Agni Tattva (Fiery Hand)">Agni Tattva (Fiery Hand)</option>
-                  <option value="Jala Tattva (Watery Hand)">Jala Tattva (Watery Hand)</option>
-                  <option value="Pṛthvī Tattva (Earthy Hand)">Pṛthvī Tattva (Earthy Hand)</option>
-                  <option value="Vāyu Tattva (Airy Hand)">Vāyu Tattva (Airy Hand)</option>
-                  <option value="Mixed Hand (Agni-Jala Blend)">Mixed Hand (Agni-Jala Blend)</option>
-                  <option value="Mixed Hand (Air-Earth Blend)">Mixed Hand (Air-Earth Blend)</option>
-                  <option value="Mixed Hand">Mixed Hand</option>
-                </select>
-              </div>
-            </div>
-
-            {vedicData.hand_type && HAND_TYPE_DETAILS[vedicData.hand_type] && (
-              <div className="p-4 rounded-xl border border-stone-200/80 bg-stone-50/50 shadow-sm text-xs space-y-2.5 transition-all duration-300">
-                <div className="flex items-center gap-2 border-b border-stone-200/40 pb-2">
-                  <Sparkles className="w-4 h-4 text-accent-gold" />
-                  <span className="font-bold text-stone-900 text-xs tracking-wide">
-                    {HAND_TYPE_DETAILS[vedicData.hand_type].title} Details
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
-                  <div>
-                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Identification:</span>
-                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].identification}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Mentality:</span>
-                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].mentality}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Prosperity & Struggle:</span>
-                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].struggleOrStrength}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Nail/Skin Modifiers:</span>
-                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].modifiers}</p>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Hand Pictures Catalog Grid */}
             <div className="sidebar-section">
@@ -597,6 +524,94 @@ export default function AnalysisForm({
               Analyze the structural elements of the hand: shape, measurements, texture, and finger ratios before examining lines and mounts.
             </div>
 
+            {/* Core Hand Classification */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Activity className="w-4 h-4 text-amber-500" />
+                Core Hand Classification
+              </h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="form-group">
+                  <label className="form-label text-xs">Dominant Hand (Active)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs text-stone-850"
+                    value={profile.dominant_hand}
+                    onChange={(e) => updateProfileField('dominant_hand', e.target.value)}
+                  >
+                    <option value="Right">Right Handed</option>
+                    <option value="Left">Left Handed</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Classical Hand Type</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs text-stone-850"
+                    value={vedicData.hand_type || ''}
+                    onChange={(e) => {
+                      updateVedicField('hand_type', e.target.value);
+                    }}
+                  >
+                    <option value="">Select Classic Type...</option>
+                    {HAND_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Elemental Hand (Tattva)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs text-stone-850"
+                    value={vedicData.hand_tattva || ''}
+                    onChange={(e) => {
+                      updateVedicField('hand_tattva', e.target.value);
+                    }}
+                  >
+                    <option value="">Select Tattva...</option>
+                    <option value="Agni Tattva (Fiery Hand)">Agni Tattva (Fiery Hand)</option>
+                    <option value="Jala Tattva (Watery Hand)">Jala Tattva (Watery Hand)</option>
+                    <option value="Pṛthvī Tattva (Earthy Hand)">Pṛthvī Tattva (Earthy Hand)</option>
+                    <option value="Vāyu Tattva (Airy Hand)">Vāyu Tattva (Airy Hand)</option>
+                    <option value="Mixed Hand (Agni-Jala Blend)">Mixed Hand (Agni-Jala Blend)</option>
+                    <option value="Mixed Hand (Air-Earth Blend)">Mixed Hand (Air-Earth Blend)</option>
+                    <option value="Mixed Hand">Mixed Hand</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {vedicData.hand_type && HAND_TYPE_DETAILS[vedicData.hand_type] && (
+              <div className="p-4 rounded-xl border border-stone-200/80 bg-stone-50/50 shadow-sm text-xs space-y-2.5 transition-all duration-300">
+                <div className="flex items-center gap-2 border-b border-stone-200/40 pb-2">
+                  <Sparkles className="w-4 h-4 text-accent-gold" />
+                  <span className="font-bold text-stone-900 text-xs tracking-wide">
+                    {HAND_TYPE_DETAILS[vedicData.hand_type].title} Details
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 leading-relaxed">
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Identification:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].identification}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Core Mentality:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].mentality}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Prosperity & Struggle:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].struggleOrStrength}</p>
+                  </div>
+                  <div>
+                    <span className="font-bold uppercase tracking-wider block text-[8px] text-stone-400">Nail/Skin Modifiers:</span>
+                    <p className="text-stone-600 font-medium mt-0.5 text-[11px]">{HAND_TYPE_DETAILS[vedicData.hand_type].modifiers}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Hand Tattva Calculator */}
             <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
               <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
@@ -732,11 +747,11 @@ export default function AnalysisForm({
               </div>
             </div>
 
-            {/* Soil Texture & Willpower Index */}
+            {/* Soil Texture & Stiffness */}
             <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
               <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
                 <Smile className="w-4 h-4 text-orange-500" />
-                Soil Texture & Willpower Index
+                Soil Texture & Stiffness
               </h4>
               <p className="text-[10px] text-stone-500 leading-normal">
                 The stiffness of the hand acts as the soil (ground). A stiff hand (hard ground) blocks successful yogas from bearing fruit easily, requiring extreme labor. Soft hands represent fertile ease.
@@ -757,36 +772,200 @@ export default function AnalysisForm({
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label text-xs">Thumb Base Willpower</label>
-                <select
-                  className="form-input bg-white border border-stone-200 text-xs"
-                  value={vedicData.thumb_willpower}
-                  onChange={(e) => updateVedicField('thumb_willpower', e.target.value)}
-                >
-                  <option value="Average">Average Willpower</option>
-                  <option value="Strong">Strong / Swollen Base</option>
-                  <option value="Weak">Weak / Flat Base</option>
-                </select>
-              </div>
-
               {/* Dynamic soil calculation */}
               <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl text-xs space-y-1.5">
                 <span className="font-bold text-amber-800 flex items-center gap-1">
                   <Info className="w-3.5 h-3.5 text-accent-gold" />
-                  Soil & Willpower Signification
+                  Soil Signification
                 </span>
                 <p className="text-[11px] text-stone-700 leading-relaxed font-semibold">
                   {vedicData.texture < 45
                     ? '⚠️ Stiff Hand (Hard Ground): Success combinations (Rajyoga seeds) are blocked. The subject has to struggle and put in double the labor to get results.'
-                    : vedicData.thumb_willpower === 'Strong' && vedicData.texture > 60
-                      ? '✨ Fertile Ground + Strong Willpower: Highly determination-driven creative nature. Active willpower overrides general lazy soft-hand traits.'
-                      : vedicData.thumb_willpower === 'Weak' && vedicData.texture > 60
-                        ? '⚠️ Fertile Ground + Weak Willpower: High creative desire but prone to severe laziness, convenience-seeking, and suppression of anger.'
-                        : '✨ Normal Soil: Average balance of practical action and mental flexibility.'
+                    : vedicData.texture > 60
+                      ? '✨ Fertile Ground: High creative desire and potential ease of progress. Active willpower is needed to override general lazy soft-hand traits.'
+                      : '✨ Normal Soil: Average balance of practical action and mental flexibility.'
                   }
                 </p>
               </div>
+            </div>
+
+            {/* Thumb (Angūṭhā) Analysis Profile */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Thumb (Angūṭhā) Analysis Profile
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">
+                Read the thumb length, natural angle of opening, and parva (phalange) details to gauge willpower, independence, and receptivity to advice.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label className="form-label text-xs">Thumb Base Willpower</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_willpower}
+                    onChange={(e) => updateVedicField('thumb_willpower', e.target.value)}
+                  >
+                    <option value="Average">Average Willpower</option>
+                    <option value="Strong">Strong / Swollen Base</option>
+                    <option value="Weak">Weak / Flat Base</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Thumb Length (Index Base Ref)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_length || ''}
+                    onChange={(e) => updateVedicField('thumb_length', e.target.value)}
+                  >
+                    <option value="">Select Length...</option>
+                    <option value="Short">Short (reaches below index base midpoint)</option>
+                    <option value="Average">Average / Mediocre (reaches index base midpoint)</option>
+                    <option value="Long">Long (reaches above index base midpoint)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Thumb natural Angle</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_angle || ''}
+                    onChange={(e) => updateVedicField('thumb_angle', e.target.value)}
+                  >
+                    <option value="">Select Angle...</option>
+                    <option value="Below 30°">Below 30° (Completely Dependent)</option>
+                    <option value="30°-45°">30°-45° (Mostly Dependent/Private)</option>
+                    <option value="45°-70°">45°-70° (Imaginative/Daydreamer)</option>
+                    <option value="70°-90°">70°-90° (Independent but Receptive)</option>
+                    <option value="Exactly 90°">Exactly 90° (Pillar/Foundation)</option>
+                    <option value="Above 90°">Above 90° (Struggle-Built/Logical)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">First Phalange (Parva) Length</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_first_phalange_length || ''}
+                    onChange={(e) => updateVedicField('thumb_first_phalange_length', e.target.value)}
+                  >
+                    <option value="">Select Phalange Length...</option>
+                    <option value="Short">Short (Lower immunity, dependent)</option>
+                    <option value="Average">Average / Middle (Self-Made, credit sharing)</option>
+                    <option value="Long">Long (Dominant, high ego, confident)</option>
+                  </select>
+                </div>
+
+                <div className="form-group md:col-span-2">
+                  <label className="form-label text-xs">First Phalange Condition</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_first_phalange_condition || ''}
+                    onChange={(e) => updateVedicField('thumb_first_phalange_condition', e.target.value)}
+                  >
+                    <option value="">Select Surface Condition...</option>
+                    <option value="Smooth">Smooth (Listens politely, does what they planned)</option>
+                    <option value="Sunken/Flattened">Sunken / Flattened (Seeks & follows advice)</option>
+                    <option value="Cut marks/lines">Cut marks / Creases (Seeks & follows advice)</option>
+                    <option value="Bulged">Bulged / Puffy tip (Firm/stubborn, short temper)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="border-t border-stone-100 pt-3 space-y-2">
+                <span className="font-bold text-xs text-stone-700 block">Special Indicators</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-stone-700">
+                    <input
+                      type="checkbox"
+                      className="rounded text-accent-gold focus:ring-accent-gold"
+                      checked={vedicData.has_clubbed_thumb || false}
+                      onChange={(e) => updateVedicField('has_clubbed_thumb', e.target.checked)}
+                    />
+                    Clubbed Thumb ("Murderer's Thumb" - Bulged tip / Pent-up energy)
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-stone-700">
+                    <input
+                      type="checkbox"
+                      className="rounded text-accent-gold focus:ring-accent-gold"
+                      checked={vedicData.has_six_fingers || false}
+                      onChange={(e) => updateVedicField('has_six_fingers', e.target.checked)}
+                    />
+                    Six Digits (Polydactyly - Excess digit / Struggle-filled life)
+                  </label>
+                </div>
+              </div>
+
+              {/* Dynamic Thumb Interpretation */}
+              {(vedicData.thumb_length || vedicData.thumb_angle || vedicData.thumb_first_phalange_length || vedicData.thumb_first_phalange_condition || vedicData.has_clubbed_thumb || vedicData.has_six_fingers) && (
+                <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl text-xs space-y-2">
+                  <span className="font-bold text-amber-800 flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-accent-gold" />
+                    Thumb Sāmudrika Significations
+                  </span>
+                  
+                  <div className="space-y-1.5 text-[11px] text-stone-700 leading-relaxed font-semibold">
+                    {/* Willpower & Core Personality Readings based on Angle */}
+                    {vedicData.thumb_angle === 'Exactly 90°' && (
+                      <p>✨ <strong className="text-amber-900">Foundation-Type Personality:</strong> Practical, stable, and highly dependable. Acts as the pillar (nīv) of the family or workplace—the person without whom things do not run smoothly. Intense self-respect and willpower.</p>
+                    )}
+                    {vedicData.thumb_angle === 'Above 90°' && (
+                      <p>✨ <strong className="text-amber-900">Struggle-built Independence:</strong> Likely had a struggle-filled childhood, but carries immense inner strength and independent thinking to turn circumstances in their favor. Deep logic and questioning mindset. Success often comes post-age 40.</p>
+                    )}
+                    {vedicData.thumb_angle === '45°-70°' && (
+                      <p>⚠️ <strong className="text-amber-900">Imaginative / Daydreamer:</strong> Prone to elaborate daydreaming ("Khyālī Pulāv").
+                        {vedicData.hand_tattva && vedicData.hand_tattva.includes('Jala') && ' (Especially pronounced on Watery Hands: maximum fantasy/daydreaming).'}
+                        {vedicData.hand_tattva && vedicData.hand_tattva.includes('Agni') && ' (On Fiery Hands, they quickly discard the idea if it isn\'t actionable).'}
+                        {vedicData.hand_tattva && (vedicData.hand_tattva.includes('Pṛthvī') || vedicData.hand_tattva.includes('Vāyu')) && ' (On Earthy/Airy hands, they work it out practically/analytically without getting lost in fantasy).'}
+                        {" Risk of frustration when dreams and resolutions fail to manifest. Practical action steps or team support is required."}
+                      </p>
+                    )}
+                    {vedicData.thumb_angle === 'Below 30°' && (
+                      <p>⚠️ <strong className="text-amber-900">High Dependency:</strong> Completely dependent on others' validation and direction. Cannot make independent decisions easily.</p>
+                    )}
+                    {vedicData.thumb_angle === '30°-45°' && (
+                      <p>⚠️ <strong className="text-amber-900">Advice-reliant:</strong> Will express slight opinions in private but ultimately won't act without others' guidance and validation.</p>
+                    )}
+                    {vedicData.thumb_angle === '70°-90°' && (
+                      <p>✨ <strong className="text-amber-900">Balanced Independence:</strong> Independent thinking is present, but values and incorporates others' input before executing plans.</p>
+                    )}
+
+                    {/* First Phalange Length */}
+                    {vedicData.thumb_first_phalange_length === 'Long' && (
+                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Noticeably long willpower segment. Represents strong confidence, free independent thinking, but also high dominance and potential ego (taking full personal credit).</p>
+                    )}
+                    {vedicData.thumb_first_phalange_length === 'Average' && (
+                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Balanced middle-length. Indicates a self-made/self-built personality who progressed through personal effort, open to credit sharing ("I can do that too").</p>
+                    )}
+                    {vedicData.thumb_first_phalange_length === 'Short' && (
+                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Short segment. Indicates lower immunity power and dependency on others for willpower.</p>
+                    )}
+
+                    {/* Receptivity to advice */}
+                    {vedicData.thumb_first_phalange_condition && (
+                      <p>💡 <strong className="text-amber-900">Advice Receptivity:</strong> 
+                        {vedicData.thumb_first_phalange_condition === 'Smooth' && ' Listens politely but ultimately does exactly what they had already decided independently.'}
+                        {(vedicData.thumb_first_phalange_condition === 'Sunken/Flattened' || vedicData.thumb_first_phalange_condition === 'Cut marks/lines') && ' The sunken surface or lines/marks make them highly receptive to others\' advice, actively seeking validation.'}
+                        {vedicData.thumb_first_phalange_condition === 'Bulged' && ' Bulged/puffy tip increases firmness, stubbornness, and short-tempered practicality.'}
+                      </p>
+                    )}
+
+                    {/* Special warnings */}
+                    {vedicData.has_clubbed_thumb && (
+                      <p className="text-red-700 bg-red-500/5 border border-red-500/10 p-2 rounded-lg mt-1 font-semibold">
+                        ⚠️ <strong className="font-bold text-red-900">Clubbed Thumb ("Murderer's Thumb"):</strong> Swollen thumb-tip indicates blocked/stagnant energy ("Pent-Up Energy") pooling at the tip instead of circulating. High warning indicator of sudden, explosive anger.
+                      </p>
+                    )}
+                    {vedicData.has_six_fingers && (
+                      <p className="text-red-700 bg-red-500/5 border border-red-500/10 p-2 rounded-lg mt-1 font-semibold">
+                        ⚠️ <strong className="font-bold text-red-900">Structural Excess (Six Digits):</strong> Traditional Sāmudrika rules state that excess digits represent structural imbalance. Frequently associated with a life of recurring obstacles and intense personal struggle.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Ego & Communication Profile */}

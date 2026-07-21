@@ -21,7 +21,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
-  const [pendingUpload, setPendingUpload] = useState<{ view: HandView; file: File } | null>(null);
+  const [pendingUpload, setPendingUpload] = useState<{ view: HandView | 'd1_chart'; file: File } | null>(null);
 
   // Check Supabase connection on mount
   useEffect(() => {
@@ -100,12 +100,12 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   };
 
   // Intercept raw image upload to trigger the crop/rotate modal
-  const handleUploadImageForView = async (view: HandView, file: File) => {
+  const handleUploadImageForView = async (view: HandView | 'd1_chart', file: File) => {
     setPendingUpload({ view, file });
   };
 
   // Process the file after user crops/rotates it in the modal
-  const handleUploadImageAfterCrop = async (view: HandView, croppedFile: File) => {
+  const handleUploadImageAfterCrop = async (view: HandView | 'd1_chart', croppedFile: File) => {
     setPendingUpload(null);
     setIsUploading(true);
     try {
@@ -146,7 +146,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   };
 
   // Handle image removal specifically for a selected view (Right Palm, Left Back, etc.)
-  const handleRemoveImageForView = (view: HandView) => {
+  const handleRemoveImageForView = (view: HandView | 'd1_chart') => {
     const newImages = { ...activeProfile.images };
     delete newImages[view];
     setActiveProfile({
@@ -158,7 +158,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   // Save changes (Save to SQLite/Postgres or LocalStorage)
   const handleSave = async () => {
     if (!activeProfile.name) {
-      alert('Please enter a profile name.');
+      alert('Please fill out the Subject Identifier / Name.');
       return;
     }
 
@@ -274,6 +274,8 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
               isSaving={isSaving}
               onUploadImageForView={handleUploadImageForView}
               isUploading={isUploading}
+              hasChanges={isProfileChanged(initialProfile, activeProfile)}
+              onChangeActiveView={setActiveView}
             />
           </div>
         </div>
@@ -281,6 +283,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
       {pendingUpload && (
         <ImageCropperModal
           file={pendingUpload.file}
+          view={pendingUpload.view}
           onConfirm={(croppedFile) => handleUploadImageAfterCrop(pendingUpload.view, croppedFile)}
           onCancel={() => setPendingUpload(null)}
         />

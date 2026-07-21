@@ -8,13 +8,14 @@ export const isSupabaseConfigured = !!(
 export const supabase = isSupabaseConfigured ? createBrowserClient() : null;
 
 
-export type HandView = 'right_palm' | 'right_back' | 'left_palm' | 'left_back';
+export type HandView = 'right_palm' | 'right_back' | 'left_palm' | 'left_back' | 'd1_chart';
 
 export const HAND_VIEW_LABELS: Record<HandView, string> = {
   right_palm: 'Right Palm (Front)',
   right_back: 'Right Hand (Back)',
   left_palm: 'Left Palm (Front)',
   left_back: 'Left Hand (Back)',
+  d1_chart: 'D-1 Rasi Chart',
 };
 
 export interface Pin {
@@ -43,6 +44,12 @@ export interface VedicData {
   palm_shape: 'Square' | 'Rectangular' | '';
   texture: number; // 0-100 (stiff to soft)
   thumb_willpower: 'Strong' | 'Weak' | 'Average';
+  thumb_length: 'Short' | 'Average' | 'Long' | '';
+  thumb_angle: 'Below 30°' | '30°-45°' | '45°-70°' | '70°-90°' | 'Exactly 90°' | 'Above 90°' | '';
+  thumb_first_phalange_length: 'Short' | 'Average' | 'Long' | '';
+  thumb_first_phalange_condition: 'Smooth' | 'Sunken/Flattened' | 'Cut marks/lines' | 'Bulged' | '';
+  has_clubbed_thumb: boolean;
+  has_six_fingers: boolean;
   jupiter_sun_relation: 'Jupiter Longer' | 'Sun Longer' | 'Equal' | '';
   mercury_length: 'Short' | 'Average' | 'Long' | '';
   manibandha_lines: number | '';
@@ -70,6 +77,12 @@ export const parseVedicData = (notesField: string): VedicData => {
     palm_shape: '',
     texture: 50,
     thumb_willpower: 'Average',
+    thumb_length: '',
+    thumb_angle: '',
+    thumb_first_phalange_length: '',
+    thumb_first_phalange_condition: '',
+    has_clubbed_thumb: false,
+    has_six_fingers: false,
     jupiter_sun_relation: '',
     mercury_length: '',
     manibandha_lines: '',
