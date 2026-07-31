@@ -270,31 +270,19 @@ A person with a normal Mercury finger may have:
 
 ---
 
-## Questions & Answers
+## 4️⃣ Audience Q&A
 
-### Question
-In one student's (Anuradha ji's) hand, is the gap appearing near Saturn or near Jupiter?
+> [!FAQ]- Q1: "In one student's (Anuradha ji's) hand, is the gap appearing near Saturn or near Jupiter?"
+> **A:** **Saturn** — the gap is caused by one side of the Saturn finger's base area being sunken. This can result in poor outcomes despite hard work, and if the Saturn phalanx or finger itself shows further trouble, it can also point to health problems.
 
-### Answer
-**Saturn** — the gap is caused by one side of the Saturn finger's base area being sunken. This can result in poor outcomes despite hard work, and if the Saturn phalanx or finger itself shows further trouble, it can also point to health problems.
+> [!FAQ]- Q2: "Can wearing a ring cause the Mercury finger to appear detached from the Sun finger?"
+> **A:** Yes — wearing a ring can make the finger appear **slightly detached**; it's important to remove the ring to check whether the detachment is genuine.
 
-### Question
-Can wearing a ring cause the Mercury finger to appear detached from the Sun finger?
+> [!FAQ]- Q3: "What does a gap in the Mercury finger area signify — only generosity, or something more?"
+> **A:** A gap indicates **generosity** as well as **spending** — the two are read together.
 
-### Answer
-Yes — wearing a ring can make the finger appear **slightly detached**; it's important to remove the ring to check whether the detachment is genuine.
-
-### Question
-What does a gap in the Mercury finger area signify — only generosity, or something more?
-
-### Answer
-A gap indicates **generosity** as well as **spending** — the two are read together.
-
-### Question
-In the fiery-hand example (Abhijit ji), where both the Jupiter and Sun fingers tilt toward Saturn, what does the combination mean overall?
-
-### Answer
-This combination (a longer, risk-taking Sun finger + a fiery hand + a detached Mercury finger) suggests the person will **do what feels right to them**, working outside conventional social patterns, but will **not break the actual rules of society** — because they do not want to be criticized or judged by others.
+> [!FAQ]- Q4: "In the fiery-hand example (Abhijit ji), where both the Jupiter and Sun fingers tilt toward Saturn, what does the combination mean overall?"
+> **A:** This combination (a longer, risk-taking Sun finger + a fiery hand + a detached Mercury finger) suggests the person will **do what feels right to them**, working outside conventional social patterns, but will **not break the actual rules of society** — because they do not want to be criticized or judged by others.
 
 ---
 
