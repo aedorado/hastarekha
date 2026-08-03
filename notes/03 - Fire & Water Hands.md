@@ -1,4 +1,4 @@
-# Lecture 3: Fiery Hand & Watery Hand — Detailed Qualities and Case Studies
+# Fiery Hand & Watery Hand — Detailed Qualities and Case Studies
 
 > [!INFO] Lecture Scope
 > This class refines the **measurement thresholds** for classifying a hand as Fiery, Watery, or Mixed, then covers the detailed personality qualities of the **Fiery hand** and the **Watery hand** in depth, with several live hand demonstrations.

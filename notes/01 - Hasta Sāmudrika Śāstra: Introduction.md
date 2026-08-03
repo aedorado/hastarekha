@@ -1,4 +1,4 @@
-# Lecture #1 — Introduction to Hasta Sāmudrika Śāstra (Palmistry)
+# Introduction to Hasta Sāmudrika Śāstra (Palmistry)
 
 > [!INFO] Topic of This Lecture
 > This is the introductory lecture of the palmistry (hastarekhā) course. It covers what palmistry is and isn't, its place within the broader **sāmudrika śāstra (science of physical signs/features)**, classical textual references, the origin story of palmistry, how to build a picture-taking practice for study, and the foundational theory of the **active hand vs. destiny hand**. The lecture ends with student questions.

@@ -1,4 +1,4 @@
-# Lecture 2: Foundations — Naming, Mounts, Major Lines, Measuring & Hand Types
+# Foundations — Naming, Mounts, Major Lines, Measuring & Hand Types
 
 > [!INFO] Lecture Scope
 > This class covers introductory concepts before line-reading begins: who we do/don't read, the naming of every part of the hand, the mounts (पर्वत), the major lines (introduced only by name and origin, not full interpretation), and how to measure the palm to classify it into one of **four front-palm hand types**.
