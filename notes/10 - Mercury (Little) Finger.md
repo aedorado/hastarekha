@@ -1,4 +1,4 @@
-# Lecture #10 — Budh Rekhā/Aṅguli (Mercury Finger) and Finger Analysis
+# Budh Rekhā/Aṅguli (Mercury Finger) and Finger Analysis
 
 > [!INFO] Topic of This Lecture
 > This lecture focuses on the **budh aṅguli (Mercury finger)** — the smallest finger in the hand. It covers what the Mercury finger signifies, its three categories (normal / long / short), crooked (bent) fingers, gaps between fingers, the tilt of the Mercury finger toward or away from the Sun (ring) finger, and general principles about finger thickness/length. The lecture closes with live hand-reading demonstrations on students' own hands.

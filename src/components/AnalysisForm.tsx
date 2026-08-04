@@ -874,6 +874,86 @@ export default function AnalysisForm({
                 </div>
               </div>
 
+              {/* Thumb Type, 2nd Phalange, Tip Element — Lecture 07 */}
+              <div className="grid grid-cols-3 gap-3 border-t border-stone-100 pt-4">
+                <div className="form-group">
+                  <label className="form-label text-xs">Thumb Type / Shape</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_type || ''}
+                    onChange={(e) => updateVedicField('thumb_type', e.target.value)}
+                  >
+                    <option value="">Select Thumb Type...</option>
+                    <option value="Waist-like">Waist-like (Best — social, diplomatic)</option>
+                    <option value="Middle Type">Middle Type (2nd best — practical, polite)</option>
+                    <option value="Slight Bend">Slight Backward Bend (Conditional/dominating)</option>
+                    <option value="Stiff">Stiff / Straight (Stubborn, plain-spoken)</option>
+                    <option value="Very Flexible">Very Flexible / Bends Back (Follower/spendthrift)</option>
+                    <option value="Elementary">Elementary (Procrastinating, aimless)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">2nd Phalange (Logic Parva)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_second_phalange || ''}
+                    onChange={(e) => updateVedicField('thumb_second_phalange', e.target.value)}
+                  >
+                    <option value="">Select Logic Condition...</option>
+                    <option value="Normal">Normal (Balanced logic &amp; action)</option>
+                    <option value="Long (over-thinker)">Long (Excessive analysis, paralysis)</option>
+                    <option value="Short (impulsive)">Short (Acts without thinking)</option>
+                    <option value="Half-cut line">Half-cut line (Logic not sustained long)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label text-xs">Tip Element Shape</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.thumb_tip_element || ''}
+                    onChange={(e) => updateVedicField('thumb_tip_element', e.target.value)}
+                  >
+                    <option value="">Select Tip Element...</option>
+                    <option value="Square (Earth)">Square — Earth (Practical, stubborn)</option>
+                    <option value="Round (Air)">Round — Air (Investigative, Ketu-driven)</option>
+                    <option value="Conical (Water)">Conical — Water (Emotional, artistic)</option>
+                    <option value="Spatulate (Fire)">Spatulate — Fire (Energetic, action-first)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Thumb Type + 2nd Phalange + Tip Element Interpretations */}
+              {(vedicData.thumb_type || vedicData.thumb_second_phalange || vedicData.thumb_tip_element) && (
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs space-y-2 leading-relaxed">
+                  <span className="font-bold text-stone-800 uppercase tracking-wider block text-[9px]">Thumb Reading:</span>
+                  <div className="space-y-1.5 text-[11px] text-stone-700 font-semibold">
+
+                    {/* Thumb Type */}
+                    {vedicData.thumb_type === 'Waist-like' && <p>✨ <strong>Waist-like (Best Type):</strong> Very social, brings everyone along, maintains self-respect while respecting others. Diplomatic — responds appropriately to others' emotional states without envy or complaint. Good sense of humor.</p>}
+                    {vedicData.thumb_type === 'Middle Type' && <p>✨ <strong>Middle Type (2nd Best):</strong> Practical and polite. Very good at adjusting and compromising. If combined with tool-use bone trait → resourceful/jugadu — good results even with limited resources.</p>}
+                    {vedicData.thumb_type === 'Slight Bend' && <p>⚡ <strong>Slight Backward Bend:</strong> Mildly dominating — adjusts, but with certain conditions ("you do this for me, and I'll do that for you"). Comfort-seeking; life is relatively easy. Enforcement of conditions depends on willpower strength.</p>}
+                    {vedicData.thumb_type === 'Stiff' && <p>⚠️ <strong>Stiff / Straight:</strong> Stubborn, rigid, set in their ways. Anger expressed indirectly (slamming doors, venting to others). Plain-spoken — states things exactly as they are. Life involves more hard work/struggle.</p>}
+                    {vedicData.thumb_type === 'Very Flexible' && <p>⚠️ <strong>Very Flexible (Bends Back):</strong> If willpower (1st phalange) is small → pure follower. If willpower is good → adjusts but still presents own view. Tends toward wasteful spending and overthinking. Avoids physical labor.</p>}
+                    {vedicData.thumb_type === 'Elementary' && <p>⚠️ <strong>Elementary Thumb:</strong> Habit of postponing tasks. Can be aimless, lacking clear life goals. If also stiff → stubborn and aimless together — refuses advice, does only what they've decided.</p>}
+
+                    {/* 2nd Phalange (Logic) */}
+                    {vedicData.thumb_second_phalange === 'Normal' && <p>🧠 <strong>2nd Phalange — Normal:</strong> Balanced logic and action. Thinks adequately before doing; neither over-analyses nor acts blindly.</p>}
+                    {vedicData.thumb_second_phalange === 'Long (over-thinker)' && <p>⚠️ <strong>2nd Phalange — Long:</strong> Over-thinker / analysis paralysis. Spends excessive time reasoning and second-guessing before any decision. Can delay action indefinitely.</p>}
+                    {vedicData.thumb_second_phalange === 'Short (impulsive)' && <p>⚠️ <strong>2nd Phalange — Short:</strong> Impulsive. Acts without thinking through consequences. Strong willpower but weak logic filter — says or does things they later regret.</p>}
+                    {vedicData.thumb_second_phalange === 'Half-cut line' && <p>⚡ <strong>2nd Phalange — Half-cut line:</strong> Logic is present but not sustained. Reasoning starts strong, then cuts off — decisions are partially thought through but abandoned mid-way.</p>}
+
+                    {/* Tip Element */}
+                    {vedicData.thumb_tip_element === 'Square (Earth)' && <p>🟫 <strong>Tip — Square (Earth / Pṛthvī):</strong> Practical, stubborn, and grounded. Executes decisions in a stable, methodical way. Values tangible results over ideas.</p>}
+                    {vedicData.thumb_tip_element === 'Round (Air)' && <p>🔵 <strong>Tip — Round (Air / Vāyu / Ketu):</strong> Investigative and philosophical. Curious mind that questions everything. Prefers understanding the "why" before acting.</p>}
+                    {vedicData.thumb_tip_element === 'Conical (Water)' && <p>💧 <strong>Tip — Conical (Water / Jala):</strong> Emotionally driven decisions. Artistic and sensitive. Willpower is shaped by mood and emotional state rather than pure logic.</p>}
+                    {vedicData.thumb_tip_element === 'Spatulate (Fire)' && <p>🔥 <strong>Tip — Spatulate (Fire / Agni):</strong> Action-first, energy-first. High physical drive. Gets things done through force of personality and enthusiasm rather than careful planning.</p>}
+
+                  </div>
+                </div>
+              )}
+
               <div className="border-t border-stone-100 pt-3 space-y-2">
                 <span className="font-bold text-xs text-stone-700 block">Special Indicators</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
@@ -968,63 +1048,351 @@ export default function AnalysisForm({
               )}
             </div>
 
-            {/* Ego & Communication Profile */}
+            {/* ─── FINGERS — Jupiter (Guru / Index) — Lecture 08 ─── */}
             <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
               <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
-                <Activity className="w-4 h-4 text-emerald-500" />
-                Ego & Communication Profile
+                <Activity className="w-4 h-4 text-indigo-500" />
+                Jupiter Finger (Guru / Index) — Aṅguli Analysis
               </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">Read length vs. Sun finger first, then tilt direction, then all three phalanges from tip downward.</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* All 6 Jupiter fields in one compact grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="form-group">
-                  <label className="form-label text-xs">Jupiter (Index) vs Apollo (Ring) Finger</label>
+                  <label className="form-label text-xs">Length vs. Sun (Ring)</label>
                   <select
                     className="form-input bg-white border border-stone-200 text-xs"
-                    value={vedicData.jupiter_sun_relation}
-                    onChange={(e) => updateVedicField('jupiter_sun_relation', e.target.value)}
+                    value={vedicData.jupiter_length || ''}
+                    onChange={(e) => updateVedicField('jupiter_length', e.target.value)}
                   >
-                    <option value="">Select Proportion...</option>
-                    <option value="Jupiter Longer">Jupiter (Index) is Longer</option>
-                    <option value="Sun Longer">Sun / Apollo (Ring) is Longer</option>
-                    <option value="Equal">Fingers are Equal Length</option>
+                    <option value="">Select...</option>
+                    <option value="Short">Short (Below Sun)</option>
+                    <option value="Normal">Normal / Equal</option>
+                    <option value="Long">Long (Above Sun)</option>
                   </select>
                 </div>
-
                 <div className="form-group">
-                  <label className="form-label text-xs">Mercury Pinky Finger Length</label>
+                  <label className="form-label text-xs">Tilt Direction</label>
                   <select
                     className="form-input bg-white border border-stone-200 text-xs"
-                    value={vedicData.mercury_length}
-                    onChange={(e) => updateVedicField('mercury_length', e.target.value)}
+                    value={vedicData.jupiter_tilt || ''}
+                    onChange={(e) => updateVedicField('jupiter_tilt', e.target.value)}
                   >
-                    <option value="">Select Pinky Length...</option>
-                    <option value="Short">Short (Below top joint of Ring)</option>
-                    <option value="Average">Average (Aligns with top joint)</option>
-                    <option value="Long">Long (Extends above top joint)</option>
+                    <option value="">Select...</option>
+                    <option value="Toward Saturn">→ Saturn (philosophical)</option>
+                    <option value="Straight">Straight (balanced)</option>
+                    <option value="Toward Thumb">→ Thumb (own terms)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Tip Element</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.jupiter_tip_element || ''}
+                    onChange={(e) => updateVedicField('jupiter_tip_element', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Square (Earth)">Square — Earth</option>
+                    <option value="Round (Air)">Round — Air</option>
+                    <option value="Conical (Water)">Conical — Water</option>
+                    <option value="Spatulate (Fire)">Spatulate — Fire</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">1st Phalange (Mentality)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.jupiter_phalange_1 || ''}
+                    onChange={(e) => updateVedicField('jupiter_phalange_1', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Short">Short</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Long & Bulged">Long &amp; Bulged</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">2nd Phalange (Logic)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.jupiter_phalange_2 || ''}
+                    onChange={(e) => updateVedicField('jupiter_phalange_2', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Horizontal line (reduced logic)">Horizontal line</option>
+                    <option value="Vertical line (stress)">Vertical line (stress)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">3rd Phalange (Results)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.jupiter_phalange_3 || ''}
+                    onChange={(e) => updateVedicField('jupiter_phalange_3', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Open/Full">Open / Full (good)</option>
+                    <option value="Thin">Thin (low results)</option>
+                    <option value="Has marks/lines">Has marks / lines</option>
                   </select>
                 </div>
               </div>
 
-              {/* Dynamic Ego interpretation */}
-              {vedicData.jupiter_sun_relation && (
-                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs space-y-1">
-                  <span className="font-bold text-stone-800 uppercase tracking-wider block text-[9px]">Ego & Speech Signature:</span>
-                  <p className="text-stone-700 leading-relaxed font-medium">
-                    {vedicData.jupiter_sun_relation === 'Jupiter Longer'
-                      ? '🧠 Authoritative Ego: Highly knowledgeable, dominating, and argumentative ("fighter"). Speech style is centered on lecturing, wisdom, and strict rules. Will not bow down easily.'
-                      : vedicData.jupiter_sun_relation === 'Sun Longer'
-                        ? '☀️ Influential Ego: Ego is driven by responsibility, light, and leadership. Speaks with absolute force and creative energy. Will not bow down.'
-                        : '⚖️ Balanced Ego: Harmonious expression. Ego is restrained, adapting to situations logically.'
-                    }
-                  </p>
-                  {vedicData.mercury_length && (
-                    <p className="text-stone-700 leading-relaxed font-medium border-t border-stone-200/50 pt-1.5 mt-1.5">
-                      {vedicData.mercury_length === 'Long'
-                        ? '🐍 Mercury Modifier (Snake Dies, Stick Intact): Excellent diplomacy. Can express stubbornness or deliver harsh truths elegantly without breaking relationships ("snake dies, stick intact").'
-                        : '⚠️ Mercury Modifier: Struggles to communicate will/ego effectively. May struggle to say "no" or might create severe relational friction.'
-                      }
-                    </p>
-                  )}
+              {/* Jupiter Interpretation */}
+              {(vedicData.jupiter_length || vedicData.jupiter_tilt || vedicData.jupiter_phalange_1 || vedicData.jupiter_phalange_3) && (
+                <div className="p-3 bg-indigo-50/50 border border-indigo-200/40 rounded-xl text-xs space-y-1.5 leading-relaxed">
+                  <span className="font-bold text-indigo-900 flex items-center gap-1 text-[9px] uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                    Jupiter Sāmudrika Significations
+                  </span>
+                  <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
+                    {vedicData.jupiter_length === 'Normal' && <p>⚖️ <strong>Normal Jupiter:</strong> Good listener, absorbs more than shares. Spiritually inclined but not showy. High morality. Guru-like qualities. Contented/satisfied. Balanced between materialistic and emotional.</p>}
+                    {vedicData.jupiter_length === 'Long' && <p>📖 <strong>Long Jupiter:</strong> Stronger knowledge drive. Can become dominating, argumentative ("fighter"). Philosophy-inclined. May lecture everyone around them. Ego in knowledge domain.</p>}
+                    {vedicData.jupiter_length === 'Short' && <p>⚠️ <strong>Short Jupiter:</strong> Lower self-confidence. Relies on others for direction in knowledge matters. May be less willing to teach or guide.</p>}
+                    {vedicData.jupiter_tilt === 'Toward Saturn' && <p>🪐 <strong>Tilt → Saturn:</strong> Respects social norms and does not break society\'s rules. Philosophical inclination increases if finger also has knots. May not impose personal rules on others.</p>}
+                    {vedicData.jupiter_tilt === 'Toward Thumb' && <p>💪 <strong>Tilt → Self/Thumb:</strong> Works on their own terms. May impose conditions on others. Whether they can enforce this depends on willpower (1st phalange) strength.</p>}
+                    {vedicData.jupiter_phalange_1 === 'Long & Bulged' && <p>✨ <strong>1st Phalange (Long &amp; Bulged):</strong> Strong spiritual inclination (may show as worship, charity, or dharmic service). Good ancestral inheritance in thinking/mentality.</p>}
+                    {vedicData.jupiter_phalange_2 === 'Horizontal line (reduced logic)' && <p>⚠️ <strong>2nd Phalange (Horizontal):</strong> Implementation of knowledge is reduced. Person accepts things without fully reasoning them through.</p>}
+                    {vedicData.jupiter_phalange_2 === 'Vertical line (stress)' && <p>⚠️ <strong>2nd Phalange (Vertical):</strong> Stress accompanies implementation. Excessive worry about applying what was learned.</p>}
+                    {vedicData.jupiter_phalange_3 === 'Thin' && <p>⚠️ <strong>3rd Phalange (Thin):</strong> Results in Jupiter matters (knowledge, wisdom, leadership) are not proportionate to effort/mentality put in.</p>}
+                    {vedicData.jupiter_phalange_3 === 'Open/Full' && <p>✨ <strong>3rd Phalange (Full):</strong> Good results flow from Jupiter matters. Knowledge translates into real outcomes.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ─── FINGERS — Saturn (Śani / Middle) — Lecture 09 ─── */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Activity className="w-4 h-4 text-slate-500" />
+                Saturn Finger (Śani / Middle) — Aṅguli Analysis
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">Saturn is the longest finger. Read its natural tilt to understand the person\'s relationship with work, rules, and society.</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="form-group">
+                  <label className="form-label text-xs">Saturn Length</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.saturn_length || ''}
+                    onChange={(e) => updateVedicField('saturn_length', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Short">Short</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Long">Long</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Tilt Direction</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.saturn_tilt || ''}
+                    onChange={(e) => updateVedicField('saturn_tilt', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Toward Jupiter">→ Jupiter (philosophical)</option>
+                    <option value="Straight">Straight (balanced)</option>
+                    <option value="Toward Sun">→ Sun (fame-seeking)</option>
+                  </select>
+                </div>
+              </div>
+              {(vedicData.saturn_length || vedicData.saturn_tilt) && (
+                <div className="p-3 bg-slate-50 border border-slate-200/40 rounded-xl text-xs space-y-1 leading-relaxed">
+                  <span className="font-bold text-slate-800 uppercase tracking-wider block text-[9px]">Saturn Reading:</span>
+                  <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
+                    {vedicData.saturn_length === 'Short' && <p>⚠️ <strong>Short Saturn:</strong> May indicate challenges with karma and life\'s responsibilities. Difficulty sustaining long-term commitments.</p>}
+                    {vedicData.saturn_length === 'Normal' && <p>✨ <strong>Normal Saturn:</strong> Balanced relationship with work and duty. Karma unfolds steadily without extremes.</p>}
+                    {vedicData.saturn_length === 'Long' && <p>📌 <strong>Long Saturn:</strong> Dominant Saturn influence — strong sense of duty, discipline, philosophical nature, or increased life obstacles (read with mount).</p>}
+                    {vedicData.saturn_tilt === 'Toward Jupiter' && <p>📖 <strong>Tilt → Jupiter:</strong> The person seeks to learn before acting. Knowledge and wisdom shape their sense of duty.</p>}
+                    {vedicData.saturn_tilt === 'Toward Sun' && <p>⚡ <strong>Tilt → Sun:</strong> Strong desire for name/fame through work (karma). Can bring anxiety related to self-confidence or health of the nervous system when combined with Sun tilting toward Saturn.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ─── FINGERS — Sun (Sūrya / Ring) — Lecture 09 ─── */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Activity className="w-4 h-4 text-amber-500" />
+                Sun Finger (Sūrya / Ring) — Aṅguli Analysis
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">Sun controls fame, ego, risk-taking, and vitality. Compare to Jupiter to assess ego type.</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                <div className="form-group">
+                  <label className="form-label text-xs">Length vs. Jupiter</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.sun_length || ''}
+                    onChange={(e) => updateVedicField('sun_length', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Short">Short</option>
+                    <option value="Normal">Normal / Equal</option>
+                    <option value="Long">Long (risk-taker)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Tilt Direction</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.sun_tilt || ''}
+                    onChange={(e) => updateVedicField('sun_tilt', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Toward Saturn">→ Saturn (fame via work)</option>
+                    <option value="Straight">Straight (balanced)</option>
+                    <option value="Toward Mercury">→ Mercury (creative blend)</option>
+                  </select>
+                </div>
+                <div className="form-group col-span-2 md:col-span-2 flex items-end pb-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-stone-700">
+                    <input
+                      type="checkbox"
+                      className="rounded text-accent-gold focus:ring-accent-gold"
+                      checked={vedicData.sun_crooked || false}
+                      onChange={(e) => updateVedicField('sun_crooked', e.target.checked)}
+                    />
+                    <span>Sun Finger is Crooked / Bent</span>
+                  </label>
+                </div>
+              </div>
+              {(vedicData.sun_length || vedicData.sun_tilt || vedicData.sun_crooked) && (
+                <div className="p-3 bg-amber-50/60 border border-amber-200/40 rounded-xl text-xs space-y-1 leading-relaxed">
+                  <span className="font-bold text-amber-900 uppercase tracking-wider block text-[9px]">Sun Reading:</span>
+                  <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
+                    {vedicData.sun_length === 'Long' && <p>⚡ <strong>Long Sun:</strong> Greater risk-taking ability — tends to act before thinking. Strong creative energy and drive for recognition.</p>}
+                    {vedicData.sun_length === 'Normal' && <p>✨ <strong>Normal/Equal Sun:</strong> Balanced ego. Ego is expressed harmoniously, neither dominating nor submissive.</p>}
+                    {vedicData.sun_length === 'Short' && <p>⚠️ <strong>Short Sun:</strong> Lower risk appetite and less assertive about fame/recognition.</p>}
+                    {vedicData.sun_tilt === 'Toward Saturn' && <p>🪐 <strong>Tilt → Saturn:</strong> Increases desire for fame through one\'s karma/work, but can bring anxiety (self-confidence dips). If Saturn also tilts toward Sun → yoga for defamation possible alongside career prominence. Typically good at balancing personal and professional life.</p>}
+                    {vedicData.sun_crooked && <p>⚡ <strong>Crooked/Bent:</strong> Amplifies Sun energy in an intense or distorted way. If crookedness is from the knuckle, the effect shows in the entire field governed by the Sun.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ─── FINGERS — Mercury (Budh / Little) — Lecture 10 ─── */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Activity className="w-4 h-4 text-teal-500" />
+                Mercury Finger (Budh / Little) — Aṅguli Analysis
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">Mercury controls communication, business acumen, speech, writing, and diplomacy. Normal = reaches 1st joint of Sun finger.</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                <div className="form-group">
+                  <label className="form-label text-xs">Length (ref: 1st joint of Sun)</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.mercury_length || ''}
+                    onChange={(e) => updateVedicField('mercury_length', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Short">Short</option>
+                    <option value="Average">Normal</option>
+                    <option value="Long">Long</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Tilt / Position</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.mercury_tilt || ''}
+                    onChange={(e) => updateVedicField('mercury_tilt', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Attached to Sun">Attached (norm-seeking)</option>
+                    <option value="Straight">Straight</option>
+                    <option value="Separated from Sun">Separated (independent)</option>
+                  </select>
+                </div>
+                <div className="form-group col-span-2 md:col-span-2 flex items-end pb-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-stone-700">
+                    <input
+                      type="checkbox"
+                      className="rounded text-accent-gold focus:ring-accent-gold"
+                      checked={vedicData.mercury_low_set || false}
+                      onChange={(e) => updateVedicField('mercury_low_set', e.target.checked)}
+                    />
+                    <span>Mercury base is low-set (starts lower than other fingers)</span>
+                  </label>
+                </div>
+              </div>
+              {(vedicData.mercury_length || vedicData.mercury_tilt || vedicData.mercury_low_set) && (
+                <div className="p-3 bg-teal-50/50 border border-teal-200/40 rounded-xl text-xs space-y-1.5 leading-relaxed">
+                  <span className="font-bold text-teal-900 uppercase tracking-wider block text-[9px]">Mercury Reading:</span>
+                  <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
+                    {vedicData.mercury_length === 'Long' && <p>✨ <strong>Long Mercury:</strong> Excellent logical ability, persuasion, and research capacity. Good at last-minute preparation and still succeeding. Strong diplomacy — "snake dies, stick intact" communication style. Scientist-level analytical capacity.</p>}
+                    {vedicData.mercury_length === 'Average' && <p>✨ <strong>Normal Mercury:</strong> Multi-talented, quick-witted, good at speaking and social interaction. Love of arts. All Mercury qualities present in balanced measure.</p>}
+                    {vedicData.mercury_length === 'Short' && <p>⚠️ <strong>Short Mercury:</strong> Dull intellect indicator (mand buddhi). Difficulty with logic and grasping concepts. Possible nervous system issues. Indecisive. May be timid in speech. Can indicate complications related to childbirth/reproduction (read with lines).</p>}
+                    {vedicData.mercury_tilt === 'Attached to Sun' && <p>📌 <strong>Attached to Sun:</strong> Speech has commanding quality. Desires recognition and praise. Craves name/fame. Tends not to break social norms — fears disapproval from others. In astrology: like Mercury-Sun conjunction (yuti).</p>}
+                    {vedicData.mercury_tilt === 'Separated from Sun' && <p>🌟 <strong>Separated/Gap:</strong> Will do what they\'ve decided regardless of others\' opinion. Prefers to work outside conventional norms. Not afraid of criticism. Open-minded and freedom-loving. Does not necessarily do anything bad — may simply take paths their family never considered.</p>}
+                    {vedicData.mercury_low_set && <p>📏 <strong>Low-set base:</strong> Mercury base sits lower than other fingers on most hands (this is common). The mount below gets less space as the finger takes more area. Read mount condition separately to compensate.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ─── GENERAL FINGER PROFILE — Lecture 10 ─── */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Eye className="w-4 h-4 text-rose-500" />
+                General Finger Profile
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">Overall finger build, spacing between fingers, and depth of lines — all reveal core temperament and life difficulty.</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="form-group">
+                  <label className="form-label text-xs">Finger Spacing</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.finger_gaps || ''}
+                    onChange={(e) => updateVedicField('finger_gaps', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="None">None — fingers touch</option>
+                    <option value="Small gaps (generous)">Small — generous</option>
+                    <option value="Wide gaps (free spirit)">Wide — free spirit</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Overall Finger Build</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.finger_build || ''}
+                    onChange={(e) => updateVedicField('finger_build', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Long & thin (creative)">Long &amp; thin — creative</option>
+                    <option value="Short & thick (stubborn + anger)">Short &amp; thick — stubborn</option>
+                    <option value="Thick base (food lover / lazy)">Thick base — food lover</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label text-xs">Palm Line Depth</label>
+                  <select
+                    className="form-input bg-white border border-stone-200 text-xs"
+                    value={vedicData.line_depth || ''}
+                    onChange={(e) => updateVedicField('line_depth', e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    <option value="Light lines">Light / faint (easier)</option>
+                    <option value="Normal">Normal depth</option>
+                    <option value="Deep / dark lines (tough life)">Deep / dark (tough life)</option>
+                  </select>
+                </div>
+              </div>
+              {(vedicData.finger_gaps || vedicData.finger_build || vedicData.line_depth) && (
+                <div className="p-3 bg-rose-50/40 border border-rose-200/30 rounded-xl text-xs space-y-1 leading-relaxed">
+                  <span className="font-bold text-rose-900 uppercase tracking-wider block text-[9px]">General Profile Reading:</span>
+                  <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
+                    {vedicData.finger_gaps === 'Small gaps (generous)' && <p>🤲 <strong>Small gaps:</strong> Generous — quick to help when someone asks. Gap is caused by one finger\'s base phalanx being sunken on one side. Also indicates spending (generosity and spending go together).</p>}
+                    {vedicData.finger_gaps === 'Wide gaps (free spirit)' && <p>🌬️ <strong>Wide gaps:</strong> Works outside conventional social norms. Independent and unafraid of criticism. Free-spirited — does what they\'ve decided regardless of others\' opinions.</p>}
+                    {vedicData.finger_build === 'Long & thin (creative)' && <p>🎨 <strong>Long &amp; thin:</strong> Creative individual. Less hard labor required — natural ability allows easier achievement.</p>}
+                    {vedicData.finger_build === 'Short & thick (stubborn + anger)' && <p>⚠️ <strong>Short &amp; thick:</strong> Both stubbornness and anger increase together. Hasty/impulsive. Requires more hard work in life.</p>}
+                    {vedicData.finger_build === 'Thick base (food lover / lazy)' && <p>🍲 <strong>Thick base:</strong> Enjoys cooking and eating well. Good at hospitality. Per classical texts, food-loving but may lean toward laziness.</p>}
+                    {vedicData.line_depth === 'Deep / dark lines (tough life)' && <p>⚠️ <strong>Deep / dark lines:</strong> A hand with many deep lines is not considered favorable — it indicates a tough life. Deep portions along a single line correspond to phases of significant pressure in that area/timeframe.</p>}
+                    {vedicData.line_depth === 'Light lines' && <p>✨ <strong>Light lines:</strong> Light portions along lines correspond to relatively easier phases of life. Generally a favorable indicator.</p>}
+                  </div>
                 </div>
               )}
             </div>
@@ -1266,10 +1634,71 @@ export default function AnalysisForm({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
               />
-              <button type="submit" className="btn-gold px-3 text-xs shadow-sm">
+              <button type="submit" className="btn-gold px-3 text-xs shadow-sm cursor-pointer">
                 Add
               </button>
             </form>
+
+            {/* Suggested Tags based on Sāmudrika rules */}
+            {(() => {
+              const suggestions: string[] = [];
+              if (vedicData.hand_tattva) {
+                if (vedicData.hand_tattva.includes('Agni')) suggestions.push('fire-hand', 'mars-sun-traits');
+                if (vedicData.hand_tattva.includes('Jala')) suggestions.push('water-hand', 'sensitive-mind');
+                if (vedicData.hand_tattva.includes('Pṛthvī')) suggestions.push('earth-hand', 'generational-planner');
+                if (vedicData.hand_tattva.includes('Vāyu')) suggestions.push('air-hand', 'investigator');
+              }
+              if (vedicData.thumb_type) {
+                if (vedicData.thumb_type === 'Waist-like') suggestions.push('diplomat', 'waist-like-thumb');
+                if (vedicData.thumb_type === 'Stiff') suggestions.push('rigid-thumb', 'plain-spoken');
+                if (vedicData.thumb_type === 'Very Flexible') suggestions.push('flexible-thumb', 'spendthrift');
+              }
+              if (vedicData.thumb_second_phalange === 'Long (over-thinker)') {
+                suggestions.push('over-thinker');
+              }
+              if (vedicData.has_clubbed_thumb) {
+                suggestions.push('clubbed-thumb', 'quick-temper');
+              }
+              if (vedicData.has_six_fingers) {
+                suggestions.push('polydactyly', 'struggle-filled');
+              }
+              if (vedicData.jupiter_length === 'Long') {
+                suggestions.push('authoritative-ego', 'teacher-profile');
+              }
+              if (vedicData.mercury_length === 'Long') {
+                suggestions.push('diplomatic-speech', 'researcher');
+              }
+              if (vedicData.mercury_tilt === 'Separated from Sun') {
+                suggestions.push('independent-mind', 'rule-breaker');
+              }
+              if (vedicData.finger_knots === 'Fully Philosophical (Knotty)') {
+                suggestions.push('philosophical', 'message-deliverer');
+              }
+              if (vedicData.line_depth && vedicData.line_depth.includes('Deep')) {
+                suggestions.push('struggle-lines');
+              }
+
+              const filteredSuggestions = suggestions.filter(s => !profile.tags.includes(s));
+              if (filteredSuggestions.length === 0) return null;
+
+              return (
+                <div className="space-y-1.5 border-t border-stone-100 pt-3">
+                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider block">Suggested Tags (Click to Add):</span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {filteredSuggestions.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => updateProfileField('tags', [...profile.tags, tag])}
+                        className="bg-stone-50 hover:bg-amber-500/10 text-stone-600 hover:text-accent-gold px-2 py-0.5 rounded text-[10px] font-semibold border border-stone-200 hover:border-amber-500/20 transition-all cursor-pointer"
+                      >
+                        +{tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="flex flex-wrap gap-2 pt-2">
               {profile.tags.map((tag) => (
@@ -1281,7 +1710,7 @@ export default function AnalysisForm({
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className="hover:text-rose-600 font-bold transition-colors ml-1 text-xs"
+                    className="hover:text-rose-600 font-bold transition-colors ml-1 text-xs cursor-pointer"
                   >
                     ×
                   </button>

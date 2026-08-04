@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { HandProfile, parseVedicData } from '@/lib/supabase';
+import { HandProfile, parseVedicData, getVedicInterpretations } from '@/lib/supabase';
 import { Search, Plus, Calendar, Download, Upload, Trash2, Eye, HelpCircle, ImageIcon } from 'lucide-react';
 
 interface DashboardProps {
@@ -27,17 +27,22 @@ export default function Dashboard({
   const [selectedHandType, setSelectedHandType] = useState('');
   const [selectedHandTattva, setSelectedHandTattva] = useState('');
   const [selectedDominant, setSelectedDominant] = useState('');
+  const [expandedReadings, setExpandedReadings] = useState<Record<string, boolean>>({});
 
   // Filter profiles based on search/filters
   const filteredProfiles = useMemo(() => {
     return profiles.filter((p) => {
       const vedic = parseVedicData(p.general_notes);
+      const readings = getVedicInterpretations(vedic);
+      const matchesReadings = readings.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase()));
+
       const matchesSearch =
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
         vedic.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vedic.hand_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vedic.hand_tattva.toLowerCase().includes(searchQuery.toLowerCase());
+        vedic.hand_tattva.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        matchesReadings;
 
       const matchesHandType = !selectedHandType || vedic.hand_type === selectedHandType;
       const matchesHandTattva = !selectedHandTattva || vedic.hand_tattva === selectedHandTattva;
@@ -294,11 +299,50 @@ export default function Dashboard({
                         ✨ {vedic.hand_tattva}
                       </span>
                     )}
+                    {vedic.thumb_type && (
+                      <span className="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200/50 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        👍 {vedic.thumb_type}
+                      </span>
+                    )}
+                    {vedic.jupiter_length && (
+                      <span className="text-[9px] bg-teal-50 text-teal-700 border border-teal-200/50 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        ♃ {vedic.jupiter_length}
+                      </span>
+                    )}
+                    {vedic.mercury_length && (
+                      <span className="text-[9px] bg-rose-50 text-rose-700 border border-rose-200/50 rounded px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                        ☿ {vedic.mercury_length}
+                      </span>
+                    )}
                   </div>
 
                   <p className="text-stone-500 text-[11px] line-clamp-2 leading-normal">
                     {description}
                   </p>
+
+                  {(() => {
+                    const readings = getVedicInterpretations(vedic);
+                    if (readings.length === 0) return null;
+                    const isExpanded = !!expandedReadings[p.id];
+                    return (
+                      <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => setExpandedReadings(prev => ({ ...prev, [p.id]: !isExpanded }))}
+                          className="text-[9px] font-bold text-accent-gold hover:text-stone-900 flex items-center gap-1 transition-colors uppercase tracking-wider bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10 cursor-pointer"
+                        >
+                          📖 {isExpanded ? 'Hide Readings' : `Show Sāmudrika Readings (${readings.length})`}
+                        </button>
+                        
+                        {isExpanded && (
+                          <div className="mt-1.5 p-2 bg-stone-50/80 border border-stone-200 rounded-lg text-[10px] space-y-1 max-h-24 overflow-y-auto">
+                            {readings.map((r, index) => (
+                              <p key={index} className="text-stone-700 font-semibold leading-normal">• {r}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Bottom Badges and Actions */}

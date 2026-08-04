@@ -231,10 +231,13 @@ export default function LectureNotes() {
               {activeNote ? (
                 <div className="bg-stone-50/30 rounded-2xl border border-stone-200/60 p-6 md:p-8 space-y-6 max-h-[75vh] overflow-y-auto scrollbar-thin">
                   <div className="border-b border-stone-200 pb-4 flex justify-between items-start gap-4">
-                    <div>
-                      <span className="text-[10px] font-bold text-accent-gold uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
-                        Lecture Material
-                      </span>
+                    <div className="space-y-1">
+                      <h2 className="text-base font-bold text-stone-900 mt-2 leading-snug">
+                        {activeNote.title
+                          .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*(\(Palmistry\))?\s*[–\-:]?\s*/i, '')
+                          .replace(/^[–\-]\s*/, '')
+                          .trim()}
+                      </h2>
                     </div>
                   </div>
 

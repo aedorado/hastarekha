@@ -1,4 +1,4 @@
-# Lecture 9: Saturn Finger (Śani) and Sun Finger (Sūrya)
+# Saturn Finger (Śani) and Sun Finger (Sūrya)
 
 > [!INFO] How a Finger Is Read
 > Every finger is analyzed through **three parameters**:
