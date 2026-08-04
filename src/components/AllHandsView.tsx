@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { HandProfile, parseVedicData, HAND_VIEW_LABELS, HandView, getVedicInterpretations } from '@/lib/supabase';
+import { HandProfile, parseVedicData, HAND_VIEW_LABELS, HandView } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight, ExternalLink, Hand, ImageOff } from 'lucide-react';
 
 interface HandEntry {
@@ -17,7 +17,6 @@ interface HandEntry {
   viewLabel: string;
   imageUrl: string | null;
   isPlaceholder: boolean;
-  generalNotes?: string;
 }
 
 function buildEntries(profiles: HandProfile[], showD1: boolean): HandEntry[] {
@@ -44,7 +43,6 @@ function buildEntries(profiles: HandProfile[], showD1: boolean): HandEntry[] {
       dominantHand: profile.dominant_hand,
       handType: vedic.hand_type,
       handTattva: vedic.hand_tattva,
-      generalNotes: profile.general_notes,
     };
 
     const hasImages = viewOrder.some((v) => !!profile.images[v]);
@@ -210,10 +208,7 @@ export default function AllHandsView({ profiles, isLoading }: AllHandsViewProps)
         </label>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full h-auto lg:h-[720px] items-stretch">
-
-        {/* ── LEFT COLUMN: Gallery Viewer ── */}
-        <div className="lg:col-span-8 flex flex-col h-[520px] sm:h-[600px] md:h-[680px] lg:h-full bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden shadow-md">
+      <div className="flex flex-col w-full h-[520px] sm:h-[600px] md:h-[680px] lg:h-[720px]">
 
         {/* ── Top label bar ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-white border border-stone-200/80 rounded-t-2xl shadow-sm p-2">
@@ -405,55 +400,6 @@ export default function AllHandsView({ profiles, isLoading }: AllHandsViewProps)
           >
             <ChevronRight className="w-4 h-4" />
           </button>
-        </div>
-        </div>
-
-        {/* ── RIGHT COLUMN: Sāmudrika Interpretations Panel ── */}
-        <div className="lg:col-span-4 flex flex-col h-auto lg:h-full bg-white border border-stone-200/80 p-5 rounded-2xl shadow-md overflow-hidden min-h-[350px]">
-          <h3 className="font-serif font-bold text-stone-900 text-sm border-b border-stone-200 pb-2 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
-            <span>📜</span> Sāmudrika Readings
-          </h3>
-          
-          {(() => {
-            const parsedVedic = current.generalNotes ? parseVedicData(current.generalNotes) : null;
-            const readings = parsedVedic ? getVedicInterpretations(parsedVedic) : [];
-            
-            if (readings.length === 0) {
-              return (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-stone-400">
-                  <p className="text-xs font-semibold">No readings calculated yet.</p>
-                  <p className="text-[10px] mt-1">Select / classify the hand properties in the profile editor to view dynamic interpretations here.</p>
-                </div>
-              );
-            }
-            
-            return (
-              <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 scrollbar-thin">
-                <div className="space-y-1">
-                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Active Profile:</p>
-                  <p className="text-xs text-stone-850 font-bold leading-normal">{current.profileName}</p>
-                  <p className="text-[10px] text-stone-500 font-semibold">
-                    {[
-                      current.dominantHand && `${current.dominantHand}-handed`,
-                      current.age && `Age ${current.age}`,
-                      current.gender
-                    ].filter(Boolean).join(' · ')}
-                  </p>
-                </div>
-                
-                <div className="space-y-2 border-t border-stone-100 pt-3">
-                  <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-1.5">Significations:</p>
-                  <div className="space-y-1.5">
-                    {readings.map((reading, idx) => (
-                      <div key={idx} className="p-2 bg-stone-50 border border-stone-200/60 rounded-lg text-[11px] text-stone-750 font-semibold leading-normal">
-                        {reading}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
         </div>
       </div>
     </div>
