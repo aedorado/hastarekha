@@ -25,6 +25,8 @@ Speaker emphasized repeatedly: **No single hand-type reading should be taken as 
 
 ## The Seven Back-Palm Hand Types (Overview)
 
+![The 7 Dorsal Hand Types](/lecture-notes-images/05/01-dorsal-hand-types.jpeg)
+
 1. **Elementary hand** (श्रमिक हाथ / प्रारंभिक हाथ)
 2. **Spatulate hand** (चमचाकार हाथ)
 3. **Square hand** (वर्गाकार हाथ)
