@@ -448,3 +448,15 @@ body {
   .md\:col-span-2 { grid-column: span 2 / span 2 !important; }
   .md\:px-12 { padding-left: 3rem !important; padding-right: 3rem !important; }
 }
+
+/* Print utility styles */
+@media print {
+  body {
+    background-color: white !important;
+    background-image: none !important;
+    color: #1a1714 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

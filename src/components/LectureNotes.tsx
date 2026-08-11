@@ -1,15 +1,71 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, BookOpen, GraduationCap, X, List } from 'lucide-react';
+import { Search, BookOpen, GraduationCap, X, List, FileDown, Printer } from 'lucide-react';
 import MarkdownRenderer, { createSlugger } from './MarkdownRenderer';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createPortal } from 'react-dom';
 
 interface Note {
   id: string;
   fileName: string;
   title: string;
   content: string;
+}
+
+interface DocSection {
+  id: string;
+  title: string;
+  content: string;
+  isIntro?: boolean;
+}
+
+function parseSections(content: string): DocSection[] {
+  const lines = content.split('\n');
+  const sections: DocSection[] = [];
+  
+  let currentTitle = 'Introduction';
+  let currentContent: string[] = [];
+  let currentId = 'intro';
+  let isIntro = true;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim().startsWith('## ')) {
+      if (currentContent.length > 0) {
+        sections.push({
+          id: currentId,
+          title: currentTitle,
+          content: currentContent.join('\n'),
+          isIntro
+        });
+      }
+      
+      currentTitle = line.replace('## ', '').trim();
+      currentTitle = currentTitle
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, '$1');
+      
+      currentId = `sec-${sections.length}-${currentTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      currentContent = [line];
+      isIntro = false;
+    } else {
+      currentContent.push(line);
+    }
+  }
+  
+  if (currentContent.length > 0) {
+    sections.push({
+      id: currentId,
+      title: currentTitle,
+      content: currentContent.join('\n'),
+      isIntro
+    });
+  }
+  
+  return sections;
 }
 
 
@@ -164,6 +220,78 @@ export default function LectureNotes() {
     return notes.find(n => n.id === activeNoteId) || null;
   }, [notes, activeNoteId]);
 
+  // Export to PDF states
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportScope, setExportScope] = useState<'current' | 'multiple'>('current');
+  const [selectedSectionIds, setSelectedSectionIds] = useState<Record<string, boolean>>({});
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Record<string, boolean>>({});
+  const [printMargin, setPrintMargin] = useState<'minimal' | 'narrow' | 'normal'>('narrow');
+  const [includeTitleHeader, setIncludeTitleHeader] = useState(true);
+  const [includeAnnotations, setIncludeAnnotations] = useState(false);
+  const [printItems, setPrintItems] = useState<Array<{ title: string; content: string; id: string }> | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  const activeNoteSections = useMemo(() => {
+    if (!activeNote) return [];
+    return parseSections(activeNote.content);
+  }, [activeNote]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (activeNoteSections.length > 0) {
+      const initial: Record<string, boolean> = {};
+      activeNoteSections.forEach(sec => {
+        initial[sec.id] = true;
+      });
+      setSelectedSectionIds(initial);
+    }
+  }, [activeNoteSections]);
+
+  useEffect(() => {
+    if (notes.length > 0) {
+      const initial: Record<string, boolean> = {};
+      notes.forEach(note => {
+        initial[note.id] = note.id === activeNoteId;
+      });
+      setSelectedNoteIds(initial);
+    }
+  }, [notes, activeNoteId]);
+
+  const handleExportPrint = () => {
+    if (exportScope === 'current') {
+      if (!activeNote) return;
+      const selected = activeNoteSections.filter(sec => selectedSectionIds[sec.id]);
+      if (selected.length === 0) {
+        alert('Please select at least one section to export.');
+        return;
+      }
+      const compiledMarkdown = selected.map(sec => sec.content).join('\n\n');
+      setPrintItems([{ title: activeNote.title, content: compiledMarkdown, id: activeNote.id }]);
+    } else {
+      const selectedNotes = notes.filter(n => selectedNoteIds[n.id]);
+      if (selectedNotes.length === 0) {
+        alert('Please select at least one lecture to export.');
+        return;
+      }
+      setPrintItems(selectedNotes.map(n => ({ title: n.title, content: n.content, id: n.id })));
+    }
+    setIsExportModalOpen(false);
+  };
+
+  useEffect(() => {
+    if (printItems !== null) {
+      const timer = setTimeout(() => {
+        window.print();
+        setPrintItems(null);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [printItems]);
+
+
   const handleWikilinkClick = (target: string) => {
     setSearchQuery(target);
   };
@@ -289,6 +417,88 @@ export default function LectureNotes() {
       </>
     );
   };
+
+  // Render portal for print layout
+  const printPortal = mounted && printItems && typeof window !== 'undefined'
+    ? createPortal(
+        <div className="print-container">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @page {
+              margin: ${printMargin === 'minimal' ? '0.4cm' : printMargin === 'narrow' ? '0.8cm' : '2cm'} !important;
+            }
+            @media print {
+              body > :not(.print-container) {
+                display: none !important;
+              }
+              .print-container {
+                display: block !important;
+                background: white !important;
+                color: #1a1714 !important;
+                width: 100% !important;
+                font-family: ${fontFamily === 'serif' ? 'Georgia, serif' : 'Outfit, sans-serif'} !important;
+              }
+              .print-page-break {
+                page-break-before: always !important;
+                break-before: page !important;
+              }
+              h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+                color: #1a1714 !important;
+              }
+              pre, blockquote, .callout-box, table, tr, img {
+                page-break-inside: avoid !important;
+              }
+              a {
+                text-decoration: none !important;
+                color: inherit !important;
+              }
+            }
+          `}} />
+          <div className="prose max-w-none text-stone-900 leading-relaxed p-4">
+            {printItems.map((item, idx) => (
+              <div
+                key={item.id}
+                className={idx > 0 ? "print-page-break mt-8 pt-8 border-t border-stone-200" : ""}
+              >
+                {includeTitleHeader && (
+                  <div className="border-b-2 border-stone-850 pb-4 mb-6">
+                    <h1 className="text-3xl font-serif font-bold text-stone-900">
+                      {item.title}
+                    </h1>
+                    <p className="text-stone-500 text-xs mt-2 font-medium">
+                      Hasta-Sāmudrika Study Session • Printed on {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                
+                <MarkdownRenderer
+                  content={item.content}
+                  fontSize="base"
+                  fontFamily={fontFamily}
+                  isPrinting={true}
+                />
+
+                {includeAnnotations && highlights[item.id]?.length > 0 && (
+                  <div className="mt-8 pt-8 border-t-2 border-stone-300 page-break-inside-avoid">
+                    <h2 className="text-xl font-serif font-bold text-stone-900 mb-4">Highlights & Annotations</h2>
+                    <div className="space-y-3">
+                      {highlights[item.id].map((hl) => (
+                        <div key={hl.id} className="p-3 bg-stone-50 border-l-4 border-stone-400 rounded page-break-inside-avoid">
+                          <p className="text-sm text-stone-850 italic">"{hl.text}"</p>
+                          {hl.note && <p className="text-xs text-stone-600 mt-1">Note: {hl.note}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )
+    : null;
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 space-y-6">
@@ -541,6 +751,16 @@ export default function LectureNotes() {
                         >
                           <BookOpen className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">Focus</span>
+                        </button>
+
+                        <div className="h-4 w-px bg-stone-200 mx-0.5" />
+                        <button
+                          onClick={() => setIsExportModalOpen(true)}
+                          className="p-1.5 rounded-lg text-stone-650 hover:bg-white transition-all cursor-pointer text-xs font-semibold flex items-center gap-1"
+                          title="Export Lecture to PDF"
+                        >
+                          <FileDown className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Export</span>
                         </button>
 
                         {toc.length > 0 && (
@@ -797,6 +1017,278 @@ export default function LectureNotes() {
           )}
         </>
       )}
+
+      {/* PDF Export Options Modal */}
+      {activeNote && isExportModalOpen && (
+        <div
+          className="fixed inset-0 bg-stone-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all no-print"
+          onClick={() => setIsExportModalOpen(false)}
+        >
+          <div
+            className="bg-white w-full max-w-xl rounded-2xl border border-stone-200 shadow-xl overflow-hidden flex flex-col max-h-[85vh] transition-all transform scale-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+              <h3 className="mystic-title text-xl font-bold flex items-center gap-2">
+                <FileDown className="w-5.5 h-5.5 text-accent-gold" />
+                Export Lecture Session
+              </h3>
+              <button
+                onClick={() => setIsExportModalOpen(false)}
+                className="p-1.5 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Scope Selector */}
+              <div>
+                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-2">
+                  Export Range
+                </label>
+                <div className="grid grid-cols-2 gap-2 bg-stone-50 p-1 rounded-xl border border-stone-100">
+                  <button
+                    type="button"
+                    onClick={() => setExportScope('current')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      exportScope === 'current'
+                        ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+                        : 'text-stone-600 hover:bg-white/40'
+                    }`}
+                  >
+                    Current Lecture
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExportScope('multiple')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      exportScope === 'multiple'
+                        ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+                        : 'text-stone-600 hover:bg-white/40'
+                    }`}
+                  >
+                    Multiple Lectures
+                  </button>
+                </div>
+              </div>
+
+              {/* Section Selector (Current Lecture Scope) */}
+              {exportScope === 'current' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      Choose Sections
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const checked: Record<string, boolean> = {};
+                          activeNoteSections.forEach(s => { checked[s.id] = true; });
+                          setSelectedSectionIds(checked);
+                        }}
+                        className="text-[10px] font-bold text-accent-gold hover:text-amber-800 cursor-pointer"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-[10px] text-stone-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedSectionIds({});
+                        }}
+                        className="text-[10px] font-bold text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-stone-100 rounded-xl overflow-hidden divide-y divide-stone-50 max-h-48 overflow-y-auto scrollbar-thin">
+                    {activeNoteSections.map((sec) => (
+                      <label
+                        key={sec.id}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50/50 transition-colors cursor-pointer text-xs font-semibold text-stone-700"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!selectedSectionIds[sec.id]}
+                          onChange={(e) => {
+                            setSelectedSectionIds(prev => ({
+                              ...prev,
+                              [sec.id]: e.target.checked
+                            }));
+                          }}
+                          className="accent-accent-gold w-4 h-4 rounded text-accent-gold border-stone-300 cursor-pointer"
+                        />
+                        <span className="flex-1 truncate">
+                          {sec.isIntro ? 'Introduction & Info' : sec.title}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Lecture Selector (Multiple Lectures Scope) */}
+              {exportScope === 'multiple' && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      Select Lectures
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const checked: Record<string, boolean> = {};
+                          notes.forEach(n => { checked[n.id] = true; });
+                          setSelectedNoteIds(checked);
+                        }}
+                        className="text-[10px] font-bold text-accent-gold hover:text-amber-800 cursor-pointer"
+                      >
+                        Select All
+                      </button>
+                      <span className="text-[10px] text-stone-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedNoteIds({});
+                        }}
+                        className="text-[10px] font-bold text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border border-stone-100 rounded-xl overflow-hidden divide-y divide-stone-50 max-h-48 overflow-y-auto scrollbar-thin">
+                    {notes.map((note) => {
+                      const lecNum = note.fileName.match(/^\d+/)?.[0] || '•';
+                      const shortTitle = note.title
+                        .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*[:(Palmistry)–-]*\s*/i, '')
+                        .replace(/^–\s*/, '')
+                        .trim();
+
+                      return (
+                        <label
+                          key={note.id}
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50/50 transition-colors cursor-pointer text-xs font-semibold text-stone-700"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!selectedNoteIds[note.id]}
+                            onChange={(e) => {
+                              setSelectedNoteIds(prev => ({
+                                ...prev,
+                                [note.id]: e.target.checked
+                              }));
+                            }}
+                            className="accent-accent-gold w-4 h-4 rounded text-accent-gold border-stone-300 cursor-pointer"
+                          />
+                          <span className="bg-stone-100 text-[10px] px-1.5 py-0.5 rounded text-stone-500 font-bold shrink-0">
+                            {lecNum}
+                          </span>
+                          <span className="flex-1 truncate">{shortTitle}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Page Margin Configuration */}
+              <div>
+                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block mb-2">
+                  Page Margins
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'minimal', label: 'Minimal (0.4cm)' },
+                    { value: 'narrow', label: 'Narrow (0.8cm)' },
+                    { value: 'normal', label: 'Normal (2.0cm)' }
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setPrintMargin(item.value as any)}
+                      className={`py-2 px-1 text-center rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                        printMargin === item.value
+                          ? 'bg-amber-500/8 border-accent-gold text-accent-gold'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-stone-400 mt-1 font-medium">
+                  * Narrow/Minimal margins fits more content per page (less margin).
+                </p>
+              </div>
+
+              {/* Document Options */}
+              <div className="bg-stone-50 p-4 rounded-xl border border-stone-100 space-y-3">
+                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                  Print Options
+                </label>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-stone-700">Include Title & Header</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeTitleHeader}
+                      onChange={(e) => setIncludeTitleHeader(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent-gold" />
+                  </label>
+                </div>
+
+                {exportScope === 'current' && highlights[activeNote.id]?.length > 0 && (
+                  <div className="flex items-center justify-between pt-1 border-t border-stone-200/50">
+                    <span className="text-xs font-bold text-stone-700">Include Personal Highlights</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeAnnotations}
+                        onChange={(e) => setIncludeAnnotations(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-8 h-4 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3.5 after:transition-all peer-checked:bg-accent-gold" />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-stone-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsExportModalOpen(false)}
+                className="btn-outline text-xs px-4 py-2 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExportPrint}
+                className="btn-gold text-xs px-5 py-2 cursor-pointer flex items-center gap-1.5"
+              >
+                <Printer className="w-4 h-4" />
+                Print / Export PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {printPortal}
     </div>
   );
 }

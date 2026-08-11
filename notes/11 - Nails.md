@@ -5,7 +5,7 @@ tags: [palmistry, hasta-samudrika-shastra, nails]
 # Reading the Nails (Nakh)
 
 > [!NOTE] Context and framing
-> The teacher opens by placing nails within the overall reading system: the **front palm** remains the single most useful source for reading a person's **nature**. The back-of-hand method (learned earlier) also contributes, and **nails** are an additional layer. Many people read nature primarily from nails, and the teacher will teach both approaches — nature-reading from nails, and (more importantly) **health**-reading from nails, since nails are traditionally used mainly for health indications (doctors check nails first when assessing illness).
+> Placing nails within the overall reading system: the **front palm** remains the single most useful source for reading a person's **nature**. The back-of-hand method (learned earlier) also contributes, and **nails** are an additional layer. Many people read nature primarily from nails, and the teacher will teach both approaches — nature-reading from nails, and (more importantly) **health**-reading from nails, since nails are traditionally used mainly for health indications (doctors check nails first when assessing illness).
 >
 > **Combined accuracy target**: by combining front palm (base) + nails + fingers + minor adjustments, the teacher estimates a reader can reach roughly **70% accuracy** in describing a person's nature.
 >

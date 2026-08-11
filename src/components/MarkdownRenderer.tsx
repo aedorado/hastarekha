@@ -8,6 +8,7 @@ interface MarkdownRendererProps {
   onWikilinkClick?: (target: string) => void;
   fontSize?: 'sm' | 'base' | 'lg' | 'xl';
   fontFamily?: 'sans' | 'serif';
+  isPrinting?: boolean;
 }
 
 export const slugify = (text: string) => {
@@ -38,7 +39,8 @@ export default function MarkdownRenderer({
   content, 
   onWikilinkClick,
   fontSize = 'base',
-  fontFamily = 'sans'
+  fontFamily = 'sans',
+  isPrinting = false
 }: MarkdownRendererProps) {
   // Setup sizing map
   const sizes = {
@@ -511,6 +513,7 @@ export default function MarkdownRenderer({
             config={config}
             title={titleText}
             defaultClosed={isDefaultClosed}
+            isPrinting={isPrinting}
           >
             {contentLines.map((line, idx) => (
               <p key={idx} className={`${sizes.quote} mb-2 last:mb-0`}>
@@ -586,10 +589,12 @@ interface CollapsibleCalloutProps {
   title: string;
   defaultClosed: boolean;
   children: React.ReactNode;
+  isPrinting?: boolean;
 }
 
-function CollapsibleCallout({ config, title, defaultClosed, children }: CollapsibleCalloutProps) {
+function CollapsibleCallout({ config, title, defaultClosed, children, isPrinting = false }: CollapsibleCalloutProps) {
   const [isOpen, setIsOpen] = useState(!defaultClosed);
+  const showContent = isOpen || isPrinting;
 
   return (
     <div className={`rounded-xl border border-stone-200/50 my-4 overflow-hidden shadow-sm flex flex-col ${config.bg} ${config.borderLeft}`}>
@@ -601,14 +606,14 @@ function CollapsibleCallout({ config, title, defaultClosed, children }: Collapsi
           {config.icon}
           <span className={config.titleColor}>{title}</span>
         </div>
-        {isOpen ? (
-          <ChevronDown className="w-4 h-4 text-stone-500" />
+        {showContent ? (
+          <ChevronDown className="w-4 h-4 text-stone-500 no-print" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-stone-500" />
+          <ChevronRight className="w-4 h-4 text-stone-500 no-print" />
         )}
       </button>
       
-      {isOpen && (
+      {showContent && (
         <div className="px-4 pb-4 pt-1 text-stone-750 border-t border-stone-100/50 space-y-2">
           {children}
         </div>

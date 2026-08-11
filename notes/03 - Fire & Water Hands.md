@@ -1,7 +1,7 @@
-# Fiery Hand & Watery Hand — Detailed Qualities and Case Studies
+# Chapter 3: Fiery Hand & Watery Hand — Detailed Qualities and Case Studies
 
 > [!INFO] Lecture Scope
-> This class refines the **measurement thresholds** for classifying a hand as Fiery, Watery, or Mixed, then covers the detailed personality qualities of the **Fiery hand** and the **Watery hand** in depth, with several live hand demonstrations.
+> This lesson refines the **measurement thresholds** for classifying a hand as Fiery, Watery, or Mixed, then covers the detailed personality qualities of the **Fiery hand** and the **Watery hand** in depth.
 
 ---
 
@@ -30,7 +30,7 @@ Using the palm length as the base measurement (example: palm = **10 cm**):
 > [!EXAMPLE] Case Study — A Young Maid's Hand
 > The teacher observed a young girl (sent to work by her unwell mother) sweeping the floor carefully, and took a photo of her hand out of curiosity. On measuring, her hand fell into the **Mixed** category — not fully Fire, not fully Water.
 
-> [!NOTE] Speaker emphasized repeatedly: A finger will practically never be found longer than about **11 cm** relative to a 10 cm palm — fingers this long simply don't occur, so the Watery range tops out realistically around there.
+> [!NOTE] Emphasized repeatedly: A finger will practically never be found longer than about **11 cm** relative to a 10 cm palm — fingers this long simply don't occur, so the Watery range tops out realistically around there.
 
 > [!WARNING] "Mixed hand" (as understood in this lecture, from front palm) is not primarily read from the back palm — this term should not be confused with any separate back-palm classification.
 
@@ -62,7 +62,7 @@ Before studying the shape-based qualities (Fiery, Watery, etc.) in depth, a hand
 > [!INFO] Recap: Definition
 > **Rectangular palm + short fingers (relative to palm, per the thresholds above) = Fiery hand.**
 
-> [!NOTE] Speaker emphasized repeatedly: The **Fiery hand is extremely common** — nowadays it's the hand type seen most often, in nearly every household and even in oneself, because its qualities are broadly relatable to most people.
+> [!NOTE] Emphasized repeatedly: The **Fiery hand is extremely common** — nowadays it's the hand type seen most often, in nearly every household and even in oneself, because its qualities are broadly relatable to most people.
 
 ### Core Nature — The Element of Fire
 Fire spreads far when it catches; fire brings **warmth** and can provide **energy** (e.g., cooking food for nourishment) when used correctly. Fiery-hand people reflect these qualities across **physical, emotional, mental, career, and relationship** levels.
@@ -70,8 +70,8 @@ Fire spreads far when it catches; fire brings **warmth** and can provide **energ
 ### Key Traits
 - **Very active** — physically capable of managing multiple simultaneous responsibilities (e.g., office work, home, taking a child somewhere) all at once, faster than other hand types, and can think **logically** while doing so.
 - **Relationship style**: never let a relationship get boring; crave adventure — outings, restaurants, spontaneous plans; will not sit passively when a partner suggests going out.
-- **Impulsive**, quick to anger over small matters, carries some **aggression** — described as carrying **Sun and Mars-type qualities** (a reference point for students familiar with astrology).
-- **Stubborn (जिद्दी)** — once decided, they will see it through. This stubbornness is amplified if the **upper thumb area** (the willpower zone of the thumb, to be taught later) is well developed/full.
+- **Impulsive**, quick to anger over small matters, carries some **aggression** — described as carrying **Sun and Mars-type qualities**.
+- **Stubborn (जिद्दी)** — once decided, they will see it through. This stubbornness is amplified if the **upper thumb area** (the willpower zone of the thumb) is well developed/full.
 - **Highly social** — dislike being alone; enjoy **social gatherings**, connecting with people, and learning constantly.
 
 > [!TIP] Two Kinds of "Learning"
@@ -109,7 +109,7 @@ Fire spreads far when it catches; fire brings **warmth** and can provide **energ
 > Suggested that Fiery-hand people show **impatience/restlessness (उतावलापन)**, and could be advised to **channel energy positively and meditate** — both points were confirmed by the teacher as accurate and good advice. (Draviṇ jī separately confirmed his own hand was Fiery after being asked to send a photo.)
 
 > [!EXAMPLE] Student — Madhu jī's Measurement Question
-> Madhu jī initially thought her hand might be **Mixed** rather than Fiery, since her measured palm was 10.5 (units as spoken) with fingers at 7.5, wondering if being below the 8.5 cm mark shifted it to Mixed. The teacher clarified this was a misunderstanding — a finger length **below** the Fiery range (8–8.5) is **still Fiery**, not Mixed (Mixed applies specifically to the **in-between** range, i.e., roughly 8.5–9). Madhu jī confirmed identifying strongly with Fiery traits: creativity, love of learning many new things (exemplified by taking up astrology and related subjects), staying busy/active, and — after reflection — noted she used to make very fast financial decisions (sometimes at a cost) but has since learned to analyze more, attributed to a strong Sun and Jupiter in her chart; she also related to the class's advice about finishing one task before starting the next.
+> Her measured palm was 10.5 with fingers at 7.5. Madhu jī confirmed identifying strongly with Fiery traits: creativity, love of learning many new things (exemplified by taking up astrology and related subjects), staying busy/active, and — after reflection — noted she used to make very fast financial decisions (sometimes at a cost) but has since learned to analyze more, attributed to a strong Sun and Jupiter in her chart; she also related to the class's advice about finishing one task before starting the next.
 
 > [!EXAMPLE] Demonstration — Aravind jī's Hand
 > - **Palm shape:** clearly rectangular.
@@ -155,12 +155,9 @@ Water is associated with **emotions**, and in astrology with the **Moon** ("च�
 - A **Fiery-hand** person suits **teamwork**, but should be given a **leadership** role rather than working strictly under someone.
 - A **Watery-hand** person is more **emotionally heavy**, especially if the **Moon mount** is poor/heavily lined (indicating emotional disturbance) — such a person needs regular **motivation and feedback** ("well done," positive reinforcement) to perform their best on future tasks; a Fiery-hand employee, by contrast, does not require this feedback loop.
 
-### Advice for Watery Hand People (as discussed with students)
-> [!FAQ]- What advice would you give a Watery-hand person? (student jīveś jī's answer, confirmed by the teacher)
-> **A:** Since they are sensitive and emotional, they should learn to **control their mind/reactions**, and specifically should learn to say "no" without excessive guilt — the core advice being to **keep expectations of others low**, since repeated overthinking about a single "no" from someone else can be draining.
-
-> [!FAQ]- Any additional advice? (student Ravindra jī's suggestion, confirmed by the teacher)
-> **A:** They should seek the guidance/support of someone senior or more experienced before making decisions — the teacher fully endorsed this as good advice.
+### Advice for Watery Hand People 
+> [!FAQ]- What advice would you give a Watery-hand person? 
+> **A:** Since they are sensitive and emotional, they should learn to **control their mind/reactions**, and specifically should learn to say "no" without excessive guilt — the core advice being to **keep expectations of others low**, since repeated overthinking about a single "no" from someone else can be draining. They should seek the guidance/support of someone senior or more experienced before making decisions — the teacher fully endorsed this as good advice.
 
 ---
 
