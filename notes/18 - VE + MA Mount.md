@@ -13,11 +13,9 @@ source: lecture transcript (Hindi–English)
 
 ---
 
-## 0. Class opening
+## 0. Topic of the day
 
-- Teacher's health: throat slightly better; had coughed a lot in the last class.
-- Teacher remarked that the daśā (planetary period) is changing and **śani** (Saturn) is arriving, so she is feeling the Saturn effect. For the first time in her life she is noticing daśā effects (earlier she paid no attention to daśās; she began noticing since she started studying). She feels a great deal of laziness and said she now understands what Saturn-daśā effects are.
-- Topic of the day: **śukra parvata (Venus Mount)**. She then also decided to teach **maṅgala parvata (Mars Mount)** the same day.
+- **śukra parvata (Venus Mount)** first; then **maṅgala parvata (Mars Mount)** was also taught the same day.
 
 ---
 
@@ -422,34 +420,31 @@ Mars is at **two places** on the hand:
 
 # 4. Questions & Answers
 
-> [!FAQ] Q1 – Ma'am, how is your health today?
-> **A:** Just okay; the throat is lighter; coughed a lot in the last class but it will manage. (Daśā also changing; Saturn arriving; she feels the laziness.)
-
-> [!FAQ] Q2 – (Student) In this hand, is the Saturn finger much shorter, or is the Sun finger much longer?
+> [!FAQ] Q1 – (Student) In this hand, is the Saturn finger much shorter, or is the Sun finger much longer?
 > **A:** Always **compare the Sun finger to the Jupiter finger.** The Sun finger here is normal; the tilt makes it appear longer; Saturn finger appears very short. *(See Case 1.)*
 
-> [!FAQ] Q3 – What type of hand is this? (female hand)
+> [!FAQ] Q2 – What type of hand is this? (female hand)
 > **A (student):** Fiery. **Teacher:** Yes, fiery.
 
-> [!FAQ] Q4 – (Male hand) What type of hand? Which finger is short?
+> [!FAQ] Q3 – (Male hand) What type of hand? Which finger is short?
 > **A:** Square palm; fingers short; "ardhī" **[unclear in transcript]**. *(See Case 2.)*
 
-> [!FAQ] Q5 – (Student) In Venus mount we should also see the centre, etc.?
+> [!FAQ] Q4 – (Student) In Venus mount we should also see the centre, etc.?
 > **A:** What do you need to see? (Student: *Apex*.) Teacher: **Not needed now; apex will be seen but in a different way; she will teach it later.**
 
-> [!FAQ] Q6 – (Teacher) What is your age, Arvind ji?
+> [!FAQ] Q5 – (Teacher) What is your age, Arvind ji?
 > **A:** 43. Teacher then explains expansion, built property in Gurgaon (2021, rental, with brothers). *(See Case 3.)*
 
-> [!FAQ] Q7 – (Student, Dravin ji) How does the expansion flow – how does it work?
+> [!FAQ] Q6 – (Student, Dravin ji) How does the expansion flow – how does it work?
 > **A:** You will come to know; we are reading now; **tomorrow's class** will tell.
 
-> [!FAQ] Q8 – (Student) Please summarize once what we have studied so far.
+> [!FAQ] Q7 – (Student) Please summarize once what we have studied so far.
 > **A (teacher):** Not all now. She needs **at least four classes** for a summary. Students can ask questions; **she will summarize only at the end, when the whole course is complete.**
 
-> [!FAQ] Q9 – (Student) Which "y" and "t" are good? How should we write them?
+> [!FAQ] Q8 – (Student) Which "y" and "t" are good? How should we write them?
 > **A:** She will tell later.
 
-> [!FAQ] Q10 – (Student) Does Venus show money?
+> [!FAQ] Q9 – (Student) Does Venus show money?
 > **A:** **Money is not seen from Venus alone. The Moon is also seen.**
 
 ---
