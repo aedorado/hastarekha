@@ -72,8 +72,24 @@ function parseSections(content: string): DocSection[] {
 export default function LectureNotes() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Load initial notes immediately from client memory/sessionStorage (0ms tab switch)
+  const [notes, setNotes] = useState<Note[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('hastarekha_notes_cache');
+        if (cached) return JSON.parse(cached);
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem('hastarekha_notes_cache');
+    }
+    return true;
+  });
 
   // Custom reading experience states
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
@@ -153,13 +169,37 @@ export default function LectureNotes() {
     }
   }, []);
 
+  // Fetch and revalidate notes with ETag (Never stale: checks server on mount, updates if changed)
   useEffect(() => {
     async function fetchNotes() {
       try {
-        const res = await fetch('/api/notes');
+        const storedEtag = typeof window !== 'undefined' ? sessionStorage.getItem('hastarekha_notes_etag') : null;
+        const headers: Record<string, string> = {};
+        if (storedEtag) {
+          headers['If-None-Match'] = storedEtag;
+        }
+
+        const res = await fetch('/api/notes', { headers });
+
+        // 304 Not Modified -> Cache is 100% fresh, nothing changed!
+        if (res.status === 304) {
+          setIsLoading(false);
+          return;
+        }
+
+        // 200 OK -> Server has new or modified notes
         if (res.ok) {
+          const newEtag = res.headers.get('ETag');
           const data = await res.json();
           setNotes(data);
+          if (typeof window !== 'undefined') {
+            try {
+              sessionStorage.setItem('hastarekha_notes_cache', JSON.stringify(data));
+              if (newEtag) sessionStorage.setItem('hastarekha_notes_etag', newEtag);
+            } catch (e) {
+              // ignore storage limits
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load notes', err);
