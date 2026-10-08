@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { HandProfile, HandView, saveDemoProfile, isSupabaseConfigured } from '@/lib/supabase';
+import { updateProfileInCache } from '@/lib/profilesCache';
 import HandCanvas from '@/components/HandCanvas';
 import AnalysisForm from '@/components/AnalysisForm';
 import PageLayout from '@/components/PageLayout';
@@ -172,6 +173,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         });
 
         if (res.ok) {
+          updateProfileInCache(activeProfile);
           alert('Analysis Profile Saved Successfully!');
           router.push('/');
         } else {
@@ -179,12 +181,14 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         }
       } else {
         saveDemoProfile(activeProfile);
+        updateProfileInCache(activeProfile);
         alert('Saved locally to browser storage!');
         router.push('/');
       }
     } catch (e) {
       alert('Error saving profile. Saving locally to browser fallback...');
       saveDemoProfile(activeProfile);
+      updateProfileInCache(activeProfile);
       router.push('/');
     } finally {
       setIsSaving(false);

@@ -4,36 +4,45 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { HandProfile, getDemoProfiles, isSupabaseConfigured } from '@/lib/supabase';
+import { getCachedProfiles, updateProfileInCache } from '@/lib/profilesCache';
 import AnalysisEditor from '@/components/AnalysisEditor';
 import PageLayout from '@/components/PageLayout';
 
 export default function AnalysisPage() {
   const params = useParams();
   const id = params.id as string;
-  const [profile, setProfile] = useState<HandProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Instant lookup from client cache
+  const cachedMatch = getCachedProfiles()?.find((p) => p.id === id) || null;
+  const [profile, setProfile] = useState<HandProfile | null>(cachedMatch);
+  const [isLoading, setIsLoading] = useState(!cachedMatch);
 
   useEffect(() => {
     async function loadProfile() {
+      // If we already have the profile from cache, skip initial blocking spinner
+      if (cachedMatch) {
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       if (isSupabaseConfigured) {
         try {
-          const res = await fetch('/api/hands');
+          const res = await fetch(`/api/hands?id=${id}`);
           if (res.ok) {
             const data = await res.json();
-            if (!data.isDemo) {
-              const found = data.find((p: HandProfile) => p.id === id);
-              if (found) {
-                setProfile(found);
-                setIsLoading(false);
-                return;
-              }
+            if (data && !data.error) {
+              setProfile(data);
+              updateProfileInCache(data);
+              setIsLoading(false);
+              return;
             }
           }
         } catch (e) {
           console.warn('Supabase fetch failed, falling back to local storage.');
         }
       }
+
       const demoProfiles = getDemoProfiles();
       const found = demoProfiles.find((p) => p.id === id);
       if (found) {
@@ -41,8 +50,9 @@ export default function AnalysisPage() {
       }
       setIsLoading(false);
     }
+
     loadProfile();
-  }, [id]);
+  }, [id, cachedMatch]);
 
   if (isLoading) {
     return (

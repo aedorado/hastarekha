@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { HandProfile, parseVedicData, getVedicInterpretations } from '@/lib/supabase';
 import { Search, Plus, Calendar, Download, Upload, Trash2, Eye, HelpCircle, ImageIcon } from 'lucide-react';
+import OptimizedHandImage from '@/components/OptimizedHandImage';
 
 interface DashboardProps {
   profiles: HandProfile[];
@@ -242,11 +243,12 @@ export default function Dashboard({
               {/* Small Square Thumbnail */}
               <div className="w-28 h-28 shrink-0 relative bg-stone-100/50 overflow-hidden self-center mx-4 my-3 rounded-lg border border-stone-200/60">
                 {thumbnailUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <OptimizedHandImage
                     src={thumbnailUrl}
                     alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="112px"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <div className="w-full h-full bg-stone-50 flex flex-col items-center justify-center text-stone-300 gap-1">

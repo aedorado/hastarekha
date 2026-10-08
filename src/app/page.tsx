@@ -2,39 +2,44 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { HandProfile, getDemoProfiles, saveDemoProfile, deleteDemoProfile, isSupabaseConfigured } from '@/lib/supabase';
+import { HandProfile, saveDemoProfile, deleteDemoProfile } from '@/lib/supabase';
+import {
+  loadHandProfiles,
+  getCachedProfiles,
+  setCachedProfiles,
+  removeProfileFromCache,
+  subscribeProfilesCache,
+} from '@/lib/profilesCache';
 import Dashboard from '@/components/Dashboard';
 import PageLayout from '@/components/PageLayout';
 
 export default function Home() {
   const router = useRouter();
-  const [profiles, setProfiles] = useState<HandProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const cachedInitial = getCachedProfiles();
+  const [profiles, setProfiles] = useState<HandProfile[]>(cachedInitial || []);
+  const [isLoading, setIsLoading] = useState(!cachedInitial);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
 
-  // Initialize and load profiles
+  // Initialize and load profiles using SWR cache
   useEffect(() => {
+    // Subscribe to cross-component cache updates
+    const unsubscribe = subscribeProfilesCache((updated) => {
+      setProfiles(updated);
+    });
+
     async function loadData() {
-      setIsLoading(true);
-      if (isSupabaseConfigured) {
-        try {
-          const res = await fetch('/api/hands');
-          const data = await res.json();
-          if (res.ok && !data.isDemo) {
-            setProfiles(data);
-            setIsSupabaseConnected(true);
-            setIsLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.warn('Supabase fetch failed, falling back to local storage.');
-        }
+      // If we don't have cached data yet, show loading
+      if (!getCachedProfiles()) {
+        setIsLoading(true);
       }
-      setProfiles(getDemoProfiles());
-      setIsSupabaseConnected(false);
+      const res = await loadHandProfiles();
+      setProfiles(res.profiles);
+      setIsSupabaseConnected(res.isSupabaseConnected);
       setIsLoading(false);
     }
+
     loadData();
+    return () => unsubscribe();
   }, []);
 
   const handleSelectProfile = (id: string) => {
@@ -46,23 +51,23 @@ export default function Home() {
   };
 
   const handleDeleteProfile = async (id: string) => {
+    // Optimistic UI update via cache
+    removeProfileFromCache(id);
+
     try {
       if (isSupabaseConnected) {
         const res = await fetch(`/api/hands?id=${id}`, {
           method: 'DELETE',
         });
-        if (res.ok) {
-          setProfiles(profiles.filter((p) => p.id !== id));
-        } else {
+        if (!res.ok) {
           throw new Error('API delete failed');
         }
       } else {
-        const updated = deleteDemoProfile(id);
-        setProfiles(updated);
+        deleteDemoProfile(id);
       }
     } catch (e) {
-      const updated = deleteDemoProfile(id);
-      setProfiles(updated);
+      console.error('Delete profile error:', e);
+      deleteDemoProfile(id);
     }
   };
 
@@ -76,12 +81,12 @@ export default function Home() {
             body: JSON.stringify(item),
           });
         }
-        const res = await fetch('/api/hands');
-        const data = await res.json();
-        if (res.ok) setProfiles(data);
+        const res = await loadHandProfiles({ force: true });
+        setProfiles(res.profiles);
       } else {
         imported.forEach((p) => saveDemoProfile(p));
-        setProfiles(getDemoProfiles());
+        setCachedProfiles(imported);
+        setProfiles(imported);
       }
       alert('Database imported successfully!');
     } catch (e) {

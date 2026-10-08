@@ -2,35 +2,38 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { HandProfile, getDemoProfiles, isSupabaseConfigured } from '@/lib/supabase';
+import { HandProfile } from '@/lib/supabase';
+import {
+  loadHandProfiles,
+  getCachedProfiles,
+  subscribeProfilesCache,
+} from '@/lib/profilesCache';
 import AllHandsView from '@/components/AllHandsView';
 import PageLayout from '@/components/PageLayout';
 
 export default function AllHandsPage() {
   const router = useRouter();
-  const [profiles, setProfiles] = useState<HandProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const cachedInitial = getCachedProfiles();
+  const [profiles, setProfiles] = useState<HandProfile[]>(cachedInitial || []);
+  const [isLoading, setIsLoading] = useState(!cachedInitial);
 
   useEffect(() => {
+    // Listen for updates from other tabs/actions
+    const unsubscribe = subscribeProfilesCache((updated) => {
+      setProfiles(updated);
+    });
+
     async function loadData() {
-      setIsLoading(true);
-      if (isSupabaseConfigured) {
-        try {
-          const res = await fetch('/api/hands');
-          const data = await res.json();
-          if (res.ok && !data.isDemo) {
-            setProfiles(data);
-            setIsLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.warn('Supabase fetch failed, falling back to local storage.');
-        }
+      if (!getCachedProfiles()) {
+        setIsLoading(true);
       }
-      setProfiles(getDemoProfiles());
+      const res = await loadHandProfiles();
+      setProfiles(res.profiles);
       setIsLoading(false);
     }
+
     loadData();
+    return () => unsubscribe();
   }, []);
 
   return (

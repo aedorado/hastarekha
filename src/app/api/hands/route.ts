@@ -1,23 +1,52 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
 
-const isConfigured = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+const isConfigured = !!(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+);
 
-// Get all hand profiles
-export async function GET() {
+// Get hand profiles (all or single by ?id=...)
+export async function GET(request: Request) {
   if (!isConfigured) {
-    return NextResponse.json({ error: 'Supabase is not configured', isDemo: true }, { status: 200 });
+    return NextResponse.json(
+      { error: 'Supabase is not configured', isDemo: true },
+      { status: 200 }
+    );
   }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const supabase = await createClient();
+
+    if (id) {
+      const { data, error } = await supabase
+        .from('hands')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json(data, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=86400',
+        },
+      });
+    }
+
     const { data, error } = await supabase
       .from('hands')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=86400',
+      },
+    });
   } catch (error: any) {
     console.error('Database fetch error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -27,7 +56,10 @@ export async function GET() {
 // Upsert a hand profile
 export async function POST(request: Request) {
   if (!isConfigured) {
-    return NextResponse.json({ error: 'Supabase is not configured', isDemo: true }, { status: 200 });
+    return NextResponse.json(
+      { error: 'Supabase is not configured', isDemo: true },
+      { status: 200 }
+    );
   }
 
   try {
@@ -58,6 +90,12 @@ export async function POST(request: Request) {
       .select();
 
     if (error) throw error;
+
+    // Purge CDN and route cache so changes appear immediately
+    revalidatePath('/api/hands');
+    revalidatePath('/');
+    revalidatePath('/all-hands');
+
     return NextResponse.json(data[0]);
   } catch (error: any) {
     console.error('Database save error:', error);
@@ -67,7 +105,10 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   if (!isConfigured) {
-    return NextResponse.json({ error: 'Supabase is not configured', isDemo: true }, { status: 200 });
+    return NextResponse.json(
+      { error: 'Supabase is not configured', isDemo: true },
+      { status: 200 }
+    );
   }
 
   try {
@@ -85,6 +126,12 @@ export async function DELETE(request: Request) {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Purge CDN and route cache
+    revalidatePath('/api/hands');
+    revalidatePath('/');
+    revalidatePath('/all-hands');
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Database delete error:', error);

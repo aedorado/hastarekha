@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { HandProfile, parseVedicData, HAND_VIEW_LABELS, HandView } from '@/lib/supabase';
 import { ChevronLeft, ChevronRight, ExternalLink, Hand, ImageOff } from 'lucide-react';
+import OptimizedHandImage from '@/components/OptimizedHandImage';
 
 interface HandEntry {
   profileId: string;
@@ -263,13 +264,15 @@ export default function AllHandsView({ profiles, isLoading }: AllHandsViewProps)
               </div>
             </div>
           ) : (
-            /* Actual hand image */
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            /* Actual hand image optimized through Edge CDN */
+            <OptimizedHandImage
               key={current.imageUrl!}
               src={current.imageUrl!}
               alt={`${current.profileName} — ${current.viewLabel}`}
-              className="absolute inset-0 w-full h-full object-contain"
+              fill
+              priority={true}
+              sizes="(max-width: 1024px) 100vw, 85vw"
+              className="object-contain"
               draggable={false}
             />
           )}
@@ -367,12 +370,12 @@ export default function AllHandsView({ profiles, isLoading }: AllHandsViewProps)
                   }`}
               >
                 {entry.imageUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <OptimizedHandImage
                     src={entry.imageUrl}
                     alt={entry.viewLabel}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    sizes="56px"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-stone-800 flex items-center justify-center">
