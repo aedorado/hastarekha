@@ -5,6 +5,7 @@ import { Search, BookOpen, GraduationCap, X, List, FileDown, Printer } from 'luc
 import MarkdownRenderer, { createSlugger } from './MarkdownRenderer';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
+import ReviewDeck from './ReviewDeck';
 
 interface Note {
   id: string;
@@ -873,12 +874,28 @@ export default function LectureNotes() {
                       />
                     </div>
 
-                    {/* Review Mode - Show Highlights Only */}
+                    {/* Review Mode - Interactive Spaced Repetition Flashcards & Highlights */}
                     {studyMode === 'review' && (
-                      <div className="space-y-4">
-                        {highlights[activeNote.id] && highlights[activeNote.id].length > 0 ? (
-                          <>
-                            <h3 className="font-bold text-stone-900 text-lg">Your Highlights & Notes</h3>
+                      <div className="space-y-8 animate-fade-in">
+                        {/* Dynamic Flashcards Engine */}
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-serif font-bold text-stone-900 text-lg flex items-center gap-2">
+                              <span>🎯</span> Active Recall Flashcards
+                            </h3>
+                            <span className="text-xs text-stone-500 font-medium">
+                              Flip, recall, and rate to cement into memory
+                            </span>
+                          </div>
+                          <ReviewDeck activeNote={activeNote} allNotes={notes} />
+                        </div>
+
+                        {/* User Highlights Section */}
+                        {highlights[activeNote.id] && highlights[activeNote.id].length > 0 && (
+                          <div className="border-t border-stone-200 pt-6">
+                            <h3 className="font-serif font-bold text-stone-900 text-base mb-3">
+                              Your Highlights for this Lecture ({highlights[activeNote.id].length})
+                            </h3>
                             <div className="space-y-3">
                               {highlights[activeNote.id].map((hl) => (
                                 <div key={hl.id} className={`p-3 rounded-lg border-l-4 ${
@@ -886,15 +903,11 @@ export default function LectureNotes() {
                                   hl.color === 'blue' ? 'bg-blue-50 border-blue-400' :
                                   'bg-green-50 border-green-400'
                                 }`}>
-                                  <p className="text-sm text-stone-800 italic mb-2">"{hl.text}"</p>
-                                  {hl.note && <p className="text-xs text-stone-600">Note: {hl.note}</p>}
+                                  <p className="text-sm text-stone-800 italic mb-1">"{hl.text}"</p>
+                                  {hl.note && <p className="text-xs text-stone-600 font-semibold">Note: {hl.note}</p>}
                                 </div>
                               ))}
                             </div>
-                          </>
-                        ) : (
-                          <div className="text-center py-8 text-stone-500">
-                            <p className="text-sm">No highlights yet. Switch to <span className="font-bold">Annotate Mode</span> to add highlights.</p>
                           </div>
                         )}
                       </div>
