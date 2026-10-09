@@ -12,19 +12,19 @@ export default function AnalysisPage() {
   const params = useParams();
   const id = params.id as string;
   
-  // Instant lookup from client cache
-  const cachedMatch = getCachedProfiles()?.find((p) => p.id === id) || null;
-  const [profile, setProfile] = useState<HandProfile | null>(cachedMatch);
-  const [isLoading, setIsLoading] = useState(!cachedMatch);
+  const [profile, setProfile] = useState<HandProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadProfile() {
-      // If we already have the profile from cache, skip initial blocking spinner
-      if (cachedMatch) {
-        setIsLoading(false);
-        return;
-      }
+    // Instant lookup from client cache on mount
+    const cachedMatch = getCachedProfiles()?.find((p) => p.id === id) || null;
+    if (cachedMatch) {
+      setProfile(cachedMatch);
+      setIsLoading(false);
+      return;
+    }
 
+    async function loadProfile() {
       setIsLoading(true);
       if (isSupabaseConfigured) {
         try {
@@ -52,7 +52,7 @@ export default function AnalysisPage() {
     }
 
     loadProfile();
-  }, [id, cachedMatch]);
+  }, [id]);
 
   if (isLoading) {
     return (

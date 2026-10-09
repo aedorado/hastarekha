@@ -13,11 +13,16 @@ import PageLayout from '@/components/PageLayout';
 
 export default function AllHandsPage() {
   const router = useRouter();
-  const cachedInitial = getCachedProfiles();
-  const [profiles, setProfiles] = useState<HandProfile[]>(cachedInitial || []);
-  const [isLoading, setIsLoading] = useState(!cachedInitial);
+  const [profiles, setProfiles] = useState<HandProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const cached = getCachedProfiles();
+    if (cached && cached.length > 0) {
+      setProfiles(cached);
+      setIsLoading(false);
+    }
+
     // Listen for updates from other tabs/actions
     const unsubscribe = subscribeProfilesCache((updated) => {
       setProfiles(updated);

@@ -15,20 +15,24 @@ import PageLayout from '@/components/PageLayout';
 
 export default function Home() {
   const router = useRouter();
-  const cachedInitial = getCachedProfiles();
-  const [profiles, setProfiles] = useState<HandProfile[]>(cachedInitial || []);
-  const [isLoading, setIsLoading] = useState(!cachedInitial);
+  const [profiles, setProfiles] = useState<HandProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
 
   // Initialize and load profiles using SWR cache
   useEffect(() => {
+    const cached = getCachedProfiles();
+    if (cached && cached.length > 0) {
+      setProfiles(cached);
+      setIsLoading(false);
+    }
+
     // Subscribe to cross-component cache updates
     const unsubscribe = subscribeProfilesCache((updated) => {
       setProfiles(updated);
     });
 
     async function loadData() {
-      // If we don't have cached data yet, show loading
       if (!getCachedProfiles()) {
         setIsLoading(true);
       }
