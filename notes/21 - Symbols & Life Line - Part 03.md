@@ -1,5 +1,5 @@
 
-# Hasta Sāmudrika Śāstra — Signs & Symbols, and the Life Line (Class of 7 Oct 2026)
+# Hasta Sāmudrika Śāstra — Signs & Symbols, and the Life Line 
 
 > [!NOTE] About these notes
 > - Source: Hindi/English class transcript, translated into English; key Hindi/Sanskrit terms kept.

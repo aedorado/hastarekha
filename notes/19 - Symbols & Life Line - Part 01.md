@@ -2,7 +2,7 @@
 ---
 title: "Hasta Sāmudrika Śāstra – Signs & Symbols and Jīvana Rekhā (Life Line), Part 01"
 tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
-source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and Jeevan Rekha"
+source: lecture transcript (Hindi–English), "Some Symbols and Jeevan Rekha"
 ---
 
 # Signs & Symbols and Jīvana Rekhā (Life Line) – Part 01
