@@ -136,31 +136,93 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
 
         {activeTab === 'signs' && (
           <div className="space-y-4">
-            <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Special Signs (Auspicious / Inauspicious)</h3>
+            <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Special Signs &amp; Sacred Geometry (Lectures 13–27)</h3>
 
-            <div className="space-y-3">
-              <div>
-                <strong className="text-stone-900 font-bold flex items-center gap-1">
+            <div className="space-y-3.5">
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold flex items-center gap-1.5 text-xs">
                   <Sparkles className="w-3.5 h-3.5 text-accent-gold" />
-                  Star (Nakṣatra)
+                  Cross (Krośa / Catuṣkoṇa)
                 </strong>
-                <p className="text-stone-600 text-xs mt-1">Indicates sudden energy amplification. A star on Jupiter represents great fame and success; on Saturn, a dramatic destiny.</p>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Jupiter Mount:</strong> Exceptionally auspicious — happy marriage, noble education, blessed spousal connection.<br />
+                  <strong>Anywhere else:</strong> Inauspicious — sudden obstacle, accident, surgery, or health affliction.
+                </p>
               </div>
-              <div>
-                <strong className="text-stone-900 font-bold">Cross (Catuṣkoṇa)</strong>
-                <p className="text-stone-600 text-xs mt-1">Usually represents obstacles. The Mystic Cross (between Heart & Head) shows high intuition and occult skill.</p>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold flex items-center gap-1.5 text-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  Star (Nakṣatra / Tārā)
+                </strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Jupiter:</strong> High political or administrative power, sudden rise.<br />
+                  <strong>Sun:</strong> Extraordinary celebrity fame or artistic genius.<br />
+                  <strong>Mercury:</strong> Oratorical and research agility.<br />
+                  <strong>Lower Mars:</strong> Hot temper, teenage injuries or accident-prone.<br />
+                  <strong>Moon:</strong> Danger near water bodies, psychological melancholy.<br />
+                  <strong>Saturn:</strong> Fatalistic karmic burden or historic endurance test.
+                </p>
               </div>
-              <div>
-                <strong className="text-stone-900 font-bold">Fish (Matsya)</strong>
-                <p className="text-stone-600 text-xs mt-1">A highly auspicious sign indicating wisdom, spiritual protection, wealth, and prosperity. Often found at the base of the palm.</p>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Square (Samacatuṣkoṇa / Rakṣā Kavaca)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Universal Rule:</strong> Divine protection shield (talisman). Protects whichever mount or line it appears on. On Jupiter: "Teacher\'s Square" — pedagogical skill and immunity to defamation. On Life line: miraculous recovery from hospitalization.
+                </p>
               </div>
-              <div>
-                <strong className="text-stone-900 font-bold">Island (Dvīpa)</strong>
-                <p className="text-stone-600 text-xs mt-1">Indicates division of energy, weakness, periods of illness, or mental/emotional distress along a line.</p>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Trident (Triśūla)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Sun Line end:</strong> Tri-fold renown — status (Sun), commerce (Mercury), perseverance (Saturn).<br />
+                  <strong>Jupiter Mount:</strong> Supreme dharmic leadership, wisdom, and royal respect.
+                </p>
               </div>
-              <div>
-                <strong className="text-stone-900 font-bold">Trident (Triśūla)</strong>
-                <p className="text-stone-600 text-xs mt-1">A triple branch sign indicating good luck and power. On Mount of Jupiter, it increases authority; on Apollo, increases fame.</p>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Diamond Chain (Hīra Śṛṅkhalā)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Appears at the terminus of Fate or Sun line. Classical "wish-fulfilment" symbol — doubles the line\'s vitality and ensures realization of core life desires.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Canopy / Circle (Chatra / Cakravarti)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A circular halo capping the end of a major line. Bestows lifetime umbrella of divine protection against public disgrace and humiliation.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Fish Sign (Matsya Rekhā)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Spiritual mastery, philanthropic wealth, and divine grace. At Life line terminus: peaceful spiritual transition and mokṣa inclination.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Triangle (Trikoṇa &amp; Dhana kī Koṭhī)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Dhana kī Koṭhī (Money Room):</strong> Closed triangle formed between Fate, Head, and Mercury lines. Capacity to retain and accumulate savings.<br />
+                  <strong>Moon Mount:</strong> Esoteric intuition, occult depth.<br />
+                  <strong>Mars Mount:</strong> Military or surgical strategic precision.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Island (Dvīpa) &amp; Chain (Śṛṅkhalā)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Weakness, illness, depletion, or mental agony during the corresponding age period on that line.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Supportive Line vs. Parasite Line</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  <strong>Supportive (Mars Line):</strong> Runs parallel on inner side of Life line — acts as an energetic guardian angel (Devatā Rakṣā).<br />
+                  <strong>Parasite Line:</strong> Feeds off and drains the parent line\'s vitality.
+                </p>
               </div>
             </div>
           </div>

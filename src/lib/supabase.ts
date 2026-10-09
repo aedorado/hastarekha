@@ -37,6 +37,26 @@ export interface Drawing {
   label?: string;
 }
 
+// ─── Mount sign type ───
+export interface MountSignData {
+  height: 'Raised' | 'Normal' | 'Flat' | 'Very High / Overbuilt' | 'Displaced/Shifted' | '';
+  apex: 'Centered' | 'Toward Jupiter' | 'Toward Saturn' | 'Toward Sun' | 'Toward Mercury' | 'Toward Moon' | 'Toward Venus' | 'Toward Mars' | 'Toward Thumb' | 'Toward Head Line' | '';
+  signs: string[]; // e.g. ['Star', 'Cross', 'Square']
+  quality: 'Firm/Healthy' | 'Spongy (poor)' | 'Flat/Pressed' | '';
+  notes: string;
+}
+
+// ─── Structured line analysis type ───
+export interface LineAnalysisData {
+  quality: '' | 'Normal' | 'Faint/Thin' | 'Dark/Bleeding' | 'Broken' | 'Wavy/Uneven' | 'Chain-like' | 'Double' | 'Absent';
+  origin: string; // free-form origin description
+  terminus: string; // which mount / where it ends
+  signs: string[]; // signs on the line
+  features: string[]; // structural features
+  age_events: Array<{ age: number; event: string }>;
+  notes: string;
+}
+
 export interface VedicData {
   palm_length: number | '';
   finger_length: number | '';
@@ -84,20 +104,77 @@ export interface VedicData {
   // --- Lecture 09: Saturn (Middle) Finger ---
   saturn_length: 'Short' | 'Normal' | 'Long' | '';
   saturn_tilt: 'Toward Jupiter' | 'Straight' | 'Toward Sun' | '';
+  // Saturn phalanges (Notes 09)
+  saturn_phalange_1: 'Short' | 'Normal' | 'Long' | ''; // discipline/service
+  saturn_phalange_2: 'Normal' | 'Horizontal line' | 'Vertical line (stress)' | ''; // logic/research
+  saturn_phalange_3: 'Open/Full' | 'Thin' | 'Has marks/lines' | ''; // results/material
 
   // --- Lecture 09: Sun (Ring) Finger ---
   sun_length: 'Short' | 'Normal' | 'Long' | '';
   sun_tilt: 'Toward Saturn' | 'Straight' | 'Toward Mercury' | '';
   sun_crooked: boolean;
+  // Sun phalanges (Notes 09)
+  sun_phalange_1: 'Short' | 'Normal' | 'Long' | ''; // creativity/recognition
+  sun_phalange_2: 'Normal' | 'Horizontal line' | 'Vertical line (stress)' | ''; // logic/ego
+  sun_phalange_3: 'Open/Full' | 'Thin' | 'Has marks/lines' | ''; // results/luxury
 
   // --- Lecture 10: Mercury (Little) Finger ---
   mercury_tilt: 'Attached to Sun' | 'Straight' | 'Separated from Sun' | '';
   mercury_low_set: boolean; // base sits lower than other fingers
+  // Mercury phalanges (Notes 10)
+  mercury_phalange_1: 'Short' | 'Normal' | 'Long' | ''; // communication
+  mercury_phalange_2: 'Normal' | 'Horizontal line' | 'Vertical line (stress)' | ''; // business logic
+  mercury_phalange_3: 'Open/Full' | 'Thin' | 'Has marks/lines' | ''; // results/trade
 
   // --- Lecture 10: General Finger Profile ---
   finger_gaps: '' | 'None' | 'Small gaps (generous)' | 'Wide gaps (free spirit)';
   finger_build: '' | 'Normal' | 'Long & thin (creative)' | 'Short & thick (stubborn + anger)' | 'Thick base (food lover / lazy)';
   line_depth: '' | 'Light lines' | 'Normal' | 'Deep / dark lines (tough life)';
+
+  // ─── Lecture 11-12: Nails (Nakh) — Detailed ───
+  nail_length: '' | 'Small/Short' | 'Large/Long' | 'Medium';
+  nail_width: '' | 'Wide (Chauṛā)' | 'Narrow/Tight (Sankrā)' | 'Normal';
+  nail_thickness: '' | 'Thick (Earth)' | 'Thin/Papery' | 'Medium';
+  nail_shape_detail: '' | 'Square' | 'Round' | 'Conical/Tapered' | 'Spatulate' | 'Spoon-shaped (Concave)' | 'Clubbed nail';
+  nail_color: '' | 'Pink/Normal (Healthy)' | 'Pale/White' | 'Yellow (Liver/Health)' | 'Blue/Purple (Serious)' | 'Reddish' | 'White spots present' | 'Dark discoloration';
+  nail_surface: '' | 'Smooth' | 'Ridged/Vertical lines' | 'Horizontal ridges (protein def)' | 'Spotted' | 'Brittle/Breaks easily';
+  nail_lunula: '' | 'Visible on all fingers' | 'Visible on some fingers' | 'Absent (health concern)';
+  nail_health_flag: string; // free text for specific health observations
+  nail_biting: boolean;
+
+  // ─── Palm Color (Note 04) ───
+  palm_color: '' | 'Pinkish (Healthy)' | 'Pale/Whitish' | 'Yellow (health/liver)' | 'Reddish (heat/aggression)' | 'Blue/Purple tinge (serious illness)';
+
+  // ─── Structured Mount Signs (Notes 13-18) ───
+  mount_jupiter: MountSignData | null;
+  mount_saturn: MountSignData | null;
+  mount_sun: MountSignData | null;
+  mount_mercury: MountSignData | null;
+  mount_moon: MountSignData | null;
+  mount_venus: MountSignData | null;
+  mount_mars_upper: MountSignData | null;
+  mount_mars_lower: MountSignData | null;
+  mount_mars_plain: MountSignData | null;
+
+  // ─── Structured Line Analysis (Notes 19-27) ───
+  line_life: LineAnalysisData | null;
+  line_fate: LineAnalysisData | null;
+  line_head: LineAnalysisData | null;
+  line_heart: LineAnalysisData | null;
+  line_sun: LineAnalysisData | null;
+  // Mercury / Health Line (Note 27 — full lecture)
+  line_mercury_present: boolean | null; // null = not checked; false = absent (good); true = present
+  line_mercury_starts_below_heart: boolean; // health problems if true
+  line_mercury_starts_above_heart: boolean; // healer/business line
+  line_mercury_joins_moon: boolean; // intuition line
+  line_mercury_single_vertical: boolean; // sudden money gain on mercury mount
+  line_mercury_data: LineAnalysisData | null;
+
+  // ─── Age Calculation (Notes 20, 22, 27) ───
+  age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg';
+
+  // ─── Left vs Right Hand Comparison (Notes 01, 06, 22) ───
+  lh_vs_rh_notes: string;
 }
 
 export const parseVedicData = (notesField: string): VedicData => {
@@ -135,14 +212,61 @@ export const parseVedicData = (notesField: string): VedicData => {
     jupiter_tip_element: '',
     saturn_length: '',
     saturn_tilt: '',
+    saturn_phalange_1: '',
+    saturn_phalange_2: '',
+    saturn_phalange_3: '',
     sun_length: '',
     sun_tilt: '',
     sun_crooked: false,
+    sun_phalange_1: '',
+    sun_phalange_2: '',
+    sun_phalange_3: '',
     mercury_tilt: '',
     mercury_low_set: false,
+    mercury_phalange_1: '',
+    mercury_phalange_2: '',
+    mercury_phalange_3: '',
     finger_gaps: '',
     finger_build: '',
     line_depth: '',
+    // Nails
+    nail_length: '',
+    nail_width: '',
+    nail_thickness: '',
+    nail_shape_detail: '',
+    nail_color: '',
+    nail_surface: '',
+    nail_lunula: '',
+    nail_health_flag: '',
+    nail_biting: false,
+    // Palm Color
+    palm_color: '',
+    // Structured Mounts
+    mount_jupiter: null,
+    mount_saturn: null,
+    mount_sun: null,
+    mount_mercury: null,
+    mount_moon: null,
+    mount_venus: null,
+    mount_mars_upper: null,
+    mount_mars_lower: null,
+    mount_mars_plain: null,
+    // Structured Lines
+    line_life: null,
+    line_fate: null,
+    line_head: null,
+    line_heart: null,
+    line_sun: null,
+    line_mercury_present: null,
+    line_mercury_starts_below_heart: false,
+    line_mercury_starts_above_heart: false,
+    line_mercury_joins_moon: false,
+    line_mercury_single_vertical: false,
+    line_mercury_data: null,
+    // Age
+    age_method: '',
+    // Comparison
+    lh_vs_rh_notes: '',
   };
 
   if (!notesField) return defaultData;
@@ -281,6 +405,222 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     readings.push('⚠️ Deep/Dark Lines: Indicative of a tough, pressure-filled life.');
   } else if (vedic.line_depth === 'Light lines') {
     readings.push('✨ Light Lines: Favorable indicator representing relatively easier phases.');
+  }
+
+  // 13. Palm Color (Lecture 04)
+  if (vedic.palm_color) {
+    if (vedic.palm_color.includes('Pinkish')) {
+      readings.push('🌸 Pinkish Palm: Healthy baseline, balanced vitality and harmonious prāṇa.');
+    } else if (vedic.palm_color.includes('Pale')) {
+      readings.push('⚪ Pale/Whitish Palm: Lower vitality, anemic tendency, introspective or reserved energy.');
+    } else if (vedic.palm_color.includes('Yellow')) {
+      readings.push('🟡 Yellowish Palm: Liver / Pitta dosha indicator, potential metabolic fatigue.');
+    } else if (vedic.palm_color.includes('Reddish')) {
+      readings.push('🔴 Reddish Palm: High heat/Agni, quick-tempered, passionate, intense blood pressure tendencies.');
+    } else if (vedic.palm_color.includes('Blue')) {
+      readings.push('🟣 Blue/Purple Palm: Circulatory or respiratory stagnation; flagged health concern.');
+    }
+  }
+
+  // 14. Finger Phalanges — Saturn, Sun, Mercury (Lectures 08-10)
+  if (vedic.saturn_phalange_1 === 'Long') readings.push('🪐 Saturn Phalanx 1 (Long): Deep discipline, philosophical solitude, serious mindset.');
+  if (vedic.saturn_phalange_2 === 'Horizontal line') readings.push('🪐 Saturn Phalanx 2 (Horizontal line): Obstacle or delay in scientific/technical execution.');
+  if (vedic.saturn_phalange_2 === 'Vertical line (stress)') readings.push('🪐 Saturn Phalanx 2 (Vertical lines): Heavy mental strain and pressure regarding career duties.');
+  if (vedic.saturn_phalange_3 === 'Open/Full') readings.push('🪐 Saturn Phalanx 3 (Full): Solid tangible material and financial results from hard work.');
+  if (vedic.saturn_phalange_3 === 'Thin') readings.push('🪐 Saturn Phalanx 3 (Thin): High labor with disproportionately low material yield.');
+
+  if (vedic.sun_phalange_1 === 'Long') readings.push('☀️ Sun Phalanx 1 (Long): High aesthetic refinement, creative vision, flair for arts.');
+  if (vedic.sun_phalange_2 === 'Horizontal line') readings.push('☀️ Sun Phalanx 2 (Horizontal line): Clashes of ego; struggle in translating creative ideas to reality.');
+  if (vedic.sun_phalange_2 === 'Vertical line (stress)') readings.push('☀️ Sun Phalanx 2 (Vertical line): Anxiety and sensitivity regarding social reputation.');
+  if (vedic.sun_phalange_3 === 'Open/Full') readings.push('☀️ Sun Phalanx 3 (Full): Luxurious life standards, widespread public recognition.');
+  if (vedic.sun_phalange_3 === 'Thin') readings.push('☀️ Sun Phalanx 3 (Thin): Respected and famous, but modest material wealth accumulation.');
+
+  if (vedic.mercury_phalange_1 === 'Long') readings.push('☿ Mercury Phalanx 1 (Long): Exceptional speech, silver-tongued diplomat, master communicator.');
+  if (vedic.mercury_phalange_2 === 'Horizontal line') readings.push('☿ Mercury Phalanx 2 (Horizontal line): Prone to financial miscalculation or contractual oversights.');
+  if (vedic.mercury_phalange_2 === 'Vertical line (stress)') readings.push('☿ Mercury Phalanx 2 (Vertical line): Commercial pressure and business overextension.');
+  if (vedic.mercury_phalange_3 === 'Open/Full') readings.push('☿ Mercury Phalanx 3 (Full): Sharp business acumen with profitable trade results.');
+  if (vedic.mercury_phalange_3 === 'Thin') readings.push('☿ Mercury Phalanx 3 (Thin): Business acumen present, but profit margins leak.');
+
+  // 15. Nails (Lectures 11-12)
+  if (vedic.nail_shape_detail) {
+    if (vedic.nail_shape_detail === 'Square') readings.push('💅 Square Nails: Practical, methodical, emotionally stable and fair-minded.');
+    else if (vedic.nail_shape_detail === 'Round') readings.push('💅 Round Nails: Gentle, adaptable, affectionate, sensitive nature.');
+    else if (vedic.nail_shape_detail === 'Conical/Tapered') readings.push('💅 Conical/Tapered Nails: Artistic, intuitive, sensitive to environment.');
+    else if (vedic.nail_shape_detail === 'Spatulate') readings.push('💅 Spatulate Nails: Restless action-taker, inventor, thrives on practical execution.');
+    else if (vedic.nail_shape_detail === 'Spoon-shaped (Concave)') readings.push('⚠️ Spoon Nails (Koilonychia): Indicates chronic fatigue, iron deficiency or metabolic depletion.');
+    else if (vedic.nail_shape_detail === 'Clubbed nail') readings.push('⚠️ Clubbed Nails: Respiratory/cardiovascular alert — consult medical practitioner.');
+  }
+  if (vedic.nail_color) {
+    if (vedic.nail_color.includes('White spots')) readings.push('💅 White Spots on Nails: Classical sign of sudden gains / zinc-mineral assimilation marker.');
+    else if (vedic.nail_color.includes('Yellow')) readings.push('⚠️ Yellow Nails: Sluggish liver/jaundice flag; check metabolic health.');
+    else if (vedic.nail_color.includes('Blue')) readings.push('⚠️ Blue/Purple Nails: Poor circulation or oxygenation distress.');
+    else if (vedic.nail_color.includes('Pale')) readings.push('💅 Pale Nails: Low hemoglobin/prāṇic vitality indicator.');
+  }
+  if (vedic.nail_surface) {
+    if (vedic.nail_surface.includes('Ridged/Vertical')) readings.push('💅 Vertical Nail Ridges: Nervous exhaustion, thyroid/digestive stress or prolonged anxiety.');
+    else if (vedic.nail_surface.includes('Horizontal')) readings.push('⚠️ Horizontal Nail Ridges (Beau lines): Past acute illness or severe metabolic shock.');
+    else if (vedic.nail_surface.includes('Brittle')) readings.push('💅 Brittle Nails: Vāta aggravation, calcium/mineral deficit.');
+  }
+  if (vedic.nail_lunula === 'Absent (health concern)') {
+    readings.push('⚠️ Absent Nail Moons (Lunulae): Low metabolic fire (mandāgni), sluggish circulation.');
+  }
+  if (vedic.nail_biting) {
+    readings.push('💅 Nail Biting: Chronic interior nervous restlessness or suppressed anxiety.');
+  }
+  if (vedic.nail_health_flag) {
+    readings.push(`🏥 Nail Health Note: ${vedic.nail_health_flag}`);
+  }
+
+  // 16. Mount Signs & Apex (Lectures 13-18)
+  if (vedic.mount_jupiter) {
+    const signs = vedic.mount_jupiter.signs || [];
+    if (signs.includes('Cross')) readings.push('♃ Cross on Jupiter: Highly auspicious — happy marriage, noble education, blessed spousal connection.');
+    if (signs.includes('Star')) readings.push('♃ Star on Jupiter: Extraordinary ambition realized; sudden social rise and high authority.');
+    if (signs.includes('Square')) readings.push('♃ Square on Jupiter (Teacher\'s Square): Natural instructional gift; protection from reputational attacks.');
+    if (signs.includes('Trident')) readings.push('♃ Trident on Jupiter: Spiritual wisdom, executive command, and high dharmic recognition.');
+    if (signs.includes('Grille') || signs.includes('Mole')) readings.push('♃ Grille/Mole on Jupiter: Vanity, dogmatic pride, obstacles in guru or parental blessings.');
+  }
+
+  if (vedic.mount_saturn) {
+    const signs = vedic.mount_saturn.signs || [];
+    if (signs.includes('Cross')) readings.push('🪐 Cross on Saturn: Karmic warnings, unexpected life turns, risk of bone/joint accidents.');
+    if (signs.includes('Star')) readings.push('🪐 Star on Saturn: Heavy karmic events, sudden stroke of fatalistic destiny or great endurance test.');
+    if (signs.includes('Square')) readings.push('🪐 Square on Saturn: Supreme protective shield against physical accidents and karmic catastrophes.');
+    if (signs.includes('Single Vertical Line')) readings.push('🪐 Single Vertical Line on Saturn: Prosperous and peaceful old age; unshakeable steady income.');
+  }
+
+  if (vedic.mount_sun) {
+    const signs = vedic.mount_sun.signs || [];
+    if (signs.includes('Star')) readings.push('☀️ Star on Sun: Worldwide renown, sudden fame, exceptional genius in arts or public office.');
+    if (signs.includes('Trident')) readings.push('☀️ Trident on Sun Mount: Tri-fold renown — acclaim through art/status, commerce (Mercury), and perseverance (Saturn).');
+    if (signs.includes('Diamond Chain')) readings.push('☀️ Diamond Chain on Sun: Wish fulfilment symbol — doubles the fame and protective radiance.');
+    if (signs.includes('Canopy / Circle')) readings.push('☀️ Canopy / Circle on Sun: Lifetime umbrella of divine honor; impervious to disgrace.');
+    if (signs.includes('Square')) readings.push('☀️ Square on Sun: Immunity from defamation, financial security against property loss.');
+    if (signs.includes('Cross') || signs.includes('Island')) readings.push('☀️ Cross/Island on Sun: Public scandal, eye strain/troubles, obstruction to recognition.');
+  }
+
+  if (vedic.mount_mercury) {
+    const signs = vedic.mount_mercury.signs || [];
+    if (signs.includes('Star')) readings.push('☿ Star on Mercury: Brilliance in rhetoric, scientific research, mathematical agility.');
+    if (signs.includes('Square')) readings.push('☿ Square on Mercury: Protected against business ruin and fraud.');
+    if (signs.includes('3+ Vertical Lines (Medical Stigmata)')) readings.push('☿ Medical Stigmata (3+ Lines): Natural healing hands, empathy, suited for medicine or therapy.');
+  }
+
+  if (vedic.mount_moon) {
+    const signs = vedic.mount_moon.signs || [];
+    if (signs.includes('Triangle')) readings.push('🌙 Triangle on Moon: Heightened psychic intuition, prophetic visions, mastery of occult arts.');
+    if (signs.includes('Star') || signs.includes('Cross')) readings.push('🌙 Star/Cross on Moon: Psychological turbulence, vulnerability to over-imagination, caution near water bodies.');
+    if (signs.includes('Square')) readings.push('🌙 Square on Moon: Protection during long travels and mental emotional balance under pressure.');
+  }
+
+  if (vedic.mount_venus) {
+    const signs = vedic.mount_venus.signs || [];
+    if (signs.includes('Square')) readings.push('♀ Square on Venus: Shield against emotional entrapment and scandalous infatuations.');
+    if (signs.includes('Grille')) readings.push('♀ Grille on Venus: Restless passions, hyper-sensual desires, energy dispersion.');
+  }
+
+  if (vedic.mount_mars_upper?.signs?.includes('Star')) {
+    readings.push('⚔️ Star on Upper Mars: Supreme martial courage, victorious in court and battle, cool head under crisis.');
+  }
+  if (vedic.mount_mars_lower?.signs?.includes('Star')) {
+    readings.push('⚔️ Star on Lower Mars: Impulsive conflict, teenage injuries or accident-prone youth.');
+  }
+
+  // 17. Structured Lines (Lectures 19-27)
+  if (vedic.line_life) {
+    if (vedic.line_life.features?.includes('Supportive / Mars Line (Devata Raksha)')) {
+      readings.push('🛡️ Mars Line (Devatā Rakṣā): Divine guardian angel line — shields against grave illness and danger.');
+    }
+    if (vedic.line_life.features?.includes('Fork at end towards Moon')) {
+      readings.push('✈️ Life Line Fork to Moon: Long-distance travel, foreign relocation or changing lands in twilight years.');
+    }
+    if (vedic.line_life.signs?.includes('Island')) {
+      readings.push('⚠️ Island on Life Line: Temporary period of health debility or prolonged confinement/struggle.');
+    }
+    if (vedic.line_life.signs?.includes('Square')) {
+      readings.push('✨ Square on Life Line: Miraculous recovery from illness; hospital protection.');
+    }
+  }
+
+  if (vedic.line_fate) {
+    if (vedic.line_fate.origin?.includes('Moon')) {
+      readings.push('🌊 Fate from Moon Mount: Career blessed by public popularity, assistance from strangers or spouse.');
+    } else if (vedic.line_fate.origin?.includes('Life')) {
+      readings.push('🌱 Fate from Life Line: Self-made destiny carved by intense personal grit and family foundations.');
+    } else if (vedic.line_fate.origin?.includes('Wrist')) {
+      readings.push('⚓ Fate from Wrist (Maṇibandha): Clear vocation determined early in youth.');
+    }
+    if (vedic.line_fate.features?.includes('Branch to Jupiter')) {
+      readings.push('👑 Fate Branch to Jupiter: Exceptional rise to executive power and leadership.');
+    }
+    if (vedic.line_fate.features?.includes('Branch to Sun')) {
+      readings.push('🌟 Fate Branch to Sun: High fame and public prestige accompany professional work.');
+    }
+    if (vedic.line_fate.signs?.includes('Diamond Chain at end')) {
+      readings.push('💎 Diamond Chain on Fate: Peak life fulfilment; multiple desires materialized.');
+    }
+  }
+
+  if (vedic.line_head) {
+    if (vedic.line_head.terminus?.includes('Moon')) {
+      readings.push('🎨 Head Line sloping to Moon: Rich creative imagination, literary gifts, poetic nature.');
+    } else if (vedic.line_head.terminus?.includes('Upper Mars')) {
+      readings.push('📐 Straight Head Line to Mars: Practical, pragmatic, mathematical logic, realistic worldview.');
+    }
+    if (vedic.line_head.features?.includes('Writer\'s Fork (Fork at end)')) {
+      readings.push('✍️ Writer\'s Fork: Versatile duality — synthesizes creative imagination with pragmatic business acumen.');
+    }
+    if (vedic.line_head.signs?.includes('Island')) {
+      readings.push('⚠️ Island on Head Line: Mental overload, migraine, period of indecision or intellectual strain.');
+    }
+  }
+
+  if (vedic.line_heart) {
+    if (vedic.line_heart.terminus?.includes('Jupiter')) {
+      readings.push('❤️ Heart Line terminating under Jupiter: Idealistic, noble romantic ethics, unconditional loyalty.');
+    } else if (vedic.line_heart.terminus?.includes('Saturn')) {
+      readings.push('❤️ Heart Line terminating under Saturn: Sensual, pragmatic, emotionally guarded, practical expectations.');
+    }
+    if (vedic.line_heart.features?.includes('Guru Fork (Fork at end to Jupiter)')) {
+      readings.push('🔱 Guru Fork on Heart: Auspicious balance between deep affection and social dignity.');
+    }
+    if (vedic.line_heart.quality === 'Chain-like') {
+      readings.push('⚠️ Chain-like Heart Line: Hypersensitive emotional turbulence, subject to heartache.');
+    }
+  }
+
+  if (vedic.line_sun) {
+    if (vedic.line_sun.origin?.includes('Heart Line')) {
+      readings.push('☀️ Sun Line from Heart: Blossoming of true fame and artistic fulfillment after age 50.');
+    } else if (vedic.line_sun.origin?.includes('Wrist') || vedic.line_sun.origin?.includes('Fate')) {
+      readings.push('☀️ Long Sun Line: Early recognized talent, royal patronage and sustained lifelong renown.');
+    }
+    if (vedic.line_sun.signs?.includes('Trident at end')) {
+      readings.push('🔱 Sun Line Trident: Multi-faceted success across art, commerce, and leadership.');
+    }
+  }
+
+  // 18. Mercury Line / Health / Liver (Lecture 27)
+  if (vedic.line_mercury_present === false) {
+    readings.push('✨ Mercury Line Absent: Highly auspicious — classical indicator of robust digestive vitality and resilient constitution.');
+  } else if (vedic.line_mercury_present === true) {
+    if (vedic.line_mercury_starts_below_heart) {
+      readings.push('⚠️ Mercury Line below Heart: Potential digestive, liver or nervous sensitivity.');
+    }
+    if (vedic.line_mercury_starts_above_heart) {
+      readings.push('🩺 Mercury Line above Heart: Healer\'s or business acumen line — counseling and consultation gifts.');
+    }
+    if (vedic.line_mercury_joins_moon) {
+      readings.push('👁️ Line of Intuition (Joined to Moon): Strong premonitions, prophetic dreams, keen gut instincts.');
+    }
+    if (vedic.line_mercury_single_vertical) {
+      readings.push('💰 Single Vertical Line on Mercury: Sudden windfall or unexpected commercial gain (Dhana Lābha).');
+    }
+  }
+
+  // 19. Karmic Hand Comparison (Lectures 01, 06, 22)
+  if (vedic.lh_vs_rh_notes && vedic.lh_vs_rh_notes.trim().length > 0) {
+    readings.push(`⚖️ Left vs Right Hand Synthesis: ${vedic.lh_vs_rh_notes.trim()}`);
   }
 
   return readings;
