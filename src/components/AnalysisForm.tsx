@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData, calculateAge, MountSignData, LineAnalysisData } from '@/lib/supabase';
-import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye, Heart, Clock, Copy, Printer, Share2, BookOpen, CheckCircle2, Award } from 'lucide-react';
+import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye, Heart, Clock, Copy, Printer, Share2, BookOpen, CheckCircle2, Award, User, Mountain, Compass, MapPin, Tag } from 'lucide-react';
 
 interface AnalysisFormProps {
   profile: HandProfile;
@@ -405,6 +405,120 @@ export default function AnalysisForm({
     );
   };
 
+  // Auto-switch to markers tab if user clicks a marker pin on canvas
+  useEffect(() => {
+    if (selectedPin) {
+      setActiveTab('pins');
+    }
+  }, [selectedPin]);
+
+  // Tab evaluation metrics for smart badges
+  const mountsEvaluatedCount = [
+    vedicData.mount_jupiter,
+    vedicData.mount_saturn,
+    vedicData.mount_sun,
+    vedicData.mount_mercury,
+    vedicData.mount_moon,
+    vedicData.mount_venus,
+    vedicData.mount_mars_upper,
+    vedicData.mount_mars_lower,
+  ].filter(Boolean).length ||
+    Object.keys(profile.mounts_data || {}).filter(
+      (k) => profile.mounts_data[k] && profile.mounts_data[k].trim() !== ''
+    ).length;
+
+  const linesEvaluatedCount = [
+    vedicData.line_life,
+    vedicData.line_fate,
+    vedicData.line_head,
+    vedicData.line_heart,
+    vedicData.line_sun,
+    vedicData.line_mercury_data,
+  ].filter(Boolean).length ||
+    Object.keys(profile.lines_data || {}).filter(
+      (k) => profile.lines_data[k] && profile.lines_data[k].trim() !== ''
+    ).length;
+
+  const pinsCount = profile.pins?.length || 0;
+  const tagsCount = profile.tags?.length || 0;
+
+  const isSamudrikaActive = Boolean(
+    vedicData.hand_tattva ||
+    vedicData.palm_shape ||
+    vedicData.palm_color ||
+    vedicData.thumb_type ||
+    vedicData.skin_texture ||
+    vedicData.finger_length
+  );
+
+  const isNailsActive = Boolean(
+    vedicData.nail_shape ||
+    vedicData.nail_color ||
+    vedicData.nail_lunula ||
+    vedicData.nail_surface ||
+    vedicData.nail_length
+  );
+
+  const isAgeActive = Boolean(profile.dob || vedicData.age_method);
+
+  const tabsConfig = [
+    {
+      id: 'profile' as const,
+      label: 'Profile',
+      icon: User,
+      hasDot: Boolean(profile.name && profile.name.trim() !== ''),
+    },
+    {
+      id: 'samudrika' as const,
+      label: 'Sāmudrika',
+      icon: Sparkles,
+      hasDot: isSamudrikaActive,
+    },
+    {
+      id: 'nails' as const,
+      label: 'Nails',
+      icon: Activity,
+      hasDot: isNailsActive,
+    },
+    {
+      id: 'mounts' as const,
+      label: 'Mounts',
+      icon: Mountain,
+      count: mountsEvaluatedCount > 0 ? mountsEvaluatedCount : null,
+    },
+    {
+      id: 'lines' as const,
+      label: 'Lines',
+      icon: Compass,
+      count: linesEvaluatedCount > 0 ? linesEvaluatedCount : null,
+    },
+    {
+      id: 'age' as const,
+      label: 'Age',
+      icon: Clock,
+      hasDot: isAgeActive,
+    },
+    {
+      id: 'pins' as const,
+      label: selectedPin ? 'Marker (Edit)' : 'Pins',
+      icon: MapPin,
+      count: pinsCount > 0 ? pinsCount : null,
+      highlight: Boolean(selectedPin),
+    },
+    {
+      id: 'tags' as const,
+      label: 'Tags',
+      icon: Tag,
+      count: tagsCount > 0 ? tagsCount : null,
+    },
+    {
+      id: 'report' as const,
+      label: 'Synthesis Report',
+      icon: FileText,
+      isSpecial: true,
+    },
+  ];
+
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl border border-stone-200/80 overflow-hidden shadow-md">
       {/* Save Action Bar */}
@@ -421,33 +535,69 @@ export default function AnalysisForm({
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-stone-50/40 border-b border-stone-200/60 text-sm overflow-x-auto">
-        {(['profile', 'samudrika', 'nails', 'mounts', 'lines', 'age', 'pins', 'tags', 'report'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-shrink-0 py-3.5 text-center font-semibold capitalize transition-all border-b-2 whitespace-nowrap px-3 text-xs ${activeTab === tab
-                ? 'border-accent-gold text-accent-gold bg-white'
-                : 'border-transparent text-stone-500 hover:text-stone-700'
-              }`}
-          >
-            {tab === 'pins' && selectedPin
-              ? '📍 Marker'
-              : tab === 'samudrika'
-                ? '☸️ Sāmudrika'
-                : tab === 'nails'
-                  ? '💅 Nails'
-                  : tab === 'mounts'
-                    ? '⛰️ Mounts'
-                    : tab === 'lines'
-                      ? '— Lines'
-                      : tab === 'age'
-                        ? '🕒 Age'
-                        : tab === 'report'
-                          ? '📜 Synthesis Report'
-                          : tab}
-          </button>
-        ))}
+      <div className="flex items-center gap-1.5 bg-stone-50/70 border-b border-stone-200/80 px-3 py-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {tabsConfig.map((t) => {
+          const Icon = t.icon;
+          const isActive = activeTab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer select-none whitespace-nowrap ${
+                isActive
+                  ? 'bg-white text-stone-900 shadow-sm border border-stone-200/90 font-semibold ring-1 ring-amber-500/20'
+                  : 'text-stone-500 hover:text-stone-800 hover:bg-stone-100/70 border border-transparent font-medium'
+              } ${t.highlight ? 'ring-2 ring-amber-500/50 bg-amber-50/50' : ''}`}
+            >
+              <Icon
+                className={`w-3.5 h-3.5 transition-colors ${
+                  isActive
+                    ? 'text-accent-gold'
+                    : t.isSpecial
+                    ? 'text-amber-600/80'
+                    : 'text-stone-400'
+                }`}
+              />
+              <span>{t.label}</span>
+
+              {/* Count badge */}
+              {typeof t.count === 'number' && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold leading-tight ${
+                    isActive
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-stone-200/80 text-stone-600'
+                  }`}
+                >
+                  {t.count}
+                </span>
+              )}
+
+              {/* Data presence dot */}
+              {t.hasDot && typeof t.count !== 'number' && (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    isActive ? 'bg-accent-gold' : 'bg-emerald-500'
+                  }`}
+                  title="Completed / Active"
+                />
+              )}
+
+              {/* Special badge for Synthesis Report */}
+              {t.isSpecial && (
+                <span
+                  className={`text-[9px] px-1.5 py-0.2 uppercase tracking-wider rounded font-bold ${
+                    isActive
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300/40'
+                      : 'bg-stone-200/70 text-stone-600'
+                  }`}
+                >
+                  Vedic
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Contents */}
@@ -1168,7 +1318,7 @@ export default function AnalysisForm({
                     <Sparkles className="w-3.5 h-3.5 text-accent-gold" />
                     Thumb Sāmudrika Significations
                   </span>
-                  
+
                   <div className="space-y-1.5 text-[11px] text-stone-700 leading-relaxed font-semibold">
                     {/* Willpower & Core Personality Readings based on Angle */}
                     {vedicData.thumb_angle === 'Exactly 90°' && (
@@ -1208,7 +1358,7 @@ export default function AnalysisForm({
 
                     {/* Receptivity to advice */}
                     {vedicData.thumb_first_phalange_condition && (
-                      <p>💡 <strong className="text-amber-900">Advice Receptivity:</strong> 
+                      <p>💡 <strong className="text-amber-900">Advice Receptivity:</strong>
                         {vedicData.thumb_first_phalange_condition === 'Smooth' && ' Listens politely but ultimately does exactly what they had already decided independently.'}
                         {(vedicData.thumb_first_phalange_condition === 'Sunken/Flattened' || vedicData.thumb_first_phalange_condition === 'Cut marks/lines') && ' The sunken surface or lines/marks make them highly receptive to others\' advice, actively seeking validation.'}
                         {vedicData.thumb_first_phalange_condition === 'Bulged' && ' Bulged/puffy tip increases firmness, stubbornness, and short-tempered practicality.'}
@@ -1799,15 +1949,15 @@ export default function AnalysisForm({
               {(vedicData.skin_texture || vedicData.nail_shape || vedicData.finger_knots) && (
                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs space-y-1.5 leading-relaxed">
                   <span className="font-bold text-stone-800 uppercase tracking-wider block text-[9px]">Dorsal Modification Profile:</span>
-                  
+
                   {vedicData.skin_texture && (
                     <p className="text-stone-600 font-medium">
                       <strong>Skin:</strong> {
                         vedicData.skin_texture === 'Soft/Moisturized' ? '✨ Soft & supple skin represents fertile ease and higher responsiveness to favorable yogas.' :
-                        vedicData.skin_texture === 'Hard/Stiff' ? '⚠️ Hard, stiff skin blocks flexibility and implies high physical struggle. Represents a lack of pampered care.' :
-                        vedicData.skin_texture === 'Rough' ? '⚠️ Rough skin indicates a mindset centered on raw struggle and manual routine. Prone to rejecting self-improvement.' :
-                        vedicData.skin_texture === 'Thin-skinned (Nerves visible)' ? '🧠 Thin skin with visible nerves indicates extreme mental/emotional sensitivity and vulnerability.' :
-                        'Standard skin elasticity and texture.'
+                          vedicData.skin_texture === 'Hard/Stiff' ? '⚠️ Hard, stiff skin blocks flexibility and implies high physical struggle. Represents a lack of pampered care.' :
+                            vedicData.skin_texture === 'Rough' ? '⚠️ Rough skin indicates a mindset centered on raw struggle and manual routine. Prone to rejecting self-improvement.' :
+                              vedicData.skin_texture === 'Thin-skinned (Nerves visible)' ? '🧠 Thin skin with visible nerves indicates extreme mental/emotional sensitivity and vulnerability.' :
+                                'Standard skin elasticity and texture.'
                       }
                     </p>
                   )}
@@ -1816,9 +1966,9 @@ export default function AnalysisForm({
                     <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
                       <strong>Nails:</strong> {
                         vedicData.nail_shape === 'Wide/Small' ? '🔍 Small nails indicate low ambition, short-term planning, or focus on manual tasks.' :
-                        vedicData.nail_shape === 'Square' ? '💼 Square nails complement natural business acumen and support strong determination.' :
-                        vedicData.nail_shape === 'Beautiful' ? '🎨 Beautiful tapering nails align with creative Sun/Mercury energy or high psychic sensitivity.' :
-                        'Nails act as modifiers to determine physical details and health patterns.'
+                          vedicData.nail_shape === 'Square' ? '💼 Square nails complement natural business acumen and support strong determination.' :
+                            vedicData.nail_shape === 'Beautiful' ? '🎨 Beautiful tapering nails align with creative Sun/Mercury energy or high psychic sensitivity.' :
+                              'Nails act as modifiers to determine physical details and health patterns.'
                       }
                     </p>
                   )}
@@ -1827,9 +1977,9 @@ export default function AnalysisForm({
                     <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
                       <strong>Finger Joints:</strong> {
                         vedicData.finger_knots === 'Fully Philosophical (Knotty)' ? '📖 Knotty joints add an analytical filter, showing a Message Deliverer who abhors mindless entertainment.' :
-                        vedicData.finger_knots === 'Jupiter & Saturn Knots' ? '🪐 Knots localized on Jupiter and Saturn restrict philosophical contemplation specifically to wisdom, ambition, and focus.' :
-                        vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crooked fingers amplify the energy of their respective planets in an intense or distorted way (e.g. Sage Ashtavakra).' :
-                        'Smooth joints indicate swift, intuitive thinking without heavy analytical filters.'
+                          vedicData.finger_knots === 'Jupiter & Saturn Knots' ? '🪐 Knots localized on Jupiter and Saturn restrict philosophical contemplation specifically to wisdom, ambition, and focus.' :
+                            vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crooked fingers amplify the energy of their respective planets in an intense or distorted way (e.g. Sage Ashtavakra).' :
+                              'Smooth joints indicate swift, intuitive thinking without heavy analytical filters.'
                       }
                     </p>
                   )}
