@@ -18,75 +18,7 @@ interface AnalysisFormProps {
   onChangeActiveView?: (view: HandView) => void;
 }
 
-const HAND_TYPES = [
-  'Elementary Hand (Primitive/Labor Hand)',
-  'Spatulate Hand (Spoon Hand)',
-  'Square Hand (Vertical Hand)',
-  'Conical Hand (Conic Hand)',
-  'Philosophical Hand (Knotty Hand)',
-  'Psychic Hand',
-  'Mixed Hand',
-];
-
-interface HandTypeDetail {
-  title: string;
-  identification: string;
-  mentality: string;
-  struggleOrStrength: string;
-  modifiers: string;
-}
-
-const HAND_TYPE_DETAILS: Record<string, HandTypeDetail> = {
-  'Elementary Hand (Primitive/Labor Hand)': {
-    title: 'Elementary Hand (Primitive/Labor Hand)',
-    identification: 'Looks thick, heavy, and stiff. Palm appears highly prominent, resembling a square (Mars-driven). Fingers look short and less prominent compared to the massive palm space. Wrist is thick and wide. Nails are typically small.',
-    mentality: 'Core focus on short-term survival ("Work, eat, drink, sleep"). Refuses self-investment, lacks ambition, and declines training opportunities. Low emotional sensitivity and creativity appreciation.',
-    struggleOrStrength: 'Success requires grueling physical labor. Stiff skin blocks positive yogas from bearing fruit easily without massive struggle.',
-    modifiers: 'Skin texture is usually hard, rough, and stiff. Nails are small.',
-  },
-  'Spatulate Hand (Spoon Hand)': {
-    title: 'Spatulate Hand (Spoon Hand)',
-    identification: 'Shaped like a spatula or spoon (flares out wider at the top or bottom). Similar to the Elementary hand, but the wrist is noticeably thinner and the nails are not as small.',
-    mentality: 'Hardworking and practical, but fiercely independent and highly disciplined with strict boundaries. Formula: "Learn first, then make money from that learning."',
-    struggleOrStrength: 'One of the best categories. Combines extreme physical capacity/action with mental sharpness. Highly organized and time-sensitive.',
-    modifiers: 'Skin is less rough than Elementary; nails are larger. Willpower is heavily tied to the strength of the Thumb.',
-  },
-  'Square Hand (Vertical Hand)': {
-    title: 'Square Hand (Vertical Hand)',
-    identification: 'The entire hand (palm + fingers combined) visually forms a square. Nails often naturally take a square shape as well.',
-    mentality: 'Innate, natural business acumen. Can figure out how to make money and run businesses without prior formal training. Excellent long-term planner, highly determined but flexible enough to pivot.',
-    struggleOrStrength: 'Extremely good category for prosperity. Possesses excellent social etiquette and grace, and often works/donates for social welfare.',
-    modifiers: 'Small nails on a Square hand indicate a researcher/investigative mindset but may bring minor health issues.',
-  },
-  'Conical Hand (Conic Hand)': {
-    title: 'Conical Hand (Conic Hand)',
-    identification: 'Long and thin hand. Fingers are long and taper smoothly forward, with a notably long middle finger. Beautiful fingernails.',
-    mentality: 'Deeply desires a luxurious, comfortable life. Highly moody with rapidly fluctuating emotions and low patience. Sun/Mercury creativity (ambiguous clever communication, managing networks, hosting beautifully).',
-    struggleOrStrength: 'Attains luxury but struggles to "settle" in foreign environments. Dislikes staying in other people\'s houses (prefers neutral spaces like hotels).',
-    modifiers: 'Tapering fingers and beautiful nails. Associated with Sun/Mercury planetary lines.',
-  },
-  'Philosophical Hand (Knotty Hand)': {
-    title: 'Philosophical Hand (Knotty Hand)',
-    identification: 'Long and tapering hand similar to Conical, but features prominent, visible knots at the finger joints.',
-    mentality: 'Deep analytical/philosophical mind. Abhors mindless entertainment. Message deliverers found in character actors, stand-up comedians, and motivational speakers. Particular about comfort and secretive.',
-    struggleOrStrength: 'Very intellectual and precise. Limits their space, preferring quiet corners to remain calm.',
-    modifiers: 'Knots do not need to be on all fingers—traits apply specifically to the planet of the knotted finger (e.g., Jupiter or Saturn). Thin-skinned (visible nerves) adds extreme sensitivity. Crooked fingers amplify planetary energy intensely.',
-  },
-  'Psychic Hand': {
-    title: 'Psychic Hand',
-    identification: 'Extremely long, delicate, and "super soft." Looks fragile, like the hand of a royal princess or a newborn baby.',
-    mentality: 'Highly sensitive, physically and emotionally fragile. Catch colds/coughs easily and have weak digestion. Break easily under pressure if not praised.',
-    struggleOrStrength: 'With finger knots: can ascend to the absolute highest levels of spiritual healing. Without finger knots: prone to comfort zone traps, extreme laziness, and chaos under minor routine changes.',
-    modifiers: 'Should have very light, fine lines. If a super soft hand has thick, dark lines, it indicates a tragic paradox of a delicate person forced into a harsh, struggling life.',
-  },
-  'Mixed Hand': {
-    title: 'Mixed Hand',
-    identification: 'A blend that does not fit one category (e.g. Square palm with Conical fingers).',
-    mentality: 'Ultimate multitaskers and full of diverse ideas. Seamlessly blend practicality, emotion, and creativity.',
-    struggleOrStrength: 'Versatile and adaptable, but career path cannot be determined by shape alone.',
-    modifiers: 'Must identify the major type first, then blend traits. Rely heavily on palm lines and fingerprints for specific career predictions.',
-  },
-};
+import { HAND_TYPES, HAND_TYPE_DETAILS } from '@/lib/content/handTypes';
 
 const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string => {
   let md = `# Hasta Sāmudrika Śāstra — Consultation & Reading Report\n\n`;
@@ -227,6 +159,14 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
     md += `## 7. Chronological Life Timeline & Milestones\n`;
     allEvents.forEach((ev) => {
       md += `- **Age ${ev.age}** [${ev.line} Line]: ${ev.event}\n`;
+    });
+    md += `\n`;
+  }
+
+  if (vedic.life_fate_junctions && vedic.life_fate_junctions.length > 0) {
+    md += `## 7b. Life × Fate Line Junction Timing\n`;
+    vedic.life_fate_junctions.forEach((j) => {
+      md += `- **Life age ${j.life_age} / Fate age ${j.fate_age}:** ${j.reading || 'Support/independence window'}\n`;
     });
     md += `\n`;
   }
@@ -2902,6 +2842,64 @@ export default function AnalysisForm({
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* Life × Fate Junction Timing (Lectures 21-23) */}
+            <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
+              <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
+                <Clock className="w-4 h-4 text-indigo-500" />
+                Life × Fate Line Junction Timing
+              </h4>
+              <p className="text-[10px] text-stone-500 leading-normal">
+                Where the Fate Line crosses the Life Line reveals family-support vs. independence windows (Notes 21 §4, 22 §7, 23 §7). Log the age-on-Life-Line and age-on-Fate-Line at each crossing point, with the reading.
+              </p>
+              {(vedicData.life_fate_junctions || []).map((junction, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <input type="number" min="0" max="120"
+                    className="form-input text-xs w-20 shrink-0"
+                    placeholder="Life age"
+                    title="Age on Life Line at junction"
+                    value={junction.life_age || ''}
+                    onChange={(e) => {
+                      const junctions = [...vedicData.life_fate_junctions];
+                      junctions[idx] = { ...junctions[idx], life_age: parseInt(e.target.value) || 0 };
+                      updateVedicField('life_fate_junctions', junctions);
+                    }} />
+                  <input type="number" min="0" max="120"
+                    className="form-input text-xs w-20 shrink-0"
+                    placeholder="Fate age"
+                    title="Age on Fate Line at junction"
+                    value={junction.fate_age || ''}
+                    onChange={(e) => {
+                      const junctions = [...vedicData.life_fate_junctions];
+                      junctions[idx] = { ...junctions[idx], fate_age: parseInt(e.target.value) || 0 };
+                      updateVedicField('life_fate_junctions', junctions);
+                    }} />
+                  <input type="text"
+                    className="form-input text-xs flex-1"
+                    placeholder="Reading (e.g. end of family financial support, independent career begins)"
+                    value={junction.reading || ''}
+                    onChange={(e) => {
+                      const junctions = [...vedicData.life_fate_junctions];
+                      junctions[idx] = { ...junctions[idx], reading: e.target.value };
+                      updateVedicField('life_fate_junctions', junctions);
+                    }} />
+                  <button type="button"
+                    className="text-rose-500 hover:text-rose-700 text-xs p-1 shrink-0"
+                    onClick={() => {
+                      const junctions = vedicData.life_fate_junctions.filter((_, i) => i !== idx);
+                      updateVedicField('life_fate_junctions', junctions);
+                    }}>✕</button>
+                </div>
+              ))}
+              <button type="button"
+                className="text-[10px] btn-gold px-2 py-0.5 shadow-sm"
+                onClick={() => {
+                  const junctions = [...(vedicData.life_fate_junctions || []), { life_age: 0, fate_age: 0, reading: '' }];
+                  updateVedicField('life_fate_junctions', junctions);
+                }}>
+                + Add Junction
+              </button>
             </div>
 
             {/* Method-specific reference calculator */}

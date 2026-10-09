@@ -20,9 +20,23 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   const [activeView, setActiveView] = useState<HandView>('right_palm');
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAutosaving, setIsAutosaving] = useState(false);
+  const [lastSavedProfile, setLastSavedProfile] = useState<HandProfile>(initialProfile);
   const [isUploading, setIsUploading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ view: HandView | 'd1_chart'; file: File } | null>(null);
+
+  const hasUnsavedChanges = isProfileChanged(lastSavedProfile, activeProfile);
+
+  // Debounced autosave: silently persist after 20s of inactivity if the subject name is set.
+  useEffect(() => {
+    if (!hasUnsavedChanges || !activeProfile.name || isSaving) return;
+    const timer = setTimeout(() => {
+      handleSave({ silent: true });
+    }, 20000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProfile, hasUnsavedChanges]);
 
   // Check Supabase connection on mount
   useEffect(() => {
@@ -47,7 +61,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   // Warn user on window unload if there are unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isProfileChanged(initialProfile, activeProfile)) {
+      if (isProfileChanged(lastSavedProfile, activeProfile)) {
         e.preventDefault();
         e.returnValue = 'Discard unsaved modifications and return to dashboard?';
         return e.returnValue;
@@ -57,7 +71,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [initialProfile, activeProfile]);
+  }, [lastSavedProfile, activeProfile]);
 
   // Local client-side image compression/resizing
   const compressAndResizeImage = (file: File): Promise<string> => {
@@ -156,14 +170,20 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     });
   };
 
-  // Save changes (Save to SQLite/Postgres or LocalStorage)
-  const handleSave = async () => {
+  // Save changes (Save to SQLite/Postgres or LocalStorage).
+  // `silent: true` is used by the autosave timer: persists in the background
+  // without the success alert or navigating away from the editor.
+  const handleSave = async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
+
     if (!activeProfile.name) {
-      alert('Please fill out the Subject Identifier / Name.');
+      if (!silent) alert('Please fill out the Subject Identifier / Name.');
       return;
     }
 
-    setIsSaving(true);
+    if (silent) setIsAutosaving(true);
+    else setIsSaving(true);
+
     try {
       if (isSupabaseConnected) {
         const res = await fetch('/api/hands', {
@@ -174,24 +194,36 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
 
         if (res.ok) {
           updateProfileInCache(activeProfile);
-          alert('Analysis Profile Saved Successfully!');
-          router.push('/');
+          setLastSavedProfile(activeProfile);
+          if (!silent) {
+            alert('Analysis Profile Saved Successfully!');
+            router.push('/');
+          }
         } else {
           throw new Error('API save failed');
         }
       } else {
         saveDemoProfile(activeProfile);
         updateProfileInCache(activeProfile);
-        alert('Saved locally to browser storage!');
-        router.push('/');
+        setLastSavedProfile(activeProfile);
+        if (!silent) {
+          alert('Saved locally to browser storage!');
+          router.push('/');
+        }
       }
     } catch (e) {
+      if (silent) {
+        // Don't bounce the user around or alert for a background autosave failure; it will retry.
+        return;
+      }
       alert('Error saving profile. Saving locally to browser fallback...');
       saveDemoProfile(activeProfile);
       updateProfileInCache(activeProfile);
+      setLastSavedProfile(activeProfile);
       router.push('/');
     } finally {
-      setIsSaving(false);
+      if (silent) setIsAutosaving(false);
+      else setIsSaving(false);
     }
   };
 
@@ -223,7 +255,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (!isProfileChanged(initialProfile, activeProfile) || confirm('Discard unsaved modifications and return to dashboard?')) {
+                if (!isProfileChanged(lastSavedProfile, activeProfile) || confirm('Discard unsaved modifications and return to dashboard?')) {
                   router.push('/');
                 }
               }}
@@ -239,6 +271,15 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
                 📍 Select views, draw highlights, and place markers.
               </p>
             </div>
+          </div>
+          <div className="text-[11px] font-semibold flex items-center gap-1.5 shrink-0">
+            {isAutosaving ? (
+              <span className="text-amber-600 animate-pulse">● Autosaving…</span>
+            ) : hasUnsavedChanges ? (
+              <span className="text-stone-400">○ Unsaved changes</span>
+            ) : (
+              <span className="text-emerald-600">✓ All changes saved</span>
+            )}
           </div>
         </div>
 
@@ -274,11 +315,11 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
               selectedPin={activePin}
               onUpdatePin={handleUpdatePin}
               onDeletePin={handleDeletePin}
-              onSave={handleSave}
+              onSave={() => handleSave()}
               isSaving={isSaving}
               onUploadImageForView={handleUploadImageForView}
               isUploading={isUploading}
-              hasChanges={isProfileChanged(initialProfile, activeProfile)}
+              hasChanges={hasUnsavedChanges}
               onChangeActiveView={setActiveView}
             />
           </div>

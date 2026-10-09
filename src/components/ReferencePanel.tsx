@@ -10,7 +10,7 @@ interface ReferencePanelProps {
 }
 
 export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps) {
-  const [activeTab, setActiveTab] = useState<'mounts' | 'lines' | 'signs' | 'lectures'>('mounts');
+  const [activeTab, setActiveTab] = useState<'mounts' | 'lines' | 'signs' | 'timing' | 'lectures'>('mounts');
   const [notes, setNotes] = useState<any[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string>('');
 
@@ -46,7 +46,7 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
       </div>
 
       <div className="flex gap-1 mb-4 bg-stone-100 p-1 rounded-lg border border-stone-200">
-        {(['mounts', 'lines', 'signs', 'lectures'] as const).map((tab) => (
+        {(['mounts', 'lines', 'signs', 'timing', 'lectures'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -222,6 +222,99 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
                   <strong>Supportive (Mars Line):</strong> Runs parallel on inner side of Life line — acts as an energetic guardian angel (Devatā Rakṣā).<br />
                   <strong>Parasite Line:</strong> Feeds off and drains the parent line\'s vitality.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Dot / Spot (Bindu)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A small depressed point on a line or mount. Marks a sudden, short-lived shock or minor setback at that age/location — generally resolves without lasting damage, unlike an Island.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Net / Grille (Jālī)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A crosshatched mesh of fine lines covering a mount. Dissipates and scatters that mount's energy — e.g. on Venus: restless/unfocused passions; on Jupiter: dogmatic vanity undermining real ambition.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Conch (Śaṅkha)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A sacred spiral/shell-shaped mark. Classical auspicious sign of spiritual merit, good fortune, and an announcing/public voice — often linked to Jupiter or Mercury mount placements.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Flag (Dhvaja)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A triangular pennant-like mark, typically on a mount. Signifies victory, public recognition, or a triumphant turning point tied to that mount's domain.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Tree (Vṛkṣa)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A branching mark resembling a tree trunk with limbs. Indicates growth that spreads in many directions at once — diversified income, multiple disciples/followers, or scattered focus depending on placement.
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Temple (Mandira)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  A structured, multi-tiered geometric formation (layered squares/triangles). Rare sign of sustained institutional success — building something (literal or figurative) that outlasts the individual.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'timing' && (
+          <div className="space-y-4">
+            <h3 className="text-accent-gold font-bold uppercase tracking-wider text-xs border-b border-stone-200 pb-1">Aging & Life-Timing Methods (Lectures 20, 21, 22, 23, 27)</h3>
+
+            <div className="space-y-3">
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">30-Midpoint Method (current class method)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Life Line midpoint = age 30. Upper half halves again to mark 15; lower half spans 30→75 (halving to ~52-53). Fate Line uses the same scale starting at the wrist (age 0). Heart Line (Method A): count from the little-finger side in a repeating 18-year section + 6-year gap pattern.
+                </p>
+              </div>
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Cheiro / Saptāṁśa Method</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Treats full life span as 98 years, divided into 14 equal 7-year parts along the Life Line.
+                </p>
+              </div>
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Ṣaḍaṁśa Method</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Treats full life span as 72 years, divided into 12 equal 6-year parts along the Life Line.
+                </p>
+              </div>
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Three-Line Average Method</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Life, Head, and Heart lines are each independently treated as spanning 100 years; a given life-event's age is the average of the percentage-position reading across all three lines.
+                </p>
+              </div>
+              <div className="p-2.5 bg-indigo-50 rounded-lg border border-indigo-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Life × Fate Line Junction Timing</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Where the Fate Line crosses the Life Line, read the age on each line at that crossing point. This junction marks family-support vs. independence windows — e.g. a crossing read as "Life age 22 / Fate age 22" often marks the point a person starts standing on their own financially. Taught across Lectures 21 (origin), 22 (branches), and 23 (career timing).
+                </p>
+              </div>
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Mercury / Health Line (Svasthya Rekhā)</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Absent entirely: classically the best outcome — robust digestive/hepatic vitality needs no warning line. Starting below the Heart Line: digestive or liver attention needed. Starting above the Heart Line: healer's or business/trade acumen. Reaching the Moon Mount: "Line of Intuition" — strong gut instinct, prophetic dreams. A single clean vertical line crossing it on the Mercury Mount: sudden windfall (Dhana Lābha).
+                </p>
+              </div>
+              <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
+                <strong className="text-stone-900 font-bold text-xs">Diamond Chain & Canopy on the Brain/Mind Line</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  Same wish-fulfilment (Diamond Chain) and protective-halo (Canopy) symbolism as on the Fate/Sun lines, but here they bless the mind: a Diamond Chain terminating the Head Line indicates intellectual achievements reaching full fruition; a Canopy shields against public intellectual embarrassment or reputational attacks on one's judgment.
                 </p>
               </div>
             </div>

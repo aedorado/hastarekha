@@ -173,6 +173,10 @@ export interface VedicData {
   // ─── Age Calculation (Notes 20, 22, 27) ───
   age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg';
 
+  // ─── Life × Fate Line Junction Timing (Notes 21, 22, 23) ───
+  // Where the Fate Line crosses the Life Line reveals family-support / independence windows.
+  life_fate_junctions: Array<{ life_age: number; fate_age: number; reading: string }>;
+
   // ─── Left vs Right Hand Comparison (Notes 01, 06, 22) ───
   lh_vs_rh_notes: string;
 }
@@ -265,6 +269,7 @@ export const parseVedicData = (notesField: string): VedicData => {
     line_mercury_data: null,
     // Age
     age_method: '',
+    life_fate_junctions: [],
     // Comparison
     lh_vs_rh_notes: '',
   };
@@ -616,6 +621,13 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (vedic.line_mercury_single_vertical) {
       readings.push('💰 Single Vertical Line on Mercury: Sudden windfall or unexpected commercial gain (Dhana Lābha).');
     }
+  }
+
+  // 18b. Life × Fate Junction Timing (Lectures 21-23)
+  if (vedic.life_fate_junctions && vedic.life_fate_junctions.length > 0) {
+    vedic.life_fate_junctions.forEach((j) => {
+      readings.push(`⏳ Life×Fate Junction (Life age ${j.life_age} / Fate age ${j.fate_age}): ${j.reading || 'Support/independence window — see notes.'}`);
+    });
   }
 
   // 19. Karmic Hand Comparison (Lectures 01, 06, 22)
