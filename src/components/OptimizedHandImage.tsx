@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface OptimizedHandImageProps {
@@ -29,6 +29,11 @@ export default function OptimizedHandImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+  }, [src]);
+
   if (!src || hasError) {
     return (
       <div className={`bg-stone-100 flex items-center justify-center text-stone-400 ${className}`}>
@@ -56,20 +61,40 @@ export default function OptimizedHandImage({
 
   if (fill) {
     return (
-      <Image
-        {...imageProps}
-        fill
-        sizes={sizes || '(max-width: 768px) 100vw, 50vw'}
-      />
+      <>
+        {!isLoaded && (
+          <div
+            className="absolute inset-0 bg-stone-100 flex items-center justify-center animate-pulse overflow-hidden"
+            aria-hidden="true"
+          >
+            <div className="w-5 h-5 rounded-full border-2 border-stone-200 border-t-accent-gold/60 animate-spin opacity-50" />
+          </div>
+        )}
+        <Image
+          {...imageProps}
+          fill
+          sizes={sizes || '(max-width: 768px) 100vw, 50vw'}
+        />
+      </>
     );
   }
 
   return (
-    <Image
-      {...imageProps}
-      width={width || 200}
-      height={height || 200}
-      sizes={sizes}
-    />
+    <div className="relative inline-block overflow-hidden">
+      {!isLoaded && (
+        <div
+          className="absolute inset-0 bg-stone-100 flex items-center justify-center animate-pulse"
+          aria-hidden="true"
+        >
+          <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-accent-gold/60 animate-spin opacity-50" />
+        </div>
+      )}
+      <Image
+        {...imageProps}
+        width={width || 200}
+        height={height || 200}
+        sizes={sizes}
+      />
+    </div>
   );
 }

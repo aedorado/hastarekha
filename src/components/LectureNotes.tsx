@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, BookOpen, GraduationCap, X, List, FileDown, Printer } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Search, BookOpen, GraduationCap, X, List, FileDown, Printer, AlertCircle, RefreshCw } from 'lucide-react';
 import MarkdownRenderer, { createSlugger } from './MarkdownRenderer';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import ReviewDeck from './ReviewDeck';
+import ErrorBoundary from './ErrorBoundary';
 
 interface Note {
   id: string;
@@ -91,6 +92,8 @@ export default function LectureNotes() {
     }
     return true;
   });
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState<boolean>(false);
 
   // Custom reading experience states
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl'>('base');
@@ -171,45 +174,61 @@ export default function LectureNotes() {
   }, []);
 
   // Fetch and revalidate notes with ETag (Never stale: checks server on mount, updates if changed)
-  useEffect(() => {
-    async function fetchNotes() {
-      try {
-        const storedEtag = typeof window !== 'undefined' ? sessionStorage.getItem('hastarekha_notes_etag') : null;
-        const headers: Record<string, string> = {};
-        if (storedEtag) {
-          headers['If-None-Match'] = storedEtag;
-        }
+  const fetchNotes = useCallback(async () => {
+    setFetchError(null);
+    try {
+      const storedEtag = typeof window !== 'undefined' ? sessionStorage.getItem('hastarekha_notes_etag') : null;
+      const headers: Record<string, string> = {};
+      if (storedEtag) {
+        headers['If-None-Match'] = storedEtag;
+      }
 
-        const res = await fetch('/api/notes', { headers });
+      const res = await fetch('/api/notes', { headers });
 
-        // 304 Not Modified -> Cache is 100% fresh, nothing changed!
-        if (res.status === 304) {
-          setIsLoading(false);
-          return;
-        }
+      // 304 Not Modified -> Cache is 100% fresh, nothing changed!
+      if (res.status === 304) {
+        setFetchError(null);
+        return;
+      }
 
-        // 200 OK -> Server has new or modified notes
-        if (res.ok) {
-          const newEtag = res.headers.get('ETag');
-          const data = await res.json();
-          setNotes(data);
-          if (typeof window !== 'undefined') {
-            try {
-              sessionStorage.setItem('hastarekha_notes_cache', JSON.stringify(data));
-              if (newEtag) sessionStorage.setItem('hastarekha_notes_etag', newEtag);
-            } catch (e) {
-              // ignore storage limits
-            }
+      // 200 OK -> Server has new or modified notes
+      if (res.ok) {
+        const newEtag = res.headers.get('ETag');
+        const data = await res.json();
+        setNotes(data);
+        setFetchError(null);
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.setItem('hastarekha_notes_cache', JSON.stringify(data));
+            if (newEtag) sessionStorage.setItem('hastarekha_notes_etag', newEtag);
+          } catch (e) {
+            // ignore storage limits
           }
         }
-      } catch (err) {
-        console.error('Failed to load notes', err);
-      } finally {
-        setIsLoading(false);
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch notes (status ${res.status})`);
       }
+    } catch (err: any) {
+      console.error('Failed to load notes', err);
+      setFetchError(err.message || 'Unable to connect to lecture service');
+    } finally {
+      setIsLoading(false);
+      setIsRetrying(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  const handleRetry = () => {
+    setIsRetrying(true);
+    if (notes.length === 0) {
+      setIsLoading(true);
     }
     fetchNotes();
-  }, []);
+  };
 
   // Filter notes and compute search results/snippets
   const searchResults = useMemo(() => {
@@ -568,8 +587,44 @@ export default function LectureNotes() {
           <div className="inline-block w-8 h-8 border-4 border-stone-200 border-t-accent-gold rounded-full animate-spin"></div>
           <p className="text-stone-500 text-xs mt-3 font-semibold">Loading Lecture Notes...</p>
         </div>
+      ) : notes.length === 0 && fetchError ? (
+        <div className="py-16 px-6 max-w-lg mx-auto text-center border border-rose-200/80 bg-rose-50/40 rounded-2xl shadow-xs">
+          <div className="w-14 h-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xs">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <h2 className="text-lg font-serif font-bold text-stone-900 mb-2">Unable to Load Lecture Notes</h2>
+          <p className="text-xs text-stone-600 mb-6 leading-relaxed">
+            {fetchError}. Please verify your connection or check if the backend service is running.
+          </p>
+          <button
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-stone-100 rounded-xl text-xs font-semibold tracking-wide transition cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+            {isRetrying ? 'Retrying Connection...' : 'Retry Loading Notes'}
+          </button>
+        </div>
       ) : (
         <>
+          {fetchError && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  <strong>Offline Mode:</strong> Showing cached lecture notes from your session. Re-connecting to server failed: {fetchError}
+                </span>
+              </div>
+              <button
+                onClick={handleRetry}
+                disabled={isRetrying}
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg font-semibold shrink-0 transition cursor-pointer self-start sm:self-auto"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                {isRetrying ? 'Retrying...' : 'Sync Now'}
+              </button>
+            </div>
+          )}
           {/* Full-width Search Bar */}
           <div className="search-input-wrapper">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
@@ -866,12 +921,14 @@ export default function LectureNotes() {
                       className={`${studyMode === 'review' ? 'hidden' : ''} prose max-w-none text-stone-850 leading-relaxed`}
                       onMouseUp={studyMode === 'annotate' ? handleTextSelection : undefined}
                     >
-                      <MarkdownRenderer
-                        content={activeNote.content}
-                        onWikilinkClick={handleWikilinkClick}
-                        fontSize={fontSize}
-                        fontFamily={fontFamily}
-                      />
+                      <ErrorBoundary title="Could not format note content">
+                        <MarkdownRenderer
+                          content={activeNote.content}
+                          onWikilinkClick={handleWikilinkClick}
+                          fontSize={fontSize}
+                          fontFamily={fontFamily}
+                        />
+                      </ErrorBoundary>
                     </div>
 
                     {/* Review Mode - Interactive Spaced Repetition Flashcards & Highlights */}
@@ -887,7 +944,9 @@ export default function LectureNotes() {
                               Flip, recall, and rate to cement into memory
                             </span>
                           </div>
-                          <ReviewDeck activeNote={activeNote} allNotes={notes} />
+                          <ErrorBoundary title="Could not load active recall deck">
+                            <ReviewDeck activeNote={activeNote} allNotes={notes} />
+                          </ErrorBoundary>
                         </div>
 
                         {/* User Highlights Section */}

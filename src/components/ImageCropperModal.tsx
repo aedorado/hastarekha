@@ -293,15 +293,6 @@ export default function ImageCropperModal({ file, view, onConfirm, onCancel }: I
     );
   };
 
-  const handleRotate = (clockwise: boolean) => {
-    setRotation((prev) => {
-      const next = clockwise ? prev + 90 : prev - 90;
-      // normalize to [0, 90, 180, 270]
-      return ((next % 360) + 360) % 365; // Modulo math
-    });
-  };
-
-  // Wait, let's fix that rotation calculation so it's clean
   const rotateLeft = () => {
     setRotation((prev) => (prev - 90 + 360) % 360);
   };

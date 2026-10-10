@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import PageLayout from '@/components/PageLayout';
 import LectureNotes from '@/components/LectureNotes';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 function StudyPageContent() {
   const router = useRouter();
@@ -31,7 +32,9 @@ function StudyPageContent() {
         </button>
       </div>
 
-      <LectureNotes />
+      <ErrorBoundary title="Failed to load study guide view">
+        <LectureNotes />
+      </ErrorBoundary>
     </div>
   );
 }

@@ -29,20 +29,35 @@ export default function Dashboard({
   const [selectedHandTattva, setSelectedHandTattva] = useState('');
   const [selectedDominant, setSelectedDominant] = useState('');
   const [expandedReadings, setExpandedReadings] = useState<Record<string, boolean>>({});
+  const [profileToDelete, setProfileToDelete] = useState<HandProfile | null>(null);
+
+  // Memoized Vedic analysis per profile: parsed once when profiles update, 0ms re-renders
+  const profileVedicMap = useMemo(() => {
+    const map = new Map<string, { vedic: ReturnType<typeof parseVedicData>; readings: string[] }>();
+    for (const p of profiles) {
+      const vedic = parseVedicData(p.general_notes);
+      const readings = getVedicInterpretations(vedic);
+      map.set(p.id, { vedic, readings });
+    }
+    return map;
+  }, [profiles]);
 
   // Filter profiles based on search/filters
   const filteredProfiles = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return profiles.filter((p) => {
-      const vedic = parseVedicData(p.general_notes);
-      const readings = getVedicInterpretations(vedic);
-      const matchesReadings = readings.some((r) => r.toLowerCase().includes(searchQuery.toLowerCase()));
+      const analysis = profileVedicMap.get(p.id);
+      const vedic = analysis?.vedic || parseVedicData(p.general_notes);
+      const readings = analysis?.readings || [];
+      const matchesReadings = readings.some((r) => r.toLowerCase().includes(q));
 
       const matchesSearch =
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        vedic.notes.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vedic.hand_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vedic.hand_tattva.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q)) ||
+        vedic.notes.toLowerCase().includes(q) ||
+        vedic.hand_type.toLowerCase().includes(q) ||
+        vedic.hand_tattva.toLowerCase().includes(q) ||
         matchesReadings;
 
       const matchesHandType = !selectedHandType || vedic.hand_type === selectedHandType;
@@ -51,27 +66,25 @@ export default function Dashboard({
 
       return matchesSearch && matchesHandType && matchesHandTattva && matchesDominant;
     });
-  }, [profiles, searchQuery, selectedHandType, selectedHandTattva, selectedDominant]);
+  }, [profiles, profileVedicMap, searchQuery, selectedHandType, selectedHandTattva, selectedDominant]);
 
   // Classical Hand types present in data
   const handTypes = useMemo(() => {
     const types = new Set<string>();
-    profiles.forEach((p) => {
-      const vedic = parseVedicData(p.general_notes);
+    profileVedicMap.forEach(({ vedic }) => {
       if (vedic.hand_type) types.add(vedic.hand_type);
     });
     return Array.from(types).sort();
-  }, [profiles]);
+  }, [profileVedicMap]);
 
   // Hand Tattvas present in data
   const handTattvas = useMemo(() => {
     const tattvas = new Set<string>();
-    profiles.forEach((p) => {
-      const vedic = parseVedicData(p.general_notes);
+    profileVedicMap.forEach(({ vedic }) => {
       if (vedic.hand_tattva) tattvas.add(vedic.hand_tattva);
     });
     return Array.from(tattvas).sort();
-  }, [profiles]);
+  }, [profileVedicMap]);
 
   // JSON export backup
   const handleExport = () => {
@@ -224,7 +237,9 @@ export default function Dashboard({
       {/* Hand Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {filteredProfiles.map((p) => {
-          const vedic = parseVedicData(p.general_notes);
+          const analysis = profileVedicMap.get(p.id);
+          const vedic = analysis?.vedic || parseVedicData(p.general_notes);
+          const readings = analysis?.readings || [];
           const handType = vedic.hand_type || 'Unspecified';
           const description = vedic.notes || 'No description provided';
           const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Recently';
@@ -322,9 +337,7 @@ export default function Dashboard({
                     {description}
                   </p>
 
-                  {(() => {
-                    const readings = getVedicInterpretations(vedic);
-                    if (readings.length === 0) return null;
+                  {readings.length > 0 && (() => {
                     const isExpanded = !!expandedReadings[p.id];
                     return (
                       <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
@@ -383,11 +396,9 @@ export default function Dashboard({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Delete analysis profile for "${p.name}"?`)) {
-                          onDeleteProfile(p.id);
-                        }
+                        setProfileToDelete(p);
                       }}
-                      className="text-stone-400 hover:text-rose-600 p-1 transition-colors"
+                      className="text-stone-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
                       title="Delete profile"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -427,6 +438,51 @@ export default function Dashboard({
           >
             + Create New Profile
           </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {profileToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fade-in"
+          onClick={() => setProfileToDelete(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-stone-200/90 shadow-2xl max-w-md w-full p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-lg text-stone-900">Delete Analysis Profile?</h3>
+                <p className="text-xs text-stone-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-stone-600 leading-relaxed">
+              Are you sure you want to permanently delete the profile for{' '}
+              <strong className="text-stone-900 font-semibold">{profileToDelete.name}</strong>? All associated markings, pins, drawings, and notes will be removed.
+            </p>
+            <div className="flex justify-end items-center gap-2 pt-2 border-t border-stone-100">
+              <button
+                onClick={() => setProfileToDelete(null)}
+                className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const id = profileToDelete.id;
+                  setProfileToDelete(null);
+                  onDeleteProfile(id);
+                }}
+                className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition cursor-pointer shadow-sm active:scale-95"
+              >
+                Delete Profile
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

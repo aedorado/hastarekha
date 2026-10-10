@@ -214,3 +214,102 @@ export function saveCardRating(cardId: string, rating: 'again' | 'hard' | 'good'
 
   return updated;
 }
+
+export function isCardDue(progress?: ReviewProgress): boolean {
+  if (!progress) return true; // Unreviewed/new card is due
+  const due = new Date(progress.dueDate).getTime();
+  return due <= Date.now();
+}
+
+export interface SrsStats {
+  total: number;
+  due: number;
+  newCards: number;
+  learning: number;
+  mastered: number;
+}
+
+export function getSrsStats(
+  cards: Flashcard[],
+  progressMap: Record<string, ReviewProgress>
+): SrsStats {
+  let due = 0;
+  let newCards = 0;
+  let learning = 0;
+  let mastered = 0;
+
+  for (const card of cards) {
+    const prog = progressMap[card.id];
+    if (!prog) {
+      newCards++;
+      due++;
+    } else {
+      if (prog.mastery === 'mastered') mastered++;
+      else learning++;
+
+      if (isCardDue(prog)) {
+        due++;
+      }
+    }
+  }
+
+  return {
+    total: cards.length,
+    due,
+    newCards,
+    learning,
+    mastered,
+  };
+}
+
+export function getSrsQueue(
+  cards: Flashcard[],
+  progressMap: Record<string, ReviewProgress>,
+  mode: 'due' | 'all' | 'learning' | 'mastered'
+): Flashcard[] {
+  if (mode === 'all') {
+    return cards;
+  }
+
+  if (mode === 'learning') {
+    return cards.filter((c) => {
+      const p = progressMap[c.id];
+      return p && (p.mastery === 'learning' || p.mastery === 'review');
+    });
+  }
+
+  if (mode === 'mastered') {
+    return cards.filter((c) => progressMap[c.id]?.mastery === 'mastered');
+  }
+
+  // mode === 'due'
+  const dueCards = cards.filter((c) => isCardDue(progressMap[c.id]));
+
+  // Sort due cards: overdue cards first (oldest dueDate first), then brand new cards
+  return dueCards.sort((a, b) => {
+    const pA = progressMap[a.id];
+    const pB = progressMap[b.id];
+    if (pA && pB) {
+      return new Date(pA.dueDate).getTime() - new Date(pB.dueDate).getTime();
+    }
+    if (pA && !pB) return -1;
+    if (!pA && pB) return 1;
+    return 0;
+  });
+}
+
+export function formatDueTime(progress?: ReviewProgress): string {
+  if (!progress) return 'New';
+  const diffMs = new Date(progress.dueDate).getTime() - Date.now();
+  if (diffMs <= 0) {
+    const overdueHours = Math.round(Math.abs(diffMs) / (1000 * 60 * 60));
+    if (overdueHours < 1) return 'Due now';
+    if (overdueHours < 24) return `Due (${overdueHours}h overdue)`;
+    const overdueDays = Math.round(overdueHours / 24);
+    return `Due (${overdueDays}d overdue)`;
+  }
+  const hours = Math.round(diffMs / (1000 * 60 * 60));
+  if (hours < 24) return `Due in ${Math.max(1, hours)}h`;
+  const days = Math.round(hours / 24);
+  return `Due in ${days}d`;
+}

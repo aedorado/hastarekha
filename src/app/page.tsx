@@ -55,8 +55,10 @@ export default function Home() {
   };
 
   const handleDeleteProfile = async (id: string) => {
-    // Optimistic UI update via cache
+    // Keep snapshot for rollback if deletion fails
+    const previousProfiles = [...profiles];
     removeProfileFromCache(id);
+    setProfiles((prev) => prev.filter((p) => p.id !== id));
 
     try {
       if (isSupabaseConnected) {
@@ -64,14 +66,18 @@ export default function Home() {
           method: 'DELETE',
         });
         if (!res.ok) {
-          throw new Error('API delete failed');
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || 'Server rejected deletion');
         }
       } else {
         deleteDemoProfile(id);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Delete profile error:', e);
-      deleteDemoProfile(id);
+      // Roll back optimistic delete
+      setCachedProfiles(previousProfiles);
+      setProfiles(previousProfiles);
+      alert(`Could not delete profile: ${e.message || 'Unknown error'}`);
     }
   };
 
