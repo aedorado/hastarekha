@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData, calculateAge, MountSignData, LineAnalysisData } from '@/lib/supabase';
 import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye, Heart, Clock, Copy, Printer, Share2, BookOpen, CheckCircle2, Award, User, Mountain, Compass, MapPin, Tag } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 
 interface AnalysisFormProps {
   profile: HandProfile;
@@ -96,9 +97,10 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
     { key: 'mount_mercury', name: 'Mercury Mount (Budh)' },
     { key: 'mount_moon', name: 'Moon Mount (Chandra)' },
     { key: 'mount_venus', name: 'Venus Mount (Śukra)' },
-    { key: 'mount_mars_upper', name: 'Upper Mars (Mental Courage)' },
-    { key: 'mount_mars_lower', name: 'Lower Mars (Physical Aggression)' },
-    { key: 'mount_mars_plain', name: 'Plain of Mars (Rāhu / Ketu)' },
+    { key: 'mount_mars_lower', name: 'Lower Mars / Nimna Maṅgala (Inner Courage & Vitality)' },
+    { key: 'mount_mars_upper', name: 'Upper Mars / Ucca Maṅgala (Outer Courage & Retaliation)' },
+    { key: 'mount_mars_plain', name: 'Plain of Mars / Rāhu Zone (Middle Palm)' },
+    { key: 'mount_ketu', name: 'Ketū Parvata (Base-Palm Zone / Moksha & Ancestral Roots)' },
   ];
   mountDefs.forEach(({ key, name }) => {
     const data = vedic[key] as MountSignData | null;
@@ -114,6 +116,11 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
   md += `\n`;
 
   md += `## 6. Primary Lines (Rekhā) Analysis\n`;
+  if (vedic.simian_type) {
+    md += `### Simian Line Formation: ${vedic.simian_type}\n`;
+    if (vedic.simian_notes) md += `- Observations: ${vedic.simian_notes}\n`;
+    md += `\n`;
+  }
   const lineDefs: Array<{ key: keyof VedicData; name: string }> = [
     { key: 'line_life', name: 'Life Line (Āyur Rekhā / Jīvana Rekhā)' },
     { key: 'line_head', name: 'Head / Brain Line (Mastiṣka Rekhā)' },
@@ -200,6 +207,7 @@ export default function AnalysisForm({
   const [activeTab, setActiveTab] = useState<'profile' | 'samudrika' | 'nails' | 'mounts' | 'lines' | 'age' | 'pins' | 'tags' | 'report'>('profile');
   const [newTag, setNewTag] = useState('');
   const [copiedReport, setCopiedReport] = useState(false);
+  const [photoToRemove, setPhotoToRemove] = useState<HandView | null>(null);
 
   // 10-Minute Resting State Timer
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
@@ -362,6 +370,7 @@ export default function AnalysisForm({
     vedicData.mount_venus,
     vedicData.mount_mars_upper,
     vedicData.mount_mars_lower,
+    vedicData.mount_ketu,
   ].filter(Boolean).length ||
     Object.keys(profile.mounts_data || {}).filter(
       (k) => profile.mounts_data[k] && profile.mounts_data[k].trim() !== ''
@@ -487,31 +496,28 @@ export default function AnalysisForm({
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer select-none whitespace-nowrap ${
-                isActive
-                  ? 'bg-white text-stone-900 shadow-sm border border-stone-200/90 font-semibold ring-1 ring-amber-500/20'
-                  : 'text-stone-500 hover:text-stone-800 hover:bg-stone-100/70 border border-transparent font-medium'
-              } ${t.highlight ? 'ring-2 ring-amber-500/50 bg-amber-50/50' : ''}`}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all cursor-pointer select-none whitespace-nowrap ${isActive
+                ? 'bg-white text-stone-900 shadow-sm border border-stone-200/90 font-semibold ring-1 ring-amber-500/20'
+                : 'text-stone-500 hover:text-stone-800 hover:bg-stone-100/70 border border-transparent font-medium'
+                } ${t.highlight ? 'ring-2 ring-amber-500/50 bg-amber-50/50' : ''}`}
             >
               <Icon
-                className={`w-3.5 h-3.5 transition-colors ${
-                  isActive
-                    ? 'text-accent-gold'
-                    : t.isSpecial
+                className={`w-3.5 h-3.5 transition-colors ${isActive
+                  ? 'text-accent-gold'
+                  : t.isSpecial
                     ? 'text-amber-600/80'
                     : 'text-stone-400'
-                }`}
+                  }`}
               />
               <span>{t.label}</span>
 
               {/* Count badge */}
               {typeof t.count === 'number' && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold leading-tight ${
-                    isActive
-                      ? 'bg-amber-100 text-amber-900'
-                      : 'bg-stone-200/80 text-stone-600'
-                  }`}
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold leading-tight ${isActive
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-stone-200/80 text-stone-600'
+                    }`}
                 >
                   {t.count}
                 </span>
@@ -520,9 +526,8 @@ export default function AnalysisForm({
               {/* Data presence dot */}
               {t.hasDot && typeof t.count !== 'number' && (
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isActive ? 'bg-accent-gold' : 'bg-emerald-500'
-                  }`}
+                  className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-accent-gold' : 'bg-emerald-500'
+                    }`}
                   title="Completed / Active"
                 />
               )}
@@ -530,11 +535,10 @@ export default function AnalysisForm({
               {/* Special badge for Synthesis Report */}
               {t.isSpecial && (
                 <span
-                  className={`text-[9px] px-1.5 py-0.2 uppercase tracking-wider rounded font-bold ${
-                    isActive
-                      ? 'bg-amber-100 text-amber-900 border border-amber-300/40'
-                      : 'bg-stone-200/70 text-stone-600'
-                  }`}
+                  className={`text-[9px] px-1.5 py-0.2 uppercase tracking-wider rounded font-bold ${isActive
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300/40'
+                    : 'bg-stone-200/70 text-stone-600'
+                    }`}
                 >
                   Vedic
                 </span>
@@ -657,14 +661,8 @@ export default function AnalysisForm({
                           <img src={url} alt={view} className="max-h-full max-w-full object-contain" />
                           <button
                             type="button"
-                            onClick={() => {
-                              if (confirm(`Remove photo for ${HAND_VIEW_LABELS[view]}?`)) {
-                                const newImages = { ...profile.images };
-                                delete newImages[view];
-                                updateProfileField('images', newImages);
-                              }
-                            }}
-                            className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow"
+                            onClick={() => setPhotoToRemove(view)}
+                            className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow cursor-pointer"
                             title="Delete photo"
                           >
                             ×
@@ -851,10 +849,11 @@ export default function AnalysisForm({
                   >
                     <option value="">Select Color...</option>
                     <option value="Pinkish (Healthy)">🌸 Pinkish (Healthy baseline)</option>
-                    <option value="Pale/Whitish">⚪ Pale / Whitish (Low vitality)</option>
-                    <option value="Yellow (health/liver)">🟡 Yellow (Liver/Pitta indicator)</option>
-                    <option value="Reddish (heat/aggression)">🔴 Reddish (High heat / Agni)</option>
-                    <option value="Blue/Purple tinge (serious illness)">🟣 Blue / Purple (Circulatory alert)</option>
+                    <option value="Pale/Whitish">⚪ Pale / Whitish (Stomach / low vitality / insomnia)</option>
+                    <option value="Yellow (health/liver)">🟡 Yellow (Liver / low hemoglobin / jaundice history)</option>
+                    <option value="Reddish (heat/aggression)">🔴 Reddish (High heat / Mars / short-tempered)</option>
+                    <option value="Bluish (kidney/renal alert)">🔵 Bluish (Kidney / renal alert, veins on Venus)</option>
+                    <option value="Purple / Aubergine (terminal alert)">🟣 Purple / Aubergine (Critical condition alert)</option>
                   </select>
                 </div>
               </div>
@@ -1658,7 +1657,7 @@ export default function AnalysisForm({
                 <Activity className="w-4 h-4 text-teal-500" />
                 Mercury Finger (Budh / Little) — Aṅguli Analysis
               </h4>
-              <p className="text-[10px] text-stone-500 leading-normal">Mercury controls communication, business acumen, speech, writing, and diplomacy. Normal = reaches 1st joint of Sun finger.</p>
+              <p className="text-[10px] text-stone-500 leading-normal">Mercury controls communication, business acumen, writing, and diplomacy. Benchmark is the uppermost joint/crease line (sandhi rekhā) of the Sun finger (Notes 08 &amp; 10): reaching = normal/balanced; above = gifted oratory &amp; commerce; below = timid speech / slower logic filtering.</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
                 <div className="form-group">
                   <label className="form-label text-xs">Length (ref: 1st joint of Sun)</label>
@@ -2080,19 +2079,35 @@ export default function AnalysisForm({
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label text-xs">Nail Surface (Health)</label>
+                  <label className="form-label text-xs">Nail Surface (Health — Lecture 12)</label>
                   <select className="form-input bg-white border border-stone-200 text-xs"
                     value={vedicData.nail_surface || ''}
                     onChange={(e) => updateVedicField('nail_surface', e.target.value)}>
                     <option value="">Select Surface...</option>
-                    <option value="Smooth">Smooth — healthy</option>
-                    <option value="Ridged/Vertical lines">Ridged/Vertical lines — check Jupiter sub-period</option>
-                    <option value="Horizontal ridges (protein def)">Horizontal ridges — protein deficiency</option>
+                    <option value="Smooth">Smooth — Healthy baseline</option>
+                    <option value="Vertical lines (Father inheritance / stress)">Vertical lines — Father's side inherited disease, stress, vāta-doṣa</option>
+                    <option value="Fluted vertical ridges (severe arthritis / vascular alert)">Fluted vertical ridges — Deep cracks (arthritis risk, vascular alert)</option>
+                    <option value="Horizontal ridges (Mother inheritance / acute shock / protein)">Horizontal ridges — Mother's side inherited disease, acute shock/trauma, protein deficiency</option>
                     <option value="Spotted">Spotted / uneven</option>
                     <option value="Brittle/Breaks easily">Brittle/Breaks — thin papery type</option>
                   </select>
                 </div>
               </div>
+              {vedicData.nail_surface === 'Vertical lines (Father inheritance / stress)' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold leading-relaxed">
+                  🩺 <strong>Vertical Lines on Nails (Note 12 §7):</strong> Associated with disease patterns inherited from the <strong>father's side</strong>, nervous stress, zinc deficiency, and vāta-doṣa ailments. If light/faint, indicates ordinary daily tension.
+                </div>
+              )}
+              {vedicData.nail_surface === 'Fluted vertical ridges (severe arthritis / vascular alert)' && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 font-semibold leading-relaxed">
+                  🚨 <strong>Fluted Nails (Note 12 §7):</strong> Advanced longitudinal ridges with deep cracks revealing inner nail bed. High warning indicator for severe arthritis, chronic degenerative conditions, or vascular risk.
+                </div>
+              )}
+              {vedicData.nail_surface === 'Horizontal ridges (Mother inheritance / acute shock / protein)' && (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold leading-relaxed">
+                  ⚠️ <strong>Horizontal Lines across Nails (Note 12 §8):</strong> Associated with disease patterns inherited from the <strong>mother's side</strong>, severe acute health shock or fever arrest during nail formation, and protein/metabolic deficiency.
+                </div>
+              )}
               {vedicData.nail_shape_detail === 'Spoon-shaped (Concave)' && (
                 <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-900 font-semibold leading-relaxed">
                   ⚠️ <strong>Spoon-shaped nail:</strong> Not a good health sign. Indicates possible thyroid issues, heart disease, anemia, or liver conditions. Teacher recommends getting a liver check done. Timing of issue: confirm with heart line and life line islands.
@@ -2175,10 +2190,11 @@ export default function AnalysisForm({
                   onChange={(e) => updateVedicField('palm_color', e.target.value)}>
                   <option value="">Select Palm Color...</option>
                   <option value="Pinkish (Healthy)">Pinkish — Healthy baseline</option>
-                  <option value="Pale/Whitish">Pale/Whitish — Low energy</option>
-                  <option value="Yellow (health/liver)">Yellow tinge — Liver/health concern (get tested)</option>
-                  <option value="Reddish (heat/aggression)">Reddish — Heat/aggression/Mars influence</option>
-                  <option value="Blue/Purple tinge (serious illness)">Blue/Purple tinge — Serious illness concern</option>
+                  <option value="Pale/Whitish">Pale / Whitish — Stomach / low vitality / insomnia</option>
+                  <option value="Yellow (health/liver)">Yellow tinge — Liver / low hemoglobin / jaundice history</option>
+                  <option value="Reddish (heat/aggression)">Reddish — High heat / Mars / short-tempered</option>
+                  <option value="Bluish (kidney/renal alert)">Bluish — Kidney / renal alert (veins on Venus)</option>
+                  <option value="Purple / Aubergine (terminal alert)">Purple / Aubergine — Critical condition alert</option>
                 </select>
               </div>
             </div>
@@ -2186,10 +2202,11 @@ export default function AnalysisForm({
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            MOUNTS TAB — Lectures 13-18 (fully structured)
+            MOUNTS TAB — Lectures 13-18, 20-22 (fully structured)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'mounts' && (() => {
-          const ALL_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Island ◯', 'Dot •', 'Grille #', 'Mole', 'Fish 🐟', 'Flag', 'Trident ψ', 'Circle', 'Diamond Chain', 'Canopy (Circle at end)'];
+          // Note 19: Islands exist only on lines, never on mounts.
+          const ALL_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Dot •', 'Grille #', 'Mole', 'Fish 🐟', 'Flag', 'Trident ψ', 'Circle', 'Diamond Chain', 'Canopy (Circle at end)'];
 
           const MOUNT_CONFIGS = [
             {
@@ -2201,12 +2218,21 @@ export default function AnalysisForm({
               normal: 'Knowledge, discernment, patience, spirituality, respect for elders, generosity, justice-loving, fortunate.',
               over: 'Over-developed: arrogance, repeated self-praise, belittles others, too-opinionated.',
               under: 'Under-developed: low ambition, poor self-confidence, avoids teaching or guiding.',
+              customSigns: ['Ring of Solomon ⭕', 'Line of Sympathy 📏'],
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Guru-pradhān)', meaning: 'Dominant planet influence on nature. High vivek, moral discernment, patience, and fortunate expansion.' },
+                { value: 'Toward Saturn', label: '→ Toward Saturn (Karma / Research)', meaning: 'Knowledge gains seriousness (gambhīrtā), technical acumen, research depth ("khojī"), hardworking patience, and respect for societal rules.' },
+                { value: 'Toward Thumb', label: '→ Toward Thumb (Self / Leadership)', meaning: 'Knowledge directed toward "I" (self) — natural leadership ability, extroverted authority, desire to prove oneself, possible overconfidence.' },
+                { value: 'Toward Head Line', label: '→ Toward Mind / Head Line (Intellect)', meaning: 'Knowledge channelled through mind & intellect — practicality added to wisdom, multi-disciplinary learning, early research capacity (active from childhood).' },
+                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Compassion)', meaning: 'Wisdom combined with listening to one’s heart — practical compassion and emotional balance in guidance.' },
+              ],
               signMeanings: {
+                'Ring of Solomon ⭕': '⭕ Ring of Solomon (Guru Valaya, Notes 13 & 20): Curved semi-circle toward thumb — high sixth sense, ability to listen to nature/animals, psychic and healing wisdom.',
+                'Line of Sympathy 📏': '📏 Line of Sympathy (Dayā Rekhā, Note 20): Straight diagonal line across Jupiter — deep empathy, counseling nature, naturally consoles and heals others in distress.',
                 'Star ⭐': '⭐ Star on Jupiter: Good sign — multiple channels of name/fame arriving together.',
-                'Cross ✝': '✝ Cross on Jupiter: Marriage sign (auspicious here). Also indicates education gains.',
+                'Cross ✝': '✝ Cross on Jupiter (Note 19): Auspicious here (the ONLY positive place for a cross). Signifies happy marriage and education achievements.',
                 'Square □': '□ Square on Jupiter: Teaching capacity / strong protection from downfall.',
                 'Triangle △': '△ Triangle on Jupiter: Scientific, research-oriented, diplomatic.',
-                'Island ◯': '◯ Island on Jupiter: Struggle in knowledge/career for that period.',
                 'Grille #': '# Grille: Excess ambition to the point of stress.',
                 'Trident ψ': 'ψ Trident: Multiple paths of success coming together at Jupiter.',
               },
@@ -2220,6 +2246,12 @@ export default function AnalysisForm({
               normal: 'Discipline, responsibility, karmic work, research, deep focus, solitude. Loves solitary, focused work.',
               over: 'Over-developed: excessive seriousness, melancholy, accident-prone, rigid.',
               under: 'Under-developed: irresponsible, avoids commitments, poor perseverance.',
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Śani-pradhān)', meaning: 'Strong sense of duty, philosophical solitude, disciplined labor, perseverance through obstacles.' },
+                { value: 'Toward Jupiter', label: '→ Toward Jupiter (Wisdom & Dharma)', meaning: 'Adds wisdom, dharma, and benevolence to work/karma. Always brings improvement and auspiciousness (shubhta) to Saturnian results.' },
+                { value: 'Toward Sun', label: '→ Toward Sun (Fame through Work)', meaning: 'Desire for fame/recognition through karma. Favourable for career prominence, but can introduce anxiety and nervous strain for health.' },
+                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Emotional Duty)', meaning: 'Karmic duty felt deeply in emotional commitments, family responsibility, and steadfast loyalty.' },
+              ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Saturn: Mixed — accident or sudden event (read with fate line).',
                 'Cross ✝': '✝ Cross on Saturn: Accident sign. Disease sign. Not auspicious here.',
@@ -2236,6 +2268,12 @@ export default function AnalysisForm({
               normal: 'Creative ability, fame, vivek (discernment), artistic talent, love of beauty, success in arts/media.',
               over: 'Over-developed: arrogance around fame, waste of creativity, showoff.',
               under: 'Under-developed: poor taste, lack of creative drive, difficulty gaining recognition.',
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Sūrya-pradhān)', meaning: 'Natural creative brilliance, healthy self-respect, love of beauty, high vitality, and dignified presence.' },
+                { value: 'Toward Saturn', label: '→ Toward Saturn (Disciplined / Serious Art)', meaning: 'Fame achieved through laborious, disciplined karma. Serious artistic or scholarly output; recognition may come with patience/delay.' },
+                { value: 'Toward Mercury', label: '→ Toward Mercury (Commercial Arts & Eloquence)', meaning: 'Creative talents blended with commercial acumen, speech, writing, and successful enterprise in creative fields.' },
+                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Heart-Centered Fame)', meaning: 'Warm-hearted artistic expression, deep empathy in creative work, public affection.' },
+              ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Sun: Sudden fame, unexpected recognition — auspicious.',
                 'Cross ✝': '✝ Cross on Sun: Obstacle to fame/recognition, defamation risk.',
@@ -2253,6 +2291,12 @@ export default function AnalysisForm({
               normal: 'Communication, business, diplomacy, speech, writing, science, trade, medicine.',
               over: 'Over-developed: dishonesty, cunning speech, deception for gain.',
               under: 'Under-developed: poor communication, business failures, difficulty with logic.',
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Budha-pradhān)', meaning: 'Sharp analytical logic, versatility, commercial acumen, diplomatic speech, and trade talent.' },
+                { value: 'Toward Sun', label: '→ Toward Sun (Charisma & Commercial Oratory)', meaning: 'Communication backed by artistic charm and charisma. Persuasive speaker, attractive public presentation in business.' },
+                { value: 'Toward Outside Edge', label: '→ Outside Edge / Percussion (Rough Boundary)', meaning: 'Apex crosses natural palm boundary with jagged edge — classical texts associate this with increased life struggle.' },
+                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Empathetic Commerce)', meaning: 'Trade, counseling, or communication guided by empathy and emotional understanding.' },
+              ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Mercury: Mixed — clever speaker/researcher, but can indicate trickery.',
                 'Cross ✝': '✝ Cross on Mercury: Business failure or communication trouble.',
@@ -2270,6 +2314,12 @@ export default function AnalysisForm({
               normal: 'Imagination, intuition, creativity, emotional sensitivity, love of travel, poetry, music.',
               over: 'Over-developed: excessive fantasy, emotional instability, restlessness.',
               under: 'Under-developed: lack of imagination, rigid thinking, poor adaptability.',
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Chandra-pradhān)', meaning: 'Pure imagination, poetic vision, strong intuition, emotional depth, and affinity for travel.' },
+                { value: 'Toward Upper Mars', label: '→ Toward Upper Mars (Courageous Imagination)', meaning: 'Creative and imaginative powers fortified by moral courage and emotional resilience.' },
+                { value: 'Toward Wrist / Ketu', label: '→ Toward Wrist / Ketū (Deep Mysticism)', meaning: 'Subconscious spiritual depth, prophetic dreams, strong gut instinct, attraction to moksha.' },
+                { value: 'Toward Venus', label: '→ Toward Venus (Sensory Romance & Luxury)', meaning: 'Imagination focused on romantic beauty, luxury, artistic comforts, and sensory pleasures.' },
+              ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Moon: Suicidal tendency or severe emotional crisis — serious warning.',
                 'Cross ✝': '✝ Cross on Moon: Emotional turmoil, depression risk.',
@@ -2286,6 +2336,12 @@ export default function AnalysisForm({
               normal: 'Love, passion, vitality, generosity, beauty, family warmth, attraction, music, luxury.',
               over: 'Over-developed: excess sensuality, indulgence, possessiveness in relationships.',
               under: 'Under-developed: coldness, poor family bonds, lack of physical vitality.',
+              apexOptions: [
+                { value: 'Centered', label: 'Centered — Dominant Planet (Śukra-pradhān)', meaning: 'Robust vitality, personal magnetism, warmth in relationships, appreciation for aesthetics and music.' },
+                { value: 'Toward Thumb', label: '→ Toward Thumb (Willpower & Assertive Desire)', meaning: 'Sensual energy and passion disciplined and directed by personal willpower and determination.' },
+                { value: 'Toward Life Line', label: '→ Toward Life Line (Physical Vitality & Family)', meaning: 'Vital energy directly invigorating the physical constitution, endurance, and family devotion.' },
+                { value: 'Toward Moon', label: '→ Toward Moon (Poetic / Romantic Passion)', meaning: 'Passions softened and elevated by imagination, poetic romance, and sensitive devotion.' },
+              ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Venus: Multiple love affairs or fame connected to personal charisma.',
                 'Cross ✝': '✝ Cross on Venus: Complicated love affair or relationship trouble.',
@@ -2349,17 +2405,10 @@ export default function AnalysisForm({
                         <select className="form-input bg-white border border-stone-200 text-xs"
                           value={mountData.apex}
                           onChange={(e) => updateMount(mount.key as any, 'apex', e.target.value)}>
-                          <option value="">Select...</option>
-                          <option value="Centered">Centered — Dominant planet</option>
-                          <option value="Toward Jupiter">→ Jupiter</option>
-                          <option value="Toward Saturn">→ Saturn</option>
-                          <option value="Toward Sun">→ Sun</option>
-                          <option value="Toward Mercury">→ Mercury</option>
-                          <option value="Toward Moon">→ Moon</option>
-                          <option value="Toward Venus">→ Venus</option>
-                          <option value="Toward Mars">→ Mars</option>
-                          <option value="Toward Thumb">→ Thumb (self)</option>
-                          <option value="Toward Head Line">→ Head Line (intellect)</option>
+                          <option value="">Select Apex...</option>
+                          {mount.apexOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
                         </select>
                       </div>
                       <div className="form-group">
@@ -2379,7 +2428,7 @@ export default function AnalysisForm({
                     <div>
                       <label className="form-label text-xs mb-1.5 block">Signs &amp; Symbols on Mount</label>
                       <div className="flex flex-wrap gap-2">
-                        {ALL_SIGNS.map((sign) => (
+                        {[...((mount as any).customSigns || []), ...ALL_SIGNS].map((sign: string) => (
                           <label key={sign} className={`flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg border text-[10px] font-semibold transition-all ${mountData.signs.includes(sign) ? 'bg-accent-gold text-white border-accent-gold' : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-accent-gold/40'}`}>
                             <input type="checkbox" className="sr-only"
                               checked={mountData.signs.includes(sign)}
@@ -2396,7 +2445,18 @@ export default function AnalysisForm({
                         {mountData.height === 'Raised' && <p className="text-stone-700 font-semibold">✨ <strong>Normal/Raised:</strong> {mount.normal}</p>}
                         {mountData.height === 'Very High / Overbuilt' && <p className="text-orange-700 font-semibold">⚠️ <strong>Over-developed:</strong> {mount.over}</p>}
                         {mountData.height === 'Flat' && <p className="text-rose-700 font-semibold">📉 <strong>Under-developed:</strong> {mount.under}</p>}
-                        {mountData.apex === 'Centered' && <p className="text-stone-600 font-semibold">🎯 <strong>Centered Apex:</strong> This planet is the dominant influence on personality.</p>}
+                        {mountData.apex && (() => {
+                          const matched = (mount.apexOptions as readonly { value: string; label: string; meaning: string }[]).find((opt) => opt.value === mountData.apex);
+                          return matched ? (
+                            <p className="text-stone-700 font-semibold">
+                              🎯 <strong>Apex {matched.label}:</strong> {matched.meaning}
+                            </p>
+                          ) : (
+                            <p className="text-stone-700 font-semibold">
+                              🎯 <strong>Apex:</strong> {mountData.apex}
+                            </p>
+                          );
+                        })()}
                         {mountData.quality === 'Spongy (poor)' && <p className="text-orange-700 font-semibold">⚠️ <strong>Spongy quality:</strong> Teacher says this is a poor sign — mount should return immediately like a mattress. Slow return = poor results from this mount.</p>}
                         {mountData.signs.map((sign) => {
                           const meaning = (mount.signMeanings as any)[sign];
@@ -2415,35 +2475,49 @@ export default function AnalysisForm({
                 );
               })}
 
-              {/* Mars Mounts (Upper, Lower, Plain) */}
+              {/* Mars Mounts (Lower Mars, Upper Mars, Plain of Mars) — Lecture 18 */}
               <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
-                <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
-                  ♂️ Mars Mounts &amp; Plain of Mars
-                </h4>
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 font-medium leading-relaxed">
-                  <strong>Upper Mars</strong> (between Heart and Head lines, inner): Moral courage, mental fortitude, ability to withstand pressure.<br />
-                  <strong>Lower Mars</strong> (outer, between Life and Head lines): Physical courage, aggression, action-taking.<br />
-                  <strong>Plain of Mars</strong> (center of palm): The &quot;field&quot; where all planetary energies meet and play out in daily life.
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                    <span className="text-rose-600">♂️</span>
+                    Mars Mounts (Maṅgala Parvata — Lecture 18)
+                  </h4>
+                  <span className="text-[10px] font-semibold text-stone-400">Nimna &amp; Ucca Maṅgala</span>
+                </div>
+                <div className="p-3 bg-rose-50/70 border border-rose-200/60 rounded-xl text-xs text-rose-900 font-medium leading-relaxed space-y-1">
+                  <p>
+                    <strong>Lower Mars (Nimna Maṅgala, inner):</strong> Near the thumb between Jupiter and Venus. Governs <em>āntarika sāhasa</em> (inner courage felt inside vs. trembling inside) and enthusiasm. Origin of &quot;Enemy Lines&quot; (śatru rekhā, correlated with 6th house in Jyotiṣa) which cut main lines. Bluish/dark tint = blood/hemoglobin alert.
+                  </p>
+                  <p>
+                    <strong>Upper Mars (Ucca Maṅgala, outer):</strong> On outer percussion between Mercury and Moon. Governs <em>bāhya sāhasa</em> (outer courage, physical retaliation, willingness to strike/fight back or defend). Over-developed = explosive anger/breaking things (needs gym/physical outlet). Depressed = cowardice, inability to confront or discipline.
+                  </p>
+                  <p>
+                    <strong>Plain of Mars (Middle Palm / Rāhu Area):</strong> Central depression where planetary energies traverse.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {(['mount_mars_upper', 'mount_mars_lower', 'mount_mars_plain'] as const).map((marsKey) => {
-                    const label = marsKey === 'mount_mars_upper' ? 'Upper Mars (inner, moral courage)' : marsKey === 'mount_mars_lower' ? 'Lower Mars (outer, physical courage)' : 'Plain of Mars (center palm)';
+                  {(['mount_mars_lower', 'mount_mars_upper', 'mount_mars_plain'] as const).map((marsKey) => {
+                    const label = marsKey === 'mount_mars_lower'
+                      ? 'Lower Mars / Nimna Maṅgala (Inner Courage & Enemy Lines)'
+                      : marsKey === 'mount_mars_upper'
+                      ? 'Upper Mars / Ucca Maṅgala (Outer Courage & Retaliation)'
+                      : 'Plain of Mars / Rāhu Zone (Center Palm)';
                     const marsData = getMount(marsKey);
                     return (
                       <div key={marsKey} className="border border-stone-100 rounded-xl p-3 space-y-2">
-                        <label className="form-label text-xs">{label}</label>
+                        <label className="form-label text-xs font-semibold text-stone-800">{label}</label>
                         <div className="grid grid-cols-2 gap-2">
                           <select className="form-input bg-white border border-stone-200 text-xs"
                             value={marsData.height}
                             onChange={(e) => updateMount(marsKey, 'height', e.target.value)}>
                             <option value="">Height...</option>
-                            <option value="Raised">Raised</option>
-                            <option value="Normal">Normal</option>
-                            <option value="Flat">Flat</option>
-                            <option value="Very High / Overbuilt">Very High</option>
+                            <option value="Raised">Raised / Developed</option>
+                            <option value="Normal">Normal (Sāmānya - balanced)</option>
+                            <option value="Flat">Flat / Depressed (Nimna)</option>
+                            <option value="Very High / Overbuilt">Very High / Over-developed (Atividikasita)</option>
                           </select>
                           <div className="flex flex-wrap gap-1">
-                            {['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Island ◯'].map((sign) => (
+                            {['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Enemy Line ⚔️', 'Mole'].map((sign) => (
                               <label key={sign} className={`flex items-center gap-0.5 cursor-pointer px-1.5 py-0.5 rounded border text-[9px] font-semibold transition-all ${marsData.signs.includes(sign) ? 'bg-rose-500 text-white border-rose-500' : 'bg-stone-50 text-stone-600 border-stone-200'}`}>
                                 <input type="checkbox" className="sr-only"
                                   checked={marsData.signs.includes(sign)}
@@ -2453,13 +2527,108 @@ export default function AnalysisForm({
                             ))}
                           </div>
                         </div>
+                        {marsKey === 'mount_mars_lower' && marsData.signs.includes('Enemy Line ⚔️') && (
+                          <p className="text-[10px] text-rose-700 font-semibold">⚔️ Enemy Lines (Śatru Rekhā, Note 18 §2.2): Lines shooting from Lower Mars across main lines indicate 6th house obstacles, opponents, or acute stress patches.</p>
+                        )}
                         {marsKey === 'mount_mars_lower' && marsData.signs.includes('Star ⭐') && (
-                          <p className="text-[10px] text-rose-700 font-semibold">⭐ Star on Lower Mars: Accident risk or teenage/aggressive love affairs.</p>
+                          <p className="text-[10px] text-rose-700 font-semibold">⭐ Star on Lower Mars: Sudden quarrel, accident risk, or turbulent early affair.</p>
+                        )}
+                        {marsKey === 'mount_mars_upper' && marsData.height === 'Very High / Overbuilt' && (
+                          <p className="text-[10px] text-amber-700 font-semibold">⚡ Highly Raised Upper Mars (Note 18 §2.4): Intense outer retaliatory drive. Strong physical energy that must be channeled into sports, martial arts, or gym to avoid domestic temper flareups.</p>
                         )}
                       </div>
                     );
                   })}
                 </div>
+              </div>
+
+              {/* Ketū Parvata (Ketū Mount / Base-Palm Zone) — Lectures 02, 17, 20, 21, 22 */}
+              <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                    <span className="text-purple-600">☋</span>
+                    Ketū Parvata (Base-Palm / Wrist Zone)
+                  </h4>
+                  <span className="text-[10px] font-semibold text-stone-400">Between Moon &amp; Venus at Maṇibandha</span>
+                </div>
+                <div className="p-2 bg-purple-50/70 border border-purple-200/60 rounded-xl text-xs text-purple-900 font-medium leading-relaxed">
+                  🔱 <strong>Core Teaching (Notes 20-22):</strong> Seat of Moksha, spirituality, and ancestral roots. <strong>90% of genuine complete Fish signs (Matsya Chinha) appear here</strong> at the base of the Fate Line or end of the Life Line. Gives spiritual renown, fame, and deep research capability (not liquid cash).
+                </div>
+
+                {(() => {
+                  const ketuData = getMount('mount_ketu');
+                  const hasKetuData = ketuData.height || ketuData.signs.length > 0 || ketuData.notes;
+                  const KETU_SIGNS = ['Fish 🐟', 'Triangle △', 'Square □', 'Trident ψ', 'Star ⭐', 'Cross ✝'];
+                  return (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="form-group">
+                          <label className="form-label text-xs">Development / State</label>
+                          <select className="form-input bg-white border border-stone-200 text-xs"
+                            value={ketuData.height}
+                            onChange={(e) => updateMount('mount_ketu', 'height', e.target.value)}>
+                            <option value="">Select...</option>
+                            <option value="Raised">Raised / Prominent</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Flat">Flat / Sunken</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label text-xs">Mount Quality</label>
+                          <select className="form-input bg-white border border-stone-200 text-xs"
+                            value={ketuData.quality}
+                            onChange={(e) => updateMount('mount_ketu', 'quality', e.target.value)}>
+                            <option value="">Select...</option>
+                            <option value="Firm/Healthy">Firm / Clear</option>
+                            <option value="Spongy (poor)">Spongy / Disturbed</option>
+                            <option value="Flat/Pressed">Flat / Sunken</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="form-label text-xs mb-1.5 block">Signs &amp; Symbols on Ketū</label>
+                        <div className="flex flex-wrap gap-2">
+                          {KETU_SIGNS.map((sign) => (
+                            <label key={sign} className={`flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg border text-[10px] font-semibold transition-all ${ketuData.signs.includes(sign) ? 'bg-purple-600 text-white border-purple-600' : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-purple-300'}`}>
+                              <input type="checkbox" className="sr-only"
+                                checked={ketuData.signs.includes(sign)}
+                                onChange={() => toggleMountSign('mount_ketu', sign)} />
+                              {sign}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {hasKetuData && (
+                        <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-xl text-[11px] space-y-1.5 leading-relaxed text-stone-700">
+                          {ketuData.signs.includes('Fish 🐟') && (
+                            <p className="text-purple-900 font-semibold">
+                              🐟 <strong>Fish on Ketū (Notes 20-22):</strong> Complete fish formation here bestows spiritual elevation, high renown, protection from drowning/calamity, and profound investigative wisdom. (Teacher notes: gives power &amp; spiritual status, not direct money).
+                            </p>
+                          )}
+                          {ketuData.signs.includes('Triangle △') && (
+                            <p className="text-stone-700 font-semibold">
+                              △ <strong>Triangle on Ketū:</strong> High occult acumen, astrological insight, and philosophical detachment.
+                            </p>
+                          )}
+                          {ketuData.signs.includes('Square □') && (
+                            <p className="text-stone-700 font-semibold">
+                              □ <strong>Square on Ketū:</strong> Divine protection from subconscious fears and spiritual crises.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="form-group">
+                        <textarea className="form-input h-14 resize-none text-xs"
+                          placeholder="Ketū zone observations (e.g. Life Line branch terminating directly into Ketū)..."
+                          value={ketuData.notes}
+                          onChange={(e) => updateMount('mount_ketu', 'notes', e.target.value)} />
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           );
@@ -2497,7 +2666,14 @@ export default function AnalysisForm({
               label: 'Life Line (Jīvana Rekhā)',
               emoji: '❤️',
               origin_options: ['Starts from Jupiter mount area', 'Starts from between thumb and Jupiter', 'Starts very low (near wrist)'],
-              terminus_options: ['Ends at Venus mount', 'Ends toward Moon mount', 'Ends mid-palm', 'Curves around thumb base', 'Short (ends at mid-palm)'],
+              terminus_options: [
+                'Curves inward toward thumb (100+ longevity, attachment to roots - Note 21 §3)',
+                'Branches outward to Moon mount (foreign travel, outward expansion - Note 21 §3)',
+                'Ends toward Ketū mount (moksha / highly spiritual - Note 21 §5.1)',
+                'Ends at Venus mount',
+                'Ends mid-palm',
+                'Short (ends at mid-palm)',
+              ],
               hint: 'All events of life show on the Life Line. Age counted from top (near Jupiter) downward — midpoint = age 30 (teacher\'s method).',
               signMeanings: {
                 'Square □': '□ Square on Life Line: Protection period — square marks where the person was protected from an obstacle.',
@@ -2505,6 +2681,7 @@ export default function AnalysisForm({
                 'Star ⭐': '⭐ Star on Life Line: Sudden event or shock at that age.',
                 'Cross ✝': '✝ Cross on Life Line: Obstacle, disease, or difficult event.',
                 'Fish 🐟': '🐟 Fish on Life Line: Spiritual sign. Two-symbol indicator — very auspicious.',
+                'Macchā Rekhā 🐟': '🐟 Macchā Rekhā on Life Line (Samrāṭ yoga at that age with health alert, Note 21 §6).',
                 'Canopy (Circle at end)': '◯ Canopy at Life Line end: Whole life is protected, however many ups and downs occur.',
               },
             },
@@ -2512,14 +2689,30 @@ export default function AnalysisForm({
               key: 'line_fate' as const,
               label: 'Fate Line (Bhāgya Rekhā / Dhana Rekhā)',
               emoji: '⚡',
-              origin_options: ['From wrist/maṇibandha', 'From Moon mount', 'From Venus mount', 'From Life Line (mid-life start)', 'From Head Line (late start)', 'From Heart Line (very late)'],
-              terminus_options: ['Ends at Saturn mount', 'Ends at Jupiter mount (ambition)', 'Ends at Head Line', 'Ends at Heart Line', 'Runs full length'],
-              hint: 'Also called career line, wealth line. Age always counted from wrist (maṇibandha = age 0) upward, even if line starts higher. Late-starting fate line = career starts late.',
+              origin_options: [
+                'From wrist/maṇibandha (early self-made career)',
+                'From Moon mount (public support, female assistance, arts/rental income - Note 23 §2.2)',
+                'From Venus mount (family business, deep family support - Note 23 §2.2)',
+                'From Life Line / joined (father-figure responsibility for family - Note 23 §1)',
+                'Starts mid-palm (career develops independently in 30s-40s - Note 23 §2.2)',
+                'From Head Line (late start ~35-40 after mental clarity)',
+                'From Heart Line (very late start ~50+)',
+              ],
+              terminus_options: [
+                'Ends at Saturn mount (complete karma / career)',
+                'Ends at Jupiter mount (ambition & leadership)',
+                'Stops at Head Line (career halted/altered around 40-50 due to mental decision/anger - Note 23 §3.1)',
+                'Stops at Heart Line (career impacted by emotional disturbance or relationship - Note 23 §3.2)',
+                'Branch goes to Mercury mount (business diversification, higher study - Note 23 §5)',
+                'Branch goes to Sun mount (public acclaim & fame)',
+                'Runs full length',
+              ],
+              hint: 'Also called career line, wealth line. Age counted from wrist (maṇibandha = age 0) upward. Two fate lines = two income streams (Note 23 §2.2).',
               signMeanings: {
                 'Diamond Chain': '💎 Diamond Chain at end of Fate Line: Wish fulfilment — doubles the power of the fate line throughout life.',
                 'Island ◯': '◯ Island: Career struggle / financial difficulty for that duration.',
                 'Cross ✝': '✝ Cross: Career obstacle or sudden change.',
-                'Square □': '□ Square: Protection — business/career protected during that phase.',
+                'Square □': '□ Square / Triangle: Asset indicator — property, land, or major investment protection (Note 23 §4).',
                 'Star ⭐': '⭐ Star: Sudden career success or sudden downfall (read with other lines).',
                 'Trident ψ': 'ψ Trident at end: Three channels of career success.',
               },
@@ -2528,8 +2721,20 @@ export default function AnalysisForm({
               key: 'line_head' as const,
               label: 'Head / Brain Line (Mastiṣka Rekhā)',
               emoji: '🧠',
-              origin_options: ['Starts from Life Line (joined)', 'Starts independently from Jupiter area', 'Starts from Mars (inner)'],
-              terminus_options: ['Ends at Saturn mount', 'Ends at Sun mount', 'Ends at Mercury mount', 'Ends at Moon mount (creative/imaginative)', 'Ends mid-palm'],
+              origin_options: [
+                'Joined with Life Line (follows family guidance, traditional - Note 24 §2.5A)',
+                'Slight gap from Life Line (independent thinker, shares views respectfully - Note 24 §2.5B)',
+                'Large gap (finger-width) from Life Line (risk-taker, self-willed, acts purely on own terms - Note 24 §2.5C)',
+                'Starts independently from Jupiter area (high intellectual ambition)',
+                'Starts from Mars inner (quick-tempered, combative thought process)',
+              ],
+              terminus_options: [
+                'Straight across to upper Mars (practical, logical, pragmatic - Note 23 §3.1)',
+                'Sloping to Moon mount (creative, imaginative, introspective)',
+                'Deep dip into lower Moon (overthinking, depression / anxiety risk if Moon afflicted)',
+                'Fork at end (Writer\'s fork - intellect balanced with creativity)',
+                'Ends at Mercury mount (business acumen, analytical)',
+              ],
               hint: 'The base of the whole hand — manifestation tool. If thought process is strong, lines form. Also called: Mātṛ rekhā, Śīrṣa rekhā, Bhoga rekhā.',
               signMeanings: {
                 'Island ◯': '◯ Island on Head Line: Mental struggle, tension, stress for that duration.',
@@ -2542,9 +2747,20 @@ export default function AnalysisForm({
               key: 'line_heart' as const,
               label: 'Heart Line (Hṛidaya Rekhā)',
               emoji: '💖',
-              origin_options: ['From Jupiter mount', 'From between Jupiter and Saturn', 'From Saturn mount', 'From upper Mars'],
-              terminus_options: ['Ends at Mercury mount', 'Ends at Moon mount', 'Ends at percussion (outer edge)', 'Short (ends at Saturn)'],
-              hint: 'Shows emotional life, relationships, and heart health. Age counted from Mercury side (little finger base) leftward: 18+6+18+6… method (teacher Method A).',
+              origin_options: [
+                'From Jupiter mount (idealistic, noble love, high expectations)',
+                'From between Jupiter and Saturn (balanced, realistic, mature emotions)',
+                'From Saturn mount (practical, guarded affection)',
+                'From upper Mars (aggressive emotions, reactive)',
+              ],
+              terminus_options: [
+                'Ends at percussion (outer edge — deep emotional capacity)',
+                'Downward branch touching Head Line (emotional turbulence / heartbreak affecting thought process - Note 26 §2.1)',
+                'Upward branches toward mounts (deep latent desires directed toward that mount - Note 26 §2.1)',
+                'Multiple branches at end (multiple hobbies / late-life interests - Note 26 §2.1)',
+                'Short (ends at Saturn)',
+              ],
+              hint: 'Shows emotional life, relationships, and heart health. Age counted from Mercury side leftward: 18+6+18+6… method (teacher Method A).',
               signMeanings: {
                 'Island ◯': '◯ Island: Emotional struggle or broken relationship for that duration.',
                 'Cross ✝': '✝ Cross: Heartbreak or serious relationship obstacle.',
@@ -2556,9 +2772,21 @@ export default function AnalysisForm({
               key: 'line_sun' as const,
               label: 'Sun / Apollo Line (Sūrya Rekhā)',
               emoji: '☀️',
-              origin_options: ['From Moon mount', 'From upper Mars', 'From Head Line', 'From Heart Line', 'From Life Line', 'From wrist/maṇibandha'],
-              terminus_options: ['Ends at Sun mount', 'Short — ends before Sun mount', 'Reaches Heart Line only'],
-              hint: 'Fame, recognition, success in creative fields. A Sun line starting from Moon mount = fame from public/mass appeal. Trident at end = 2+ domains of fame.',
+              origin_options: [
+                'From Moon mount (mass appeal, public support, female patronage - Note 26 §3.2)',
+                'From Mars - Pūrva-Puṇya Rekhā (past-life merit: deep research, courage, comedy/arts - Note 26 §3.2)',
+                'From Venus mount (fame via prestigious family heritage, in-laws, or feminine grace - Note 26 §3.2)',
+                'Above Heart Line only (fame & soul satisfaction after age 50 or through children - Note 26 §3.1)',
+                'From Head Line (intellectual renown)',
+                'From Life Line / Wrist (fame rooted in life struggle and personal vitality)',
+              ],
+              terminus_options: [
+                'Ends at Sun mount (full soul satisfaction & renown)',
+                'Segmented / Wavy (struggle for soul satisfaction, unfulfilled despite work - Note 26 §3.3)',
+                'Trident / Fork at end (renown across 2-3 distinct domains - Note 26 §3.3)',
+                'Reaches Heart Line only',
+              ],
+              hint: 'Governs soul satisfaction (ātma-santoṣa) and fame. Absence or wavy line = lacks work satisfaction despite success (Note 26 §3.1).',
               signMeanings: {
                 'Diamond Chain': '💎 Diamond Chain at end of Sun Line: Wish fulfilment and doubled fame power.',
                 'Trident ψ': 'ψ Trident at Sun Line end: Fame in 2+ ways simultaneously (Mercury + Saturn channels).',
@@ -2657,7 +2885,15 @@ export default function AnalysisForm({
                     {(lineData.quality || lineData.signs.length > 0 || lineData.features.length > 0) && (
                       <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-[11px] space-y-1 leading-relaxed">
                         {lineData.quality === 'Absent' && <p className="text-rose-700 font-semibold">⚠️ <strong>Line Absent:</strong> {line.key === 'line_fate' ? 'No defined career path or life direction. Person lives without clear karma drive.' : line.key === 'line_sun' ? 'Fame and recognition do not come easily. Success still possible via other lines.' : 'Unusual — note other compensating factors.'}</p>}
-                        {lineData.quality === 'Double' && <p className="text-emerald-700 font-semibold">✨ <strong>Double line:</strong> Very strong energy in this area. Acts as a sister/support line.</p>}
+                        {lineData.quality === 'Double' && line.key === 'line_life' && (
+                          <p className="text-purple-700 font-semibold">✨ <strong>Double Life Line (Notes 21 §2 &amp; 23 §2.1):</strong> Does NOT indicate longevity or long life (ref. Sushant Singh Rajput case study). Indicates a dual lifestyle, living in two places, or two completely distinct life patterns/careers. (A separate parallel non-touching line = Supportive / Mars line).</p>
+                        )}
+                        {lineData.quality === 'Double' && line.key === 'line_fate' && (
+                          <p className="text-emerald-700 font-semibold">✨ <strong>Two Fate Lines (Note 23 §2.2):</strong> Two careers or two income sources (e.g. primary job + investments/rental/part-time teaching).</p>
+                        )}
+                        {lineData.quality === 'Double' && line.key !== 'line_life' && line.key !== 'line_fate' && (
+                          <p className="text-emerald-700 font-semibold">✨ <strong>Double line:</strong> Very strong energy in this area. Acts as a sister/support line.</p>
+                        )}
                         {lineData.quality === 'Chain-like' && <p className="text-orange-700 font-semibold">⚠️ <strong>Chain-like:</strong> Struggle throughout the entire duration represented by this line.</p>}
                         {lineData.features.includes('Supportive parallel line') && <p className="text-emerald-700 font-semibold">✨ <strong>Supportive parallel line:</strong> Strength and recovery available. Doubles the energy of the main line.</p>}
                         {lineData.features.includes('Parasite line (draining)') && <p className="text-rose-700 font-semibold">⚠️ <strong>Parasite line:</strong> Energy being drained from this line. Indicates obligations or relationships that take more than they give.</p>}
@@ -2678,6 +2914,56 @@ export default function AnalysisForm({
                   </div>
                 );
               })}
+
+              {/* Simian & Semi-Simian (Sydney Line) — Lectures 24, 26, 27 */}
+              <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                    <span>⚡</span>
+                    Simian &amp; Semi-Simian (Sydney Line) Formations
+                  </h4>
+                  <span className="text-[10px] font-semibold text-stone-400">Notes 24, 26, 27</span>
+                </div>
+                <div className="p-2.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs text-amber-900 font-medium leading-relaxed">
+                  📖 <strong>Core Definition:</strong> When Head Line (intellect) and Heart Line (emotion) fuse together. In <strong>Full Simian</strong>, they become a single transverse bar across the palm. In <strong>Semi-Simian (Sydney Line)</strong>, they run touching or are linked by a connecting bridge branch.
+                </div>
+
+                <div className="space-y-3">
+                  <div className="form-group">
+                    <label className="form-label text-xs">Simian Formation Type</label>
+                    <select className="form-input bg-white border border-stone-200 text-xs"
+                      value={vedicData.simian_type || ''}
+                      onChange={(e) => updateVedicField('simian_type', e.target.value)}>
+                      <option value="">None — Independent Head &amp; Heart Lines</option>
+                      <option value="Full Simian (Heart + Head fused)">Full Simian Line — Head &amp; Heart fused into one single line</option>
+                      <option value="Semi-Simian / Sydney Line (Bridge branch or parallel touch)">Semi-Simian / Sydney Line — Run touching parallel or linked by bridge branch</option>
+                    </select>
+                  </div>
+
+                  {vedicData.simian_type === 'Full Simian (Heart + Head fused)' && (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-900 font-semibold space-y-1 leading-relaxed">
+                      🧠💖 <strong>Full Simian Line (Notes 24 &amp; 26):</strong> Complete fusion of Mastiṣka and Hṛdaya Rekhā. Intellect and emotion operate as a unified force — person cannot easily detach feelings from reasoning. Extreme determination, singular purpose, passionate drive, but difficulty compromising or relaxing routine.
+                    </div>
+                  )}
+
+                  {vedicData.simian_type === 'Semi-Simian / Sydney Line (Bridge branch or parallel touch)' && (
+                    <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 font-semibold space-y-1 leading-relaxed">
+                      🌉 <strong>Semi-Simian / Sydney Line (Notes 24, 26, 27):</strong> Two lines running extraordinarily close together, or linked by a bridge line.
+                      <p className="mt-1 text-stone-700 font-normal">
+                        • <strong>Branch descending from Heart Line down to Head Line:</strong> Emotional heartbreak, domestic unrest, or family tensions spilling into peace of mind.<br />
+                        • <strong>Branch ascending from Head Line up to Heart Line:</strong> Intellect seasoned with emotional sensitivity and empathy in speech.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <textarea className="form-input h-14 resize-none text-xs"
+                      placeholder="Simian / Sydney line observations (e.g. connecting bridge branch origin, single palm vs both hands)..."
+                      value={vedicData.simian_notes || ''}
+                      onChange={(e) => updateVedicField('simian_notes', e.target.value)} />
+                  </div>
+                </div>
+              </div>
 
               {/* Mercury / Health Line (Note 27) */}
               <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
@@ -2799,7 +3085,7 @@ export default function AnalysisForm({
           <div className="space-y-5">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 font-medium leading-relaxed">
               🕒 <strong>Age Calculation — 4 Methods (Lectures 20, 22, 27)</strong><br />
-              The teacher teaches four distinct methods. The <strong>30-midpoint</strong> method is currently used in class.
+              Four distinct methods. The <strong>30-midpoint</strong> method is currently used in class.
             </div>
 
             {/* Select age method */}
@@ -3473,8 +3759,9 @@ export default function AnalysisForm({
                     { key: 'mount_mercury', label: 'Mercury Mount (Budh)' },
                     { key: 'mount_moon', label: 'Moon Mount (Chandra)' },
                     { key: 'mount_venus', label: 'Venus Mount (Śukra)' },
-                    { key: 'mount_mars_upper', label: 'Upper Mars (Inner Courage)' },
-                    { key: 'mount_mars_lower', label: 'Lower Mars (Aggression)' },
+                    { key: 'mount_mars_lower', label: 'Lower Mars / Nimna (Inner Courage & Vitality)' },
+                    { key: 'mount_mars_upper', label: 'Upper Mars / Ucca (Outer Courage & Retaliation)' },
+                    { key: 'mount_ketu', label: 'Ketū Parvata (Base-Palm / Moksha)' },
                   ].map(({ key, label }) => {
                     const mData = vedicData[key as keyof VedicData] as MountSignData | null;
                     if (!mData || (!mData.height && (!mData.signs || mData.signs.length === 0) && !mData.notes)) return null;
@@ -3502,6 +3789,13 @@ export default function AnalysisForm({
                   5. Primary Rekhā Deep-Dive (Lectures 19–27)
                 </h4>
                 <div className="space-y-3 text-xs">
+                  {vedicData.simian_type && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+                      <span className="font-bold text-xs text-amber-900 block">⚡ Simian Formation: {vedicData.simian_type}</span>
+                      {vedicData.simian_notes && <p className="text-[11px] text-stone-700 italic">{vedicData.simian_notes}</p>}
+                    </div>
+                  )}
+
                   {[
                     { key: 'line_life', name: 'Life Line (Āyur Rekhā)' },
                     { key: 'line_head', name: 'Head Line (Mastiṣka Rekhā)' },
@@ -3590,6 +3884,29 @@ export default function AnalysisForm({
           );
         })()}
       </div>
+
+      {/* Remove Photo Confirmation Modal */}
+      <ConfirmModal
+        isOpen={photoToRemove !== null}
+        title="Remove Hand Photo?"
+        message={
+          photoToRemove
+            ? `Are you sure you want to remove the photo for ${HAND_VIEW_LABELS[photoToRemove]}? This action cannot be undone.`
+            : ''
+        }
+        confirmText="Remove Photo"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          if (photoToRemove) {
+            const newImages = { ...profile.images };
+            delete newImages[photoToRemove];
+            updateProfileField('images', newImages);
+            setPhotoToRemove(null);
+          }
+        }}
+        onCancel={() => setPhotoToRemove(null)}
+      />
     </div>
   );
 }

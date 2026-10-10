@@ -40,7 +40,7 @@ export interface Drawing {
 // ─── Mount sign type ───
 export interface MountSignData {
   height: 'Raised' | 'Normal' | 'Flat' | 'Very High / Overbuilt' | 'Displaced/Shifted' | '';
-  apex: 'Centered' | 'Toward Jupiter' | 'Toward Saturn' | 'Toward Sun' | 'Toward Mercury' | 'Toward Moon' | 'Toward Venus' | 'Toward Mars' | 'Toward Thumb' | 'Toward Head Line' | '';
+  apex: string;
   signs: string[]; // e.g. ['Star', 'Cross', 'Square']
   quality: 'Firm/Healthy' | 'Spongy (poor)' | 'Flat/Pressed' | '';
   notes: string;
@@ -137,15 +137,15 @@ export interface VedicData {
   nail_thickness: '' | 'Thick (Earth)' | 'Thin/Papery' | 'Medium';
   nail_shape_detail: '' | 'Square' | 'Round' | 'Conical/Tapered' | 'Spatulate' | 'Spoon-shaped (Concave)' | 'Clubbed nail';
   nail_color: '' | 'Pink/Normal (Healthy)' | 'Pale/White' | 'Yellow (Liver/Health)' | 'Blue/Purple (Serious)' | 'Reddish' | 'White spots present' | 'Dark discoloration';
-  nail_surface: '' | 'Smooth' | 'Ridged/Vertical lines' | 'Horizontal ridges (protein def)' | 'Spotted' | 'Brittle/Breaks easily';
+  nail_surface: '' | 'Smooth' | 'Ridged/Vertical lines' | 'Horizontal ridges (protein def)' | 'Spotted' | 'Brittle/Breaks easily' | string;
   nail_lunula: '' | 'Visible on all fingers' | 'Visible on some fingers' | 'Absent (health concern)';
   nail_health_flag: string; // free text for specific health observations
   nail_biting: boolean;
 
   // ─── Palm Color (Note 04) ───
-  palm_color: '' | 'Pinkish (Healthy)' | 'Pale/Whitish' | 'Yellow (health/liver)' | 'Reddish (heat/aggression)' | 'Blue/Purple tinge (serious illness)';
+  palm_color: '' | 'Pinkish (Healthy)' | 'Pale/Whitish' | 'Yellow (health/liver)' | 'Reddish (heat/aggression)' | 'Bluish (kidney/renal alert)' | 'Purple / Aubergine (terminal alert)' | string;
 
-  // ─── Structured Mount Signs (Notes 13-18) ───
+  // ─── Structured Mount Signs (Notes 13-18, 20-22) ───
   mount_jupiter: MountSignData | null;
   mount_saturn: MountSignData | null;
   mount_sun: MountSignData | null;
@@ -155,6 +155,7 @@ export interface VedicData {
   mount_mars_upper: MountSignData | null;
   mount_mars_lower: MountSignData | null;
   mount_mars_plain: MountSignData | null;
+  mount_ketu: MountSignData | null; // Ketu area at wrist base between Moon and Venus (Note 20-22)
 
   // ─── Structured Line Analysis ───
   line_life: LineAnalysisData | null;
@@ -162,6 +163,9 @@ export interface VedicData {
   line_head: LineAnalysisData | null;
   line_heart: LineAnalysisData | null;
   line_sun: LineAnalysisData | null;
+  // Simian / Semi-Simian Formations (Notes 24-27)
+  simian_type: '' | 'None' | 'Full Simian (Heart + Head fused)' | 'Semi-Simian / Sydney Line (Bridge branch or parallel touch)';
+  simian_notes: string;
   // Mercury / Health Line (Note 27 — full lecture)
   line_mercury_present: boolean | null; // null = not checked; false = absent (good); true = present
   line_mercury_starts_below_heart: boolean; // health problems if true
@@ -255,12 +259,15 @@ export const parseVedicData = (notesField: string): VedicData => {
     mount_mars_upper: null,
     mount_mars_lower: null,
     mount_mars_plain: null,
+    mount_ketu: null,
     // Structured Lines
     line_life: null,
     line_fate: null,
     line_head: null,
     line_heart: null,
     line_sun: null,
+    simian_type: '',
+    simian_notes: '',
     line_mercury_present: null,
     line_mercury_starts_below_heart: false,
     line_mercury_starts_above_heart: false,

@@ -32,15 +32,19 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     remoteUpdatedAt: string;
     remoteProfile: HandProfile;
   } | null>(null);
+  const [discardedEditsBackup, setDiscardedEditsBackup] = useState<{
+    profile: HandProfile;
+    timestamp: string;
+  } | null>(null);
 
   const hasUnsavedChanges = isProfileChanged(lastSavedProfile, activeProfile);
 
-  // Debounced autosave: silently persist after 20s of inactivity if the subject name is set.
+  // Debounced autosave: silently persist after 60s of inactivity if the subject name is set.
   useEffect(() => {
     if (!hasUnsavedChanges || !activeProfile.name || isSaving) return;
     const timer = setTimeout(() => {
       handleSave({ silent: true });
-    }, 20000);
+    }, 60000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProfile, hasUnsavedChanges]);
@@ -208,7 +212,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     // Conflict detection guard: before overwriting remote, check if another session updated it
     if (isSupabaseConnected && !force && activeProfile.id) {
       try {
-        const checkRes = await fetch(`/api/hands?id=${activeProfile.id}`);
+        const checkRes = await fetch(`/api/hands?id=${activeProfile.id}`, { cache: 'no-store' });
         if (checkRes.ok) {
           const remote = await checkRes.json();
           if (
@@ -351,6 +355,42 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           </div>
         </div>
 
+        {/* Local Edits Recovery Banner after Remote Reload */}
+        {discardedEditsBackup && (
+          <div className="bg-amber-50/90 border border-amber-300 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 text-amber-900 shadow-sm animate-fade-in">
+            <div className="flex items-center gap-3">
+              <span className="text-base">⚠️</span>
+              <div>
+                <p className="font-semibold text-xs text-amber-950">Remote version loaded into editor</p>
+                <p className="text-[11px] text-amber-800">
+                  Your local edits from {discardedEditsBackup.timestamp} were replaced, but saved safely in memory and local storage.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveProfile(discardedEditsBackup.profile);
+                  setDiscardedEditsBackup(null);
+                  setSaveSuccessMessage('Local edits restored');
+                  setTimeout(() => setSaveSuccessMessage(null), 3000);
+                }}
+                className="px-3 py-1.5 font-bold text-xs bg-amber-700 hover:bg-amber-800 text-white rounded-xl transition shadow-xs cursor-pointer active:scale-95"
+              >
+                Restore My Local Edits
+              </button>
+              <button
+                type="button"
+                onClick={() => setDiscardedEditsBackup(null)}
+                className="px-2.5 py-1.5 text-xs text-stone-500 hover:text-stone-800 transition cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Editor Workspace Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
           {/* Canvas Workspace Column */}
@@ -423,13 +463,16 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         title="Remote Version Conflict"
         message={
           conflictDetails ? (
-            <span className="space-y-2 block">
+            <span className="space-y-2.5 block">
               <span className="block text-stone-800 font-semibold">
                 Another browser tab or device updated this profile at{' '}
                 {new Date(conflictDetails.remoteUpdatedAt).toLocaleTimeString()}.
               </span>
               <span className="block text-stone-500 text-xs">
                 Would you like to overwrite remote changes with your current edits, or reload the latest remote version?
+              </span>
+              <span className="block text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl p-2.5 text-xs">
+                💡 If you choose to reload, a backup of your local edits will be kept so you can restore them anytime if needed.
               </span>
             </span>
           ) : ''
@@ -443,6 +486,21 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         }}
         onCancel={() => {
           if (conflictDetails) {
+            setDiscardedEditsBackup({
+              profile: activeProfile,
+              timestamp: new Date().toLocaleTimeString(),
+            });
+            try {
+              localStorage.setItem(
+                `hastarekha_conflict_backup_${activeProfile.id}`,
+                JSON.stringify({
+                  profile: activeProfile,
+                  savedAt: new Date().toISOString(),
+                })
+              );
+            } catch {
+              // ignore localStorage errors
+            }
             setActiveProfile(conflictDetails.remoteProfile);
             setLastSavedProfile(conflictDetails.remoteProfile);
             setConflictDetails(null);
