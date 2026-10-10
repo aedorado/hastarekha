@@ -48,7 +48,7 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
   if (vedic.thumb_type) md += `- **Thumb Type:** ${vedic.thumb_type}\n`;
   if (vedic.thumb_angle) md += `- **Thumb Angle:** ${vedic.thumb_angle}\n`;
   if (vedic.thumb_willpower) md += `- **Willpower Rating:** ${vedic.thumb_willpower}\n`;
-  if (vedic.thumb_first_phalange_length) md += `- **1st Phalanx Length (Willpower / Icchā):** ${vedic.thumb_first_phalange_length}\n`;
+  if (vedic.thumb_first_phalange_length) md += `- **Thumb Reach vs. Base Marker:** ${vedic.thumb_first_phalange_length}\n`;
   if (vedic.thumb_first_phalange_condition) md += `- **1st Phalanx Condition:** ${vedic.thumb_first_phalange_condition}\n`;
   if (vedic.thumb_second_phalange) md += `- **2nd Phalanx (Logic / Tarka):** ${vedic.thumb_second_phalange}\n`;
   if (vedic.has_clubbed_thumb) md += `- **Clubbed Thumb:** Present — intense temper potential; requires emotional balance\n`;
@@ -1077,15 +1077,15 @@ export default function AnalysisForm({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-group">
-                  <label className="form-label text-xs">Thumb Base Willpower</label>
+                  <label className="form-label text-xs">Thumb Willpower (1st Phalange / top segment)</label>
                   <select
                     className="form-input bg-white border border-stone-200 text-xs"
                     value={vedicData.thumb_willpower}
                     onChange={(e) => updateVedicField('thumb_willpower', e.target.value)}
                   >
                     <option value="Average">Average Willpower</option>
-                    <option value="Strong">Strong / Swollen Base</option>
-                    <option value="Weak">Weak / Flat Base</option>
+                    <option value="Strong">Strong / Swollen Top (near nail)</option>
+                    <option value="Weak">Weak / Flat Top</option>
                   </select>
                 </div>
 
@@ -1121,16 +1121,16 @@ export default function AnalysisForm({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">First Phalange (Parva) Length</label>
+                  <label className="form-label text-xs">Thumb Reach vs. Base Marker (High/Middle/Low)</label>
                   <select
                     className="form-input bg-white border border-stone-200 text-xs"
                     value={vedicData.thumb_first_phalange_length || ''}
                     onChange={(e) => updateVedicField('thumb_first_phalange_length', e.target.value)}
                   >
-                    <option value="">Select Phalange Length...</option>
-                    <option value="Short">Short (Lower immunity, dependent)</option>
-                    <option value="Average">Average / Middle (Self-Made, credit sharing)</option>
-                    <option value="Long">Long (Dominant, high ego, confident)</option>
+                    <option value="">Select Reach Level...</option>
+                    <option value="Short">Low (Lower immunity, dependent)</option>
+                    <option value="Average">Middle (Self-Made, credit sharing)</option>
+                    <option value="Long">High (Dominant, high ego, confident)</option>
                   </select>
                 </div>
 
@@ -1285,18 +1285,18 @@ export default function AnalysisForm({
                       <p>⚠️ <strong className="text-amber-900">Advice-reliant:</strong> Will express slight opinions in private but ultimately won't act without others' guidance and validation.</p>
                     )}
                     {vedicData.thumb_angle === '70°-90°' && (
-                      <p>✨ <strong className="text-amber-900">Balanced Independence:</strong> Independent thinking is present, but values and incorporates others' input before executing plans.</p>
+                      <p>✨ <strong className="text-amber-900">Near 90°:</strong> Independent; generally does not take others' advice unless the thumb's first phalange is sunken or marked with cut-lines — otherwise listens politely but proceeds with the original decision.</p>
                     )}
 
-                    {/* First Phalange Length */}
+                    {/* Thumb Reach vs. Base Marker */}
                     {vedicData.thumb_first_phalange_length === 'Long' && (
-                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Noticeably long willpower segment. Represents strong confidence, free independent thinking, but also high dominance and potential ego (taking full personal credit).</p>
+                      <p>👤 <strong className="text-amber-900">Thumb Reach — High:</strong> Reaches well above the base marker. Represents strong confidence, free independent thinking, but also high dominance and potential ego (taking full personal credit).</p>
                     )}
                     {vedicData.thumb_first_phalange_length === 'Average' && (
-                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Balanced middle-length. Indicates a self-made/self-built personality who progressed through personal effort, open to credit sharing ("I can do that too").</p>
+                      <p>👤 <strong className="text-amber-900">Thumb Reach — Middle:</strong> Reaches around the base marker. Indicates a self-made/self-built personality who progressed through personal effort, open to credit sharing ("I can do that too").</p>
                     )}
                     {vedicData.thumb_first_phalange_length === 'Short' && (
-                      <p>👤 <strong className="text-amber-900">First Parva (Nail Segment):</strong> Short segment. Indicates lower immunity power and dependency on others for willpower.</p>
+                      <p>👤 <strong className="text-amber-900">Thumb Reach — Low:</strong> Reaches below the base marker. Indicates lower immunity power and dependency on others for willpower.</p>
                     )}
 
                     {/* Receptivity to advice */}
@@ -1311,7 +1311,7 @@ export default function AnalysisForm({
                     {/* Special warnings */}
                     {vedicData.has_clubbed_thumb && (
                       <p className="text-red-700 bg-red-500/5 border border-red-500/10 p-2 rounded-lg mt-1 font-semibold">
-                        ⚠️ <strong className="font-bold text-red-900">Clubbed Thumb ("Murderer's Thumb"):</strong> Swollen thumb-tip indicates blocked/stagnant energy ("Pent-Up Energy") pooling at the tip instead of circulating. High warning indicator of sudden, explosive anger.
+                        ⚠️ <strong className="font-bold text-red-900">Clubbed Thumb ("Murderer's Thumb"):</strong> Swollen thumb-tip indicates blocked/stagnant energy ("Pent-Up Energy") pooling at the tip instead of circulating — leading to extreme reactions in whichever direction is triggered (intense anger OR intense love), not anger alone. Must be confirmed against Moon mount and Mars; not every person with this thumb becomes violent.
                       </p>
                     )}
                     {vedicData.has_six_fingers && (
@@ -1342,7 +1342,7 @@ export default function AnalysisForm({
                     onChange={(e) => updateVedicField('jupiter_length', e.target.value)}
                   >
                     <option value="">Select...</option>
-                    <option value="Short">Short (Below Sun)</option>
+                    <option value="Short">Short (below half of Saturn's 1st phalanx — absolute, not vs. Sun)</option>
                     <option value="Normal">Normal / Equal</option>
                     <option value="Long">Long (Above Sun)</option>
                   </select>
@@ -1424,7 +1424,7 @@ export default function AnalysisForm({
                   </span>
                   <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
                     {vedicData.jupiter_length === 'Normal' && <p>⚖️ <strong>Normal Jupiter:</strong> Good listener, absorbs more than shares. Spiritually inclined but not showy. High morality. Guru-like qualities. Contented/satisfied. Balanced between materialistic and emotional.</p>}
-                    {vedicData.jupiter_length === 'Long' && <p>📖 <strong>Long Jupiter:</strong> Stronger knowledge drive. Can become dominating, argumentative ("fighter"). Philosophy-inclined. May lecture everyone around them. Ego in knowledge domain.</p>}
+                    {vedicData.jupiter_length === 'Long' && <p>📖 <strong>Long Jupiter:</strong> Showiness about knowledge; cannot accept correction and may aggressively demand proof; dominating; over-prepares for every scenario; gives unsolicited advice/opinions.</p>}
                     {vedicData.jupiter_length === 'Short' && <p>⚠️ <strong>Short Jupiter:</strong> Lower self-confidence. Relies on others for direction in knowledge matters. May be less willing to teach or guide.</p>}
                     {vedicData.jupiter_tilt === 'Toward Saturn' && <p>🪐 <strong>Tilt → Saturn:</strong> Respects social norms and does not break society\'s rules. Philosophical inclination increases if finger also has knots. May not impose personal rules on others.</p>}
                     {vedicData.jupiter_tilt === 'Toward Thumb' && <p>💪 <strong>Tilt → Self/Thumb:</strong> Works on their own terms. May impose conditions on others. Whether they can enforce this depends on willpower (1st phalange) strength.</p>}
@@ -1469,14 +1469,14 @@ export default function AnalysisForm({
                     <option value="">Select...</option>
                     <option value="Toward Jupiter">→ Jupiter (philosophical)</option>
                     <option value="Straight">Straight (balanced)</option>
-                    <option value="Toward Sun">→ Sun (fame-seeking)</option>
+                    <option value="Toward Sun">→ Sun (confidence dips, more hard work)</option>
                   </select>
                 </div>
               </div>
 
               {/* Saturn Phalanges (Notes 09) */}
               <div className="border-t border-stone-100 pt-3">
-                <span className="text-[11px] font-bold text-stone-700 block mb-2">Saturn Phalanges (Notes 09)</span>
+                <span className="text-[11px] font-bold text-stone-700 block mb-2">Saturn Phalanges (Note 08 general phalange framework)</span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="form-group">
                     <label className="form-label text-xs">1st Phalange (Discipline)</label>
@@ -1488,7 +1488,7 @@ export default function AnalysisForm({
                       <option value="">Select...</option>
                       <option value="Short">Short (low discipline)</option>
                       <option value="Normal">Normal</option>
-                      <option value="Long">Long (deep solitude/research)</option>
+                      <option value="Long">Long (deep discipline)</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -1524,12 +1524,12 @@ export default function AnalysisForm({
                 <div className="p-3 bg-slate-50 border border-slate-200/40 rounded-xl text-xs space-y-1 leading-relaxed">
                   <span className="font-bold text-slate-800 uppercase tracking-wider block text-[9px]">Saturn Reading:</span>
                   <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
-                    {vedicData.saturn_length === 'Short' && <p>⚠️ <strong>Short Saturn:</strong> May indicate challenges with karma and life\'s responsibilities. Difficulty sustaining long-term commitments.</p>}
+                    {vedicData.saturn_length === 'Short' && <p>⚠️ <strong>Short Saturn (rare):</strong> Discretion and sense of responsibility almost absent; breaks tradition/rules with little regard for family honor; internal negativity/suspicion that can (with weak Mars) tip into actual wrongdoing; relates to longevity — possible health/lifespan risk via poor habits; if Saturn is afflicted and Moon weak, little internal drive to act at all.</p>}
                     {vedicData.saturn_length === 'Normal' && <p>✨ <strong>Normal Saturn:</strong> Balanced relationship with work and duty. Karma unfolds steadily without extremes.</p>}
-                    {vedicData.saturn_length === 'Long' && <p>📌 <strong>Long Saturn:</strong> Dominant Saturn influence — strong sense of duty, discipline, philosophical nature, or increased life obstacles (read with mount).</p>}
+                    {vedicData.saturn_length === 'Long' && <p>📌 <strong>Long Saturn:</strong> Suspicious by nature; can become inclined toward wrong methods to accomplish goals; overthinking leading to mental disturbance; emotionally flat/cold in speech and expression; high seriousness/maturity but lower responsibility than a normal finger; prefers isolation.</p>}
                     {vedicData.saturn_tilt === 'Toward Jupiter' && <p>📖 <strong>Tilt → Jupiter:</strong> The person seeks to learn before acting. Knowledge and wisdom shape their sense of duty.</p>}
-                    {vedicData.saturn_tilt === 'Toward Sun' && <p>⚡ <strong>Tilt → Sun:</strong> Strong desire for name/fame through work (karma). Can bring anxiety related to self-confidence or health of the nervous system when combined with Sun tilting toward Saturn.</p>}
-                    {vedicData.saturn_phalange_1 === 'Long' && <p>🪐 <strong>1st Phalange (Long):</strong> Deep contemplation, philosophical discipline, endurance in solitary work.</p>}
+                    {vedicData.saturn_tilt === 'Toward Sun' && <p>⚡ <strong>Tilt → Sun:</strong> Confidence decreases, hard work increases. Fear of wrongdoing/defamation reduces risk-taking (eases only if Sun finger is very long + thumb/Jupiter are strong). Positive: good personal/professional balance.</p>}
+                    {vedicData.saturn_phalange_1 === 'Long' && <p>🪐 <strong>1st Phalange (Long):</strong> Deep discipline and seriousness.</p>}
                     {vedicData.saturn_phalange_2 === 'Horizontal line' && <p>⚠️ <strong>2nd Phalange (Horizontal line):</strong> Execution of karmic responsibility encounters intellectual delay or obstacles.</p>}
                     {vedicData.saturn_phalange_2 === 'Vertical line (stress)' && <p>⚠️ <strong>2nd Phalange (Vertical line):</strong> High career stress and anxiety around delivering duties.</p>}
                     {vedicData.saturn_phalange_3 === 'Open/Full' && <p>✨ <strong>3rd Phalange (Full):</strong> Solid material fruits and lasting stability earned from career labor.</p>}
@@ -1588,7 +1588,7 @@ export default function AnalysisForm({
 
               {/* Sun Phalanges (Notes 09) */}
               <div className="border-t border-stone-100 pt-3">
-                <span className="text-[11px] font-bold text-stone-700 block mb-2">Sun Phalanges (Notes 09)</span>
+                <span className="text-[11px] font-bold text-stone-700 block mb-2">Sun Phalanges (Note 08 general phalange framework)</span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="form-group">
                     <label className="form-label text-xs">1st Phalange (Creative Vision)</label>
@@ -1638,10 +1638,10 @@ export default function AnalysisForm({
                   <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
                     {vedicData.sun_length === 'Long' && <p>⚡ <strong>Long Sun:</strong> Greater risk-taking ability — tends to act before thinking. Strong creative energy and drive for recognition.</p>}
                     {vedicData.sun_length === 'Normal' && <p>✨ <strong>Normal/Equal Sun:</strong> Balanced ego. Ego is expressed harmoniously, neither dominating nor submissive.</p>}
-                    {vedicData.sun_length === 'Short' && <p>⚠️ <strong>Short Sun:</strong> Lower risk appetite and less assertive about fame/recognition.</p>}
+                    {vedicData.sun_length === 'Short' && <p>⚠️ <strong>Short Sun:</strong> Low confidence (eased only if thumb's willpower area is full); loses ability to distinguish right from wrong; becomes a follower rather than initiator; little creativity unless Mercury finger compensates; possible immunity/health issues; withdraws in social settings; may quarrel over small matters from an inner inferiority complex.</p>}
                     {vedicData.sun_tilt === 'Toward Saturn' && <p>🪐 <strong>Tilt → Saturn:</strong> Increases desire for fame through one\'s karma/work, but can bring anxiety (self-confidence dips). If Saturn also tilts toward Sun → yoga for defamation possible alongside career prominence. Typically good at balancing personal and professional life.</p>}
-                    {vedicData.sun_crooked && <p>⚡ <strong>Crooked/Bent:</strong> Amplifies Sun energy in an intense or distorted way. If crookedness is from the knuckle, the effect shows in the entire field governed by the Sun.</p>}
-                    {vedicData.sun_phalange_1 === 'Long' && <p>☀️ <strong>1st Phalange (Long):</strong> Heightened creative vision, dramatic/artistic instincts, appreciation for visual grandeur.</p>}
+                    {vedicData.sun_crooked && <p>⚡ <strong>Crooked/Bent:</strong> If from knots: makes the person a philosopher in that domain. If from a genuine bend: excessive ego/arrogance, poor right-vs-wrong judgment leading to wrong decisions, reduced name/fame, inflated confidence from others' praise rather than real substance.</p>}
+                    {vedicData.sun_phalange_1 === 'Long' && <p>☀️ <strong>1st Phalange (Long):</strong> Heightened creative vision, dramatic/artistic instincts.</p>}
                     {vedicData.sun_phalange_2 === 'Horizontal line' && <p>⚠️ <strong>2nd Phalange (Horizontal line):</strong> Clashes of ego and difficulty turning aesthetic concepts into tangible execution.</p>}
                     {vedicData.sun_phalange_2 === 'Vertical line (stress)' && <p>⚠️ <strong>2nd Phalange (Vertical line):</strong> Sensitive to social reputation; persistent stress about status.</p>}
                     {vedicData.sun_phalange_3 === 'Open/Full' && <p>✨ <strong>3rd Phalange (Full):</strong> Enjoyment of luxurious comfort, high social standing and visible material prestige.</p>}
@@ -1700,7 +1700,7 @@ export default function AnalysisForm({
 
               {/* Mercury Phalanges (Notes 10) */}
               <div className="border-t border-stone-100 pt-3">
-                <span className="text-[11px] font-bold text-stone-700 block mb-2">Mercury Phalanges (Notes 10)</span>
+                <span className="text-[11px] font-bold text-stone-700 block mb-2">Mercury Phalanges (Note 08 general phalange framework)</span>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="form-group">
                     <label className="form-label text-xs">1st Phalange (Speech/Eloquence)</label>
@@ -1754,10 +1754,10 @@ export default function AnalysisForm({
                     {vedicData.mercury_tilt === 'Attached to Sun' && <p>📌 <strong>Attached to Sun:</strong> Speech has commanding quality. Desires recognition and praise. Craves name/fame. Tends not to break social norms — fears disapproval from others. In astrology: like Mercury-Sun conjunction (yuti).</p>}
                     {vedicData.mercury_tilt === 'Separated from Sun' && <p>🌟 <strong>Separated/Gap:</strong> Will do what they\'ve decided regardless of others\' opinion. Prefers to work outside conventional norms. Not afraid of criticism. Open-minded and freedom-loving. Does not necessarily do anything bad — may simply take paths their family never considered.</p>}
                     {vedicData.mercury_low_set && <p>📏 <strong>Low-set base:</strong> Mercury base sits lower than other fingers on most hands (this is common). The mount below gets less space as the finger takes more area. Read mount condition separately to compensate.</p>}
-                    {vedicData.mercury_phalange_1 === 'Long' && <p>☿ <strong>1st Phalange (Long):</strong> Supreme eloquence, convincing speaker, magnetic vocal resonance.</p>}
+                    {vedicData.mercury_phalange_1 === 'Long' && <p>☿ <strong>1st Phalange (Long):</strong> Strong communication ability.</p>}
                     {vedicData.mercury_phalange_2 === 'Horizontal line' && <p>⚠️ <strong>2nd Phalange (Horizontal line):</strong> Vulnerable to contractual misunderstandings or flawed business arithmetic.</p>}
                     {vedicData.mercury_phalange_2 === 'Vertical line (stress)' && <p>⚠️ <strong>2nd Phalange (Vertical line):</strong> Commercial stress and anxiety surrounding financial negotiations.</p>}
-                    {vedicData.mercury_phalange_3 === 'Open/Full' && <p>✨ <strong>3rd Phalange (Full):</strong> Shrewd commercial instincts with substantial wealth retention from business.</p>}
+                    {vedicData.mercury_phalange_3 === 'Open/Full' && <p>✨ <strong>3rd Phalange (Full):</strong> Good business/trade results.</p>}
                     {vedicData.mercury_phalange_3 === 'Thin' && <p>⚠️ <strong>3rd Phalange (Thin):</strong> Commercial ideas exist, but leak profit or struggle to build accumulated savings.</p>}
                   </div>
                 </div>
@@ -1818,7 +1818,7 @@ export default function AnalysisForm({
                   <span className="font-bold text-rose-900 uppercase tracking-wider block text-[9px]">General Profile Reading:</span>
                   <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
                     {vedicData.finger_gaps === 'Small gaps (generous)' && <p>🤲 <strong>Small gaps:</strong> Generous — quick to help when someone asks. Gap is caused by one finger\'s base phalanx being sunken on one side. Also indicates spending (generosity and spending go together).</p>}
-                    {vedicData.finger_gaps === 'Wide gaps (free spirit)' && <p>🌬️ <strong>Wide gaps:</strong> Works outside conventional social norms. Independent and unafraid of criticism. Free-spirited — does what they\'ve decided regardless of others\' opinions.</p>}
+                    {vedicData.finger_gaps === 'Wide gaps (free spirit)' && <p>🌬️ <strong>Wide gaps:</strong> Highly generous, quick to spend or help.</p>}
                     {vedicData.finger_build === 'Long & thin (creative)' && <p>🎨 <strong>Long &amp; thin:</strong> Creative individual. Less hard labor required — natural ability allows easier achievement.</p>}
                     {vedicData.finger_build === 'Short & thick (stubborn + anger)' && <p>⚠️ <strong>Short &amp; thick:</strong> Both stubbornness and anger increase together. Hasty/impulsive. Requires more hard work in life.</p>}
                     {vedicData.finger_build === 'Thick base (food lover / lazy)' && <p>🍲 <strong>Thick base:</strong> Enjoys cooking and eating well. Good at hospitality. Per classical texts, food-loving but may lean toward laziness.</p>}
@@ -1919,9 +1919,9 @@ export default function AnalysisForm({
                   {vedicData.finger_knots && (
                     <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
                       <strong>Finger Joints:</strong> {
-                        vedicData.finger_knots === 'Fully Philosophical (Knotty)' ? '📖 Knotty joints add an analytical filter, showing a Message Deliverer who abhors mindless entertainment.' :
+                        vedicData.finger_knots === 'Fully Philosophical (Knotty)' ? '📖 Knots increase philosophical depth in that finger\'s specific domain (strongest if on Jupiter); crookedness without knots indicates cunning/shrewdness — can bring wrong decisions, exaggerated ego, or only fear-based (not genuine) respect from others.' :
                           vedicData.finger_knots === 'Jupiter & Saturn Knots' ? '🪐 Knots localized on Jupiter and Saturn restrict philosophical contemplation specifically to wisdom, ambition, and focus.' :
-                            vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crooked fingers amplify the energy of their respective planets in an intense or distorted way (e.g. Sage Ashtavakra).' :
+                            vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crookedness without knots indicates cunning/shrewdness — can bring wrong decisions, exaggerated ego, or only fear-based (not genuine) respect from others.' :
                               'Smooth joints indicate swift, intuitive thinking without heavy analytical filters.'
                       }
                     </p>
@@ -2039,10 +2039,10 @@ export default function AnalysisForm({
                 <div className="p-3 bg-violet-50 border border-violet-200 rounded-xl text-xs space-y-1.5 leading-relaxed">
                   <span className="font-bold text-violet-900 uppercase tracking-wider block text-[9px]">Combined Nail Reading:</span>
                   <div className="space-y-1 text-[11px] text-stone-700 font-semibold">
-                    {vedicData.nail_length === 'Small/Short' && <p>🔍 <strong>Small nail:</strong> Researcher/investigative mindset. Goes deep into subjects. Can become nitpicking. Alert/cautious, hardworking, blunt. May show impatience. Health: immune system concerns.</p>}
+                    {vedicData.nail_length === 'Small/Short' && <p>🔍 <strong>Small nail:</strong> Researcher/investigative mindset. Goes deep into subjects. Can become nitpicking. Alert/cautious, hardworking, blunt. May show impatience. May indicate underlying nervousness/anxiety.</p>}
                     {vedicData.nail_length === 'Large/Long' && <p>💧 <strong>Long nail:</strong> Water-element — emotional, caring, sensitive, creative. Relaxed working pace. Prone to anxiety (harder to manage than small-nail anxiety).</p>}
                     {vedicData.nail_width === 'Wide (Chauṛā)' && <p>💪 <strong>Wide nail:</strong> Hardworking, sharp-minded but short-tempered, plain-spoken, adjustable. Tends to be thicker.</p>}
-                    {vedicData.nail_width === 'Narrow/Tight (Sankrā)' && <p>⚠️ <strong>Narrow nail:</strong> Timidity, poor self-expression, high anxiety/stress. Strong health issue indicator — particularly immunity concerns.</p>}
+                    {vedicData.nail_width === 'Narrow/Tight (Sankrā)' && <p>⚠️ <strong>Narrow nail:</strong> Timidity, poor self-expression, sensitivity/anxiety. A significant general health-issue indicator (specific immunity link applies when combined with a small nail).</p>}
                     {vedicData.nail_thickness === 'Thick (Earth)' && <p>🌍 <strong>Thick nail:</strong> Best overall type. Earth-element stability, discipline, responsibility, practicality. Values routine. Best when combined with wide nail.</p>}
                     {vedicData.nail_thickness === 'Thin/Papery' && <p>⚠️ <strong>Thin/Papery nail:</strong> Curls downward/upward or breaks repeatedly. Linked to low hemoglobin. Sensitivity (water hand) or irritability/temper (fire hand).</p>}
                     {/* Combinations */}
@@ -2224,17 +2224,14 @@ export default function AnalysisForm({
                 { value: 'Toward Saturn', label: '→ Toward Saturn (Karma / Research)', meaning: 'Knowledge gains seriousness (gambhīrtā), technical acumen, research depth ("khojī"), hardworking patience, and respect for societal rules.' },
                 { value: 'Toward Thumb', label: '→ Toward Thumb (Self / Leadership)', meaning: 'Knowledge directed toward "I" (self) — natural leadership ability, extroverted authority, desire to prove oneself, possible overconfidence.' },
                 { value: 'Toward Head Line', label: '→ Toward Mind / Head Line (Intellect)', meaning: 'Knowledge channelled through mind & intellect — practicality added to wisdom, multi-disciplinary learning, early research capacity (active from childhood).' },
-                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Compassion)', meaning: 'Wisdom combined with listening to one’s heart — practical compassion and emotional balance in guidance.' },
               ],
               signMeanings: {
                 'Ring of Solomon ⭕': '⭕ Ring of Solomon (Guru Valaya, Notes 13 & 20): Curved semi-circle toward thumb — high sixth sense, ability to listen to nature/animals, psychic and healing wisdom.',
-                'Line of Sympathy 📏': '📏 Line of Sympathy (Dayā Rekhā, Note 20): Straight diagonal line across Jupiter — deep empathy, counseling nature, naturally consoles and heals others in distress.',
+                'Line of Sympathy 📏': '📏 Line of Sympathy (Dayā Rekhā, Note 20): Straight diagonal line across Jupiter — deep empathy and devotion to others, shown without discrimination.',
                 'Star ⭐': '⭐ Star on Jupiter: Good sign — multiple channels of name/fame arriving together.',
                 'Cross ✝': '✝ Cross on Jupiter (Note 19): Auspicious here (the ONLY positive place for a cross). Signifies happy marriage and education achievements.',
                 'Square □': '□ Square on Jupiter: Teaching capacity / strong protection from downfall.',
-                'Triangle △': '△ Triangle on Jupiter: Scientific, research-oriented, diplomatic.',
-                'Grille #': '# Grille: Excess ambition to the point of stress.',
-                'Trident ψ': 'ψ Trident: Multiple paths of success coming together at Jupiter.',
+                'Triangle △': '△ Triangle on Jupiter: Scientific, research-oriented, diplomatic nature.',
               },
             },
             {
@@ -2249,8 +2246,7 @@ export default function AnalysisForm({
               apexOptions: [
                 { value: 'Centered', label: 'Centered — Dominant Planet (Śani-pradhān)', meaning: 'Strong sense of duty, philosophical solitude, disciplined labor, perseverance through obstacles.' },
                 { value: 'Toward Jupiter', label: '→ Toward Jupiter (Wisdom & Dharma)', meaning: 'Adds wisdom, dharma, and benevolence to work/karma. Always brings improvement and auspiciousness (shubhta) to Saturnian results.' },
-                { value: 'Toward Sun', label: '→ Toward Sun (Fame through Work)', meaning: 'Desire for fame/recognition through karma. Favourable for career prominence, but can introduce anxiety and nervous strain for health.' },
-                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Emotional Duty)', meaning: 'Karmic duty felt deeply in emotional commitments, family responsibility, and steadfast loyalty.' },
+                { value: 'Toward Sun', label: '→ Toward Sun (Fame through Work)', meaning: 'Desire for fame/recognition through karma. Favourable for career prominence, but arthritis and digestive issues increase; BP (blood pressure) problems can also occur.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Saturn: Mixed — accident or sudden event (read with fate line).',
@@ -2272,7 +2268,6 @@ export default function AnalysisForm({
                 { value: 'Centered', label: 'Centered — Dominant Planet (Sūrya-pradhān)', meaning: 'Natural creative brilliance, healthy self-respect, love of beauty, high vitality, and dignified presence.' },
                 { value: 'Toward Saturn', label: '→ Toward Saturn (Disciplined / Serious Art)', meaning: 'Fame achieved through laborious, disciplined karma. Serious artistic or scholarly output; recognition may come with patience/delay.' },
                 { value: 'Toward Mercury', label: '→ Toward Mercury (Commercial Arts & Eloquence)', meaning: 'Creative talents blended with commercial acumen, speech, writing, and successful enterprise in creative fields.' },
-                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Heart-Centered Fame)', meaning: 'Warm-hearted artistic expression, deep empathy in creative work, public affection.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Sun: Sudden fame, unexpected recognition — auspicious.',
@@ -2295,7 +2290,6 @@ export default function AnalysisForm({
                 { value: 'Centered', label: 'Centered — Dominant Planet (Budha-pradhān)', meaning: 'Sharp analytical logic, versatility, commercial acumen, diplomatic speech, and trade talent.' },
                 { value: 'Toward Sun', label: '→ Toward Sun (Charisma & Commercial Oratory)', meaning: 'Communication backed by artistic charm and charisma. Persuasive speaker, attractive public presentation in business.' },
                 { value: 'Toward Outside Edge', label: '→ Outside Edge / Percussion (Rough Boundary)', meaning: 'Apex crosses natural palm boundary with jagged edge — classical texts associate this with increased life struggle.' },
-                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Empathetic Commerce)', meaning: 'Trade, counseling, or communication guided by empathy and emotional understanding.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Mercury: Mixed — clever speaker/researcher, but can indicate trickery.',
@@ -2314,11 +2308,11 @@ export default function AnalysisForm({
               normal: 'Imagination, intuition, creativity, emotional sensitivity, love of travel, poetry, music.',
               over: 'Over-developed: excessive fantasy, emotional instability, restlessness.',
               under: 'Under-developed: lack of imagination, rigid thinking, poor adaptability.',
+              apexLabel: 'Bulge Direction',
               apexOptions: [
-                { value: 'Centered', label: 'Centered — Dominant Planet (Chandra-pradhān)', meaning: 'Pure imagination, poetic vision, strong intuition, emotional depth, and affinity for travel.' },
-                { value: 'Toward Upper Mars', label: '→ Toward Upper Mars (Courageous Imagination)', meaning: 'Creative and imaginative powers fortified by moral courage and emotional resilience.' },
-                { value: 'Toward Wrist / Ketu', label: '→ Toward Wrist / Ketū (Deep Mysticism)', meaning: 'Subconscious spiritual depth, prophetic dreams, strong gut instinct, attraction to moksha.' },
-                { value: 'Toward Venus', label: '→ Toward Venus (Sensory Romance & Luxury)', meaning: 'Imagination focused on romantic beauty, luxury, artistic comforts, and sensory pleasures.' },
+                { value: 'Toward Upper Mars', label: '→ Toward Upper Mars (Bulge Direction)', meaning: 'Increased aggression, tendency toward quarrels and irritation.' },
+                { value: 'Toward Wrist / Ketu', label: '→ Toward Wrist / Ketū (Bulge Direction)', meaning: 'Inclination toward spirituality, good intuition, may prefer solitude — but not good for health; stomach tends to get upset frequently.' },
+                { value: 'Toward Venus', label: '→ Toward Venus (Bulge Direction)', meaning: 'Not read directly from Moon\'s own shape — only inferred indirectly via Venus mount\'s growth or an unusually wide Life Line; no specific trait was stated for this in the source.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Moon: Suicidal tendency or severe emotional crisis — serious warning.',
@@ -2336,11 +2330,9 @@ export default function AnalysisForm({
               normal: 'Love, passion, vitality, generosity, beauty, family warmth, attraction, music, luxury.',
               over: 'Over-developed: excess sensuality, indulgence, possessiveness in relationships.',
               under: 'Under-developed: coldness, poor family bonds, lack of physical vitality.',
+              apexLabel: 'Apex Direction',
               apexOptions: [
-                { value: 'Centered', label: 'Centered — Dominant Planet (Śukra-pradhān)', meaning: 'Robust vitality, personal magnetism, warmth in relationships, appreciation for aesthetics and music.' },
-                { value: 'Toward Thumb', label: '→ Toward Thumb (Willpower & Assertive Desire)', meaning: 'Sensual energy and passion disciplined and directed by personal willpower and determination.' },
-                { value: 'Toward Life Line', label: '→ Toward Life Line (Physical Vitality & Family)', meaning: 'Vital energy directly invigorating the physical constitution, endurance, and family devotion.' },
-                { value: 'Toward Moon', label: '→ Toward Moon (Poetic / Romantic Passion)', meaning: 'Passions softened and elevated by imagination, poetic romance, and sensitive devotion.' },
+                { value: 'Not Covered', label: 'Not covered in these lectures', meaning: 'Apex reading for Venus was not covered in these lectures — the teacher deferred it to a later class.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Venus: Multiple love affairs or fame connected to personal charisma.',
@@ -2401,7 +2393,7 @@ export default function AnalysisForm({
                         </select>
                       </div>
                       <div className="form-group">
-                        <label className="form-label text-xs">Apex Direction</label>
+                        <label className="form-label text-xs">{(mount as any).apexLabel || 'Apex Direction'}</label>
                         <select className="form-input bg-white border border-stone-200 text-xs"
                           value={mountData.apex}
                           onChange={(e) => updateMount(mount.key as any, 'apex', e.target.value)}>
@@ -2552,13 +2544,13 @@ export default function AnalysisForm({
                   <span className="text-[10px] font-semibold text-stone-400">Between Moon &amp; Venus at Maṇibandha</span>
                 </div>
                 <div className="p-2 bg-purple-50/70 border border-purple-200/60 rounded-xl text-xs text-purple-900 font-medium leading-relaxed">
-                  🔱 <strong>Core Teaching (Notes 20-22):</strong> Seat of Moksha, spirituality, and ancestral roots. <strong>90% of genuine complete Fish signs (Matsya Chinha) appear here</strong> at the base of the Fate Line or end of the Life Line. Gives spiritual renown, fame, and deep research capability (not liquid cash).
+                  🔱 <strong>Core Teaching (Notes 20-22):</strong> Seat of Moksha and spirituality (ādhyātma). <strong>90% of genuine complete Fish signs (Matsya Chinha) appear here</strong> at the base of the Fate Line or end of the Life Line. Gives spiritual renown, fame, and deep research capability (not liquid cash).
                 </div>
 
                 {(() => {
                   const ketuData = getMount('mount_ketu');
                   const hasKetuData = ketuData.height || ketuData.signs.length > 0 || ketuData.notes;
-                  const KETU_SIGNS = ['Fish 🐟', 'Triangle △', 'Square □', 'Trident ψ', 'Star ⭐', 'Cross ✝'];
+                  const KETU_SIGNS = ['Fish 🐟', 'Conch (Śaṅkha) 🐚'];
                   return (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -2604,17 +2596,12 @@ export default function AnalysisForm({
                         <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-xl text-[11px] space-y-1.5 leading-relaxed text-stone-700">
                           {ketuData.signs.includes('Fish 🐟') && (
                             <p className="text-purple-900 font-semibold">
-                              🐟 <strong>Fish on Ketū (Notes 20-22):</strong> Complete fish formation here bestows spiritual elevation, high renown, protection from drowning/calamity, and profound investigative wisdom. (Teacher notes: gives power &amp; spiritual status, not direct money).
+                              🐟 <strong>Fish on Ketū (Notes 20-22):</strong> Power, name/fame, spiritual growth, researcher-type insight — does NOT bring money.
                             </p>
                           )}
-                          {ketuData.signs.includes('Triangle △') && (
+                          {ketuData.signs.includes('Conch (Śaṅkha) 🐚') && (
                             <p className="text-stone-700 font-semibold">
-                              △ <strong>Triangle on Ketū:</strong> High occult acumen, astrological insight, and philosophical detachment.
-                            </p>
-                          )}
-                          {ketuData.signs.includes('Square □') && (
-                            <p className="text-stone-700 font-semibold">
-                              □ <strong>Square on Ketū:</strong> Divine protection from subconscious fears and spiritual crises.
+                              🐚 <strong>Conch (Śaṅkha) on Ketū:</strong> Spiritual journey at a very high level, and sudden money gain — a rare sign.
                             </p>
                           )}
                         </div>
@@ -2638,7 +2625,7 @@ export default function AnalysisForm({
             LINES TAB — Lectures 19-27 (fully structured)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'lines' && (() => {
-          const LINE_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Island ◯', 'Dot •', 'Fish 🐟', 'Trident ψ', 'Diamond Chain', 'Canopy (Circle at end)', 'Flag', 'Mole', 'Grille #'];
+          const LINE_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Island ◯', 'Dot •', 'Fish 🐟', 'Macchā Rekhā 🐟', 'Trident ψ', 'Diamond Chain', 'Canopy (Circle at end)', 'Flag', 'Mole', 'Grille #'];
           const LINE_FEATURES = ['Supportive parallel line', 'Parasite line (draining)', 'Upward branch', 'Downward branch', 'Fork at start', 'Fork at end (Trident)', 'Break', 'Chain section', 'Influence lines merging in', 'Cutting cross-line', 'Double line', 'Frayed/multiple threads'];
 
           const getLine = (key: keyof typeof vedicData): LineAnalysisData => {
@@ -2665,7 +2652,7 @@ export default function AnalysisForm({
               key: 'line_life' as const,
               label: 'Life Line (Jīvana Rekhā)',
               emoji: '❤️',
-              origin_options: ['Starts from Jupiter mount area', 'Starts from between thumb and Jupiter', 'Starts very low (near wrist)'],
+              origin_options: ['Starts from Jupiter mount area', 'Starts from between thumb and Jupiter'],
               terminus_options: [
                 'Curves inward toward thumb (100+ longevity, attachment to roots - Note 21 §3)',
                 'Branches outward to Moon mount (foreign travel, outward expansion - Note 21 §3)',
@@ -2680,8 +2667,8 @@ export default function AnalysisForm({
                 'Island ◯': '◯ Island on Life Line: Struggle for that entire duration of island.',
                 'Star ⭐': '⭐ Star on Life Line: Sudden event or shock at that age.',
                 'Cross ✝': '✝ Cross on Life Line: Obstacle, disease, or difficult event.',
-                'Fish 🐟': '🐟 Fish on Life Line: Spiritual sign. Two-symbol indicator — very auspicious.',
-                'Macchā Rekhā 🐟': '🐟 Macchā Rekhā on Life Line (Samrāṭ yoga at that age with health alert, Note 21 §6).',
+                'Fish 🐟': '🐟 Fish on Life Line: Power, name/fame, spiritual growth, researcher-type insight — but explicitly does NOT bring money.',
+                'Macchā Rekhā 🐟': '🐟 Macchā Rekhā (Samrāṭ Yoga): Note 21 — the age at which this forms marks an active samrāṭ yoga, but it also brings health problems. The teacher herself said she had not personally seen this sign.',
                 'Canopy (Circle at end)': '◯ Canopy at Life Line end: Whole life is protected, however many ups and downs occur.',
               },
             },
@@ -2691,18 +2678,18 @@ export default function AnalysisForm({
               emoji: '⚡',
               origin_options: [
                 'From wrist/maṇibandha (early self-made career)',
-                'From Moon mount (public support, female assistance, arts/rental income - Note 23 §2.2)',
+                'From Moon mount (public/state-government support, or Moon-related income: arts, share market, rental, interest - Note 23 §2.2)',
                 'From Venus mount (family business, deep family support - Note 23 §2.2)',
                 'From Life Line / joined (father-figure responsibility for family - Note 23 §1)',
-                'Starts mid-palm (career develops independently in 30s-40s - Note 23 §2.2)',
-                'From Head Line (late start ~35-40 after mental clarity)',
+                'Second fate line starting mid-palm (additional income source in 30s/40s, alongside the main line - Note 23 §2.2)',
+                'From Head Line (career begins after 40-45)',
                 'From Heart Line (very late start ~50+)',
               ],
               terminus_options: [
                 'Ends at Saturn mount (complete karma / career)',
-                'Ends at Jupiter mount (ambition & leadership)',
                 'Stops at Head Line (career halted/altered around 40-50 due to mental decision/anger - Note 23 §3.1)',
                 'Stops at Heart Line (career impacted by emotional disturbance or relationship - Note 23 §3.2)',
+                'Branch goes to Jupiter mount (teaching, spirituality, storytelling, or motivational speaking enters the career)',
                 'Branch goes to Mercury mount (business diversification, higher study - Note 23 §5)',
                 'Branch goes to Sun mount (public acclaim & fame)',
                 'Runs full length',
@@ -2712,9 +2699,10 @@ export default function AnalysisForm({
                 'Diamond Chain': '💎 Diamond Chain at end of Fate Line: Wish fulfilment — doubles the power of the fate line throughout life.',
                 'Island ◯': '◯ Island: Career struggle / financial difficulty for that duration.',
                 'Cross ✝': '✝ Cross: Career obstacle or sudden change.',
-                'Square □': '□ Square / Triangle: Asset indicator — property, land, or major investment protection (Note 23 §4).',
-                'Star ⭐': '⭐ Star: Sudden career success or sudden downfall (read with other lines).',
-                'Trident ψ': 'ψ Trident at end: Three channels of career success.',
+                'Square □': '□ Square: Protection from career obstacles/challenges — "not hand-to-mouth," has savings. Can also indicate a property/asset in combination with other signs.',
+                'Triangle △': '△ Triangle: Asset indicator — property, land, or major long-term investment.',
+                'Star ⭐': '⭐ Star: Sudden shock/disturbance in career at that age (general Star rule — no fate-line-specific meaning was taught).',
+                'Trident ψ': 'ψ Trident at end: Strong drive for and success in one\'s work; career continues with name and fame into old age (50s-70s+).',
               },
             },
             {
@@ -2729,11 +2717,11 @@ export default function AnalysisForm({
                 'Starts from Mars inner (quick-tempered, combative thought process)',
               ],
               terminus_options: [
-                'Straight across to upper Mars (practical, logical, pragmatic - Note 23 §3.1)',
-                'Sloping to Moon mount (creative, imaginative, introspective)',
+                'Straight across to upper Mars (very good if the mount\'s condition is good — strong personality; not good if the mount\'s condition is poor - Note 24 §2.7D)',
+                'Sloping/wavy toward Moon mount — very dangerous: mood swings, daydreaming/living in imagination (not necessarily bad), possible depression; watch for a cross/star at the end (suicidal-tendency warning) - Note 24 §2.7E/§2.6N',
                 'Deep dip into lower Moon (overthinking, depression / anxiety risk if Moon afflicted)',
-                'Fork at end (Writer\'s fork - intellect balanced with creativity)',
-                'Ends at Mercury mount (business acumen, analytical)',
+                'Fork at end (Writer\'s Fork — one branch to Mercury, one to Mars or Moon: multitasking, good writer/artist, business mind, BUT the mind stays disturbed/not calm despite the multitasking - Note 24 §2.7H)',
+                'Ends at Mercury mount (very logical, very creative, out-of-the-box thinker, very intelligent)',
               ],
               hint: 'The base of the whole hand — manifestation tool. If thought process is strong, lines form. Also called: Mātṛ rekhā, Śīrṣa rekhā, Bhoga rekhā.',
               signMeanings: {
@@ -2748,10 +2736,7 @@ export default function AnalysisForm({
               label: 'Heart Line (Hṛidaya Rekhā)',
               emoji: '💖',
               origin_options: [
-                'From Jupiter mount (idealistic, noble love, high expectations)',
-                'From between Jupiter and Saturn (balanced, realistic, mature emotions)',
-                'From Saturn mount (practical, guarded affection)',
-                'From upper Mars (aggressive emotions, reactive)',
+                'From percussion/little-finger side (standard starting point)',
               ],
               terminus_options: [
                 'Ends at percussion (outer edge — deep emotional capacity)',
@@ -2759,6 +2744,10 @@ export default function AnalysisForm({
                 'Upward branches toward mounts (deep latent desires directed toward that mount - Note 26 §2.1)',
                 'Multiple branches at end (multiple hobbies / late-life interests - Note 26 §2.1)',
                 'Short (ends at Saturn)',
+                'Ends at Jupiter mount (practical but fair-minded; gives honest views in groups without being harsh on others; guru-like wisdom, straightforward)',
+                'Ends between Jupiter and Saturn (balanced, realistic, mature emotions)',
+                'Ends at Saturn mount (cold, somewhat selfish (matlabī), little warmth or emotional attachment; speaks only when it serves a purpose; if curved toward Saturn specifically: only physical love, no feeling of love)',
+                'Ends at upper Mars (aggressive emotions, reactive)',
               ],
               hint: 'Shows emotional life, relationships, and heart health. Age counted from Mercury side leftward: 18+6+18+6… method (teacher Method A).',
               signMeanings: {
@@ -2777,8 +2766,6 @@ export default function AnalysisForm({
                 'From Mars - Pūrva-Puṇya Rekhā (past-life merit: deep research, courage, comedy/arts - Note 26 §3.2)',
                 'From Venus mount (fame via prestigious family heritage, in-laws, or feminine grace - Note 26 §3.2)',
                 'Above Heart Line only (fame & soul satisfaction after age 50 or through children - Note 26 §3.1)',
-                'From Head Line (intellectual renown)',
-                'From Life Line / Wrist (fame rooted in life struggle and personal vitality)',
               ],
               terminus_options: [
                 'Ends at Sun mount (full soul satisfaction & renown)',
@@ -2895,7 +2882,7 @@ export default function AnalysisForm({
                           <p className="text-emerald-700 font-semibold">✨ <strong>Double line:</strong> Very strong energy in this area. Acts as a sister/support line.</p>
                         )}
                         {lineData.quality === 'Chain-like' && <p className="text-orange-700 font-semibold">⚠️ <strong>Chain-like:</strong> Struggle throughout the entire duration represented by this line.</p>}
-                        {lineData.features.includes('Supportive parallel line') && <p className="text-emerald-700 font-semibold">✨ <strong>Supportive parallel line:</strong> Strength and recovery available. Doubles the energy of the main line.</p>}
+                        {lineData.features.includes('Supportive parallel line') && <p className="text-emerald-700 font-semibold">✨ <strong>Supportive / Mars Line:</strong> A line running parallel to the Life Line without touching it — someone provides real support/help through a difficult period, for as long as the line runs alongside.</p>}
                         {lineData.features.includes('Parasite line (draining)') && <p className="text-rose-700 font-semibold">⚠️ <strong>Parasite line:</strong> Energy being drained from this line. Indicates obligations or relationships that take more than they give.</p>}
                         {lineData.features.includes('Fork at end (Trident)') && <p className="text-emerald-700 font-semibold">✨ <strong>Fork/Trident at end:</strong> Energy divides into 2-3 channels — multiple areas of success or achievement.</p>}
                         {lineData.signs.map((sign) => {
@@ -2925,7 +2912,7 @@ export default function AnalysisForm({
                   <span className="text-[10px] font-semibold text-stone-400">Notes 24, 26, 27</span>
                 </div>
                 <div className="p-2.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs text-amber-900 font-medium leading-relaxed">
-                  📖 <strong>Core Definition:</strong> When Head Line (intellect) and Heart Line (emotion) fuse together. In <strong>Full Simian</strong>, they become a single transverse bar across the palm. In <strong>Semi-Simian (Sydney Line)</strong>, they run touching or are linked by a connecting bridge branch.
+                  📖 <strong>Core Definition (Note 26 §1):</strong> Head Line (intellect) and Heart Line (emotion) run very close together / touching. If a branch runs across and joins them, it becomes a <strong>Full Simian</strong> line. If no branch joins them, it is called a <strong>Semi-Simian</strong> line.
                 </div>
 
                 <div className="space-y-3">
@@ -2935,23 +2922,22 @@ export default function AnalysisForm({
                       value={vedicData.simian_type || ''}
                       onChange={(e) => updateVedicField('simian_type', e.target.value)}>
                       <option value="">None — Independent Head &amp; Heart Lines</option>
-                      <option value="Full Simian (Heart + Head fused)">Full Simian Line — Head &amp; Heart fused into one single line</option>
-                      <option value="Semi-Simian / Sydney Line (Bridge branch or parallel touch)">Semi-Simian / Sydney Line — Run touching parallel or linked by bridge branch</option>
+                      <option value="Full Simian (Heart + Head fused)">Full Simian Line — Head &amp; Heart run close/touching AND a branch joins them across</option>
+                      <option value="Semi-Simian / Sydney Line (Bridge branch or parallel touch)">Semi-Simian / Sydney Line — Head &amp; Heart run close/touching, no joining branch</option>
                     </select>
                   </div>
 
                   {vedicData.simian_type === 'Full Simian (Heart + Head fused)' && (
                     <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-900 font-semibold space-y-1 leading-relaxed">
-                      🧠💖 <strong>Full Simian Line (Notes 24 &amp; 26):</strong> Complete fusion of Mastiṣka and Hṛdaya Rekhā. Intellect and emotion operate as a unified force — person cannot easily detach feelings from reasoning. Extreme determination, singular purpose, passionate drive, but difficulty compromising or relaxing routine.
+                      🧠💖 <strong>Full Simian Line (Note 26 §1):</strong> Mastiṣka and Hṛdaya Rekhā run very close together with a branch joining them across. Very sharp mind, very practical, very stubborn. Knows how to balance heart and mind when the line quality is good — but becomes irritable, anxious, or suspicious (śakkī) when unbalanced.
                     </div>
                   )}
 
                   {vedicData.simian_type === 'Semi-Simian / Sydney Line (Bridge branch or parallel touch)' && (
                     <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 font-semibold space-y-1 leading-relaxed">
-                      🌉 <strong>Semi-Simian / Sydney Line (Notes 24, 26, 27):</strong> Two lines running extraordinarily close together, or linked by a bridge line.
+                      🌉 <strong>Semi-Simian / Sydney Line (Note 24 §2.7B):</strong> Head and Heart Lines run very close together / touching, with no branch joining them.
                       <p className="mt-1 text-stone-700 font-normal">
-                        • <strong>Branch descending from Heart Line down to Head Line:</strong> Emotional heartbreak, domestic unrest, or family tensions spilling into peace of mind.<br />
-                        • <strong>Branch ascending from Head Line up to Heart Line:</strong> Intellect seasoned with emotional sensitivity and empathy in speech.
+                        Stubborn (jiddi) — once an idea sits in the mind it cannot be removed; very practical (but also check the heart line); very emotional, yet thinks differently; motivated by "show me something different"; research-oriented mind.
                       </p>
                     </div>
                   )}
@@ -3207,15 +3193,23 @@ export default function AnalysisForm({
                   </div>
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-1.5">
                     <span className="font-bold text-blue-900 block">Fate Line Age (from Wrist)</span>
-                    {[['Wrist (maṇibandha)', '0'], ['Head Line crossing', '~35'], ['Heart Line crossing', '~50'], ['Saturn mount', '~70+']].map(([pos, age]) => (
-                      <div key={pos} className="flex justify-between text-stone-700 font-semibold">
-                        <span>{pos}</span><span className="text-blue-600">{age}</span>
-                      </div>
-                    ))}
+                    <div className="flex justify-between text-stone-700 font-semibold">
+                      <span>Wrist (maṇibandha)</span><span className="text-blue-600">0</span>
+                    </div>
+                    <div className="flex justify-between text-stone-700 font-semibold">
+                      <span>Midpoint</span><span className="text-blue-600">30</span>
+                    </div>
+                    <div className="flex justify-between text-stone-700 font-semibold">
+                      <span>Top</span><span className="text-blue-600">~75</span>
+                    </div>
+                    <p className="text-[9px] text-stone-500 italic pt-0.5">Note 27 only gives wrist=0, midpoint=30, top=~75 for this method — it does not give fixed ages for where the line crosses the Head/Heart line.</p>
                   </div>
                 </div>
                 <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 font-medium">
                   <strong>Heart Line (Method A):</strong> Start counting from little finger side. First section = 18 years. Gap = 6 years. Next section = 18 years. Continue: 18+6+18+6… until end of line.
+                </div>
+                <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-[11px] text-stone-700 font-medium leading-relaxed">
+                  <strong>Alternate theory (Note 23 §7, hedged by the teacher as "one theory," not part of this method):</strong> Fate Line passing between the Head Line and Heart Line ≈ ages 40–50 zone; below that zone = under 40; above it = over 50.
                 </div>
                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-700 font-medium">
                   <strong>Important (Note 27):</strong> Fate Line age is ALWAYS counted from the wrist, even if the line starts higher up the palm. A line starting at the Head Line still has wrist = age 0 for the scale.
@@ -3491,37 +3485,42 @@ export default function AnalysisForm({
           });
           chronologicalEvents.sort((a, b) => a.age - b.age);
 
-          // Identify classical Vedic yogas
+          {/* Notable Combinations — plain descriptions only; no Sanskrit compound name is
+              attached unless that exact term is used in the transcripts (only "Dhana kī Koṭhī"
+              below is actually attested — the rest were previously invented names and removed). */}
           const detectedYogas: Array<{ name: string; icon: string; desc: string }> = [];
-          if (vedicData.line_life?.features?.includes('Supportive / Mars Line (Devata Raksha)')) {
-            detectedYogas.push({ name: 'Devatā Rakṣā Yoga', icon: '🛡️', desc: 'Mars guardian line shields the native from grave physical injury and life crises.' });
+          if (vedicData.line_life?.features?.includes('Supportive parallel line')) {
+            detectedYogas.push({ name: 'Supportive / Mars Line', icon: '🛡️', desc: 'A line running parallel to the Life Line without touching it (Note 21 §2) — distinguished from a Mars line that touches/crosses the Life Line, which the teacher associates with trouble.' });
           }
           if (vedicData.line_head?.features?.includes('Writer\'s Fork (Fork at end)')) {
-            detectedYogas.push({ name: 'Lekhaka / Kalā Yoga', icon: '✍️', desc: 'Writer\'s fork on head line harmonizes creative moon imagination with practical mars logic.' });
+            detectedYogas.push({ name: "Writer's Fork (Head Line)", icon: '✍️', desc: 'One branch to Mercury, one to Mars or Moon: multitasking ability, good writer/artist, business mind — but the teacher\'s explicit caveat is that the mind stays disturbed/not calm despite the multitasking (Note 24 §2.7H).' });
           }
           if (vedicData.mount_jupiter?.signs?.includes('Cross')) {
-            detectedYogas.push({ name: 'Bṛhaspati Vivāha Yoga', icon: '💍', desc: 'Cross on Jupiter mount — noble education, harmonious marriage and spousal support.' });
+            detectedYogas.push({ name: 'Cross on Jupiter', icon: '💍', desc: 'The one place a cross is auspicious (Note 19) — happy marriage and education achievements.' });
           }
           if (vedicData.mount_jupiter?.signs?.includes('Square')) {
-            detectedYogas.push({ name: 'Guru Upadeśaka Yoga', icon: '🏫', desc: 'Teacher\'s square on Jupiter — instructional authority and protection from slander.' });
+            detectedYogas.push({ name: "Teacher's Square on Jupiter", icon: '🏫', desc: 'Protective square on Jupiter mount — associated with instructional/teaching ability and protection from defamation.' });
           }
           if (vedicData.mount_sun?.signs?.includes('Trident')) {
-            detectedYogas.push({ name: 'Sūrya Triśūla Yoga', icon: '🔱', desc: 'Trident on Sun mount — three-fold fame across arts, commerce, and relentless effort.' });
+            detectedYogas.push({ name: 'Trident on Sun Mount', icon: '🔱', desc: 'Multi-channel fame — renown through more than one path at once.' });
           }
           if (vedicData.mount_sun?.signs?.includes('Diamond Chain') || vedicData.line_fate?.signs?.includes('Diamond Chain at end')) {
-            detectedYogas.push({ name: 'Manokāmanā Pūrti Yoga', icon: '💎', desc: 'Diamond chain — doubles line energy and guarantees realization of cherished ambitions.' });
+            detectedYogas.push({ name: 'Diamond Chain', icon: '💎', desc: 'Wish-fulfilment symbol — the transcript\'s clearest examples are at the end of the Fate Line or Sun Line (Note 24); doubles that line\'s result.' });
           }
-          if (vedicData.mount_sun?.signs?.includes('Canopy / Circle')) {
-            detectedYogas.push({ name: 'Chatra Yoga (Canopy of Honor)', icon: '👑', desc: 'Circle / canopy on Sun — lifetime immunity against public disgrace and regal protection.' });
+          {
+            const canopySign = vedicData.mount_sun?.signs?.includes('Canopy / Circle') ? 'Sun Mount' : vedicData.line_life?.signs?.includes('Canopy (Circle at end)') ? 'Life Line' : null;
+            if (canopySign) {
+              detectedYogas.push({ name: 'Canopy / Circle', icon: '👑', desc: `Protective-halo symbol on the ${canopySign}. The transcript's worked example is the Life Line: "whole life is protected" despite its ups and downs (Note 24) — treat the meaning elsewhere as the same protective principle applied to that line/mount, not a separately stated claim.` });
+            }
           }
           if (vedicData.line_mercury_present === true && vedicData.line_mercury_joins_moon) {
-            detectedYogas.push({ name: 'Aindriyā Jñāna Yoga', icon: '👁️', desc: 'Line of Intuition to Moon — heightened prophetic dreams, sharp sixth sense.' });
+            detectedYogas.push({ name: 'Line of Intuition', icon: '👁️', desc: 'Mercury/Health Line reaching the Moon Mount (Note 27 §9.2) — strong intuition, prophetic dreams.' });
           }
           if (vedicData.line_mercury_single_vertical) {
-            detectedYogas.push({ name: 'Dhana Lābha Rekhā', icon: '💰', desc: 'Single vertical line on Mercury mount indicates sudden windfalls and commercial profit.' });
+            detectedYogas.push({ name: 'Single Vertical Line on Mercury Mount', icon: '💰', desc: 'Sudden money gain (Note 27 §9.5).' });
           }
           if (vedicData.line_fate && vedicData.line_head && vedicData.line_mercury_present === true) {
-            detectedYogas.push({ name: 'Dhana kī Koṭhī (Money Room)', icon: '🏛️', desc: 'Triangle formed by Fate, Head, and Mercury lines — supreme capacity to store and multiply wealth.' });
+            detectedYogas.push({ name: 'Dhana kī Koṭhī (Money Room)', icon: '🏛️', desc: 'Triangle formed by Fate, Head, and Mercury lines (Note 27 §9.5) — capacity to store and grow wealth.' });
           }
 
           const handleCopyReport = () => {
@@ -3825,12 +3824,12 @@ export default function AnalysisForm({
                     <div className="p-3 bg-stone-50 rounded-xl space-y-1 border border-stone-100">
                       <span className="font-bold text-xs text-stone-800">Mercury / Health Line (Budha Rekhā — Lecture 27)</span>
                       <p className="text-[11px] text-stone-700">
-                        Status: <strong>{vedicData.line_mercury_present ? 'Present' : 'Absent (classical indicator of robust stamina & health)'}</strong>
+                        Status: <strong>{vedicData.line_mercury_present ? 'Present' : 'Absent ("it is good that it is not" — Note 27 §9)'}</strong>
                       </p>
-                      {vedicData.line_mercury_starts_below_heart && <p className="text-[11px] text-amber-700">• Starts below Heart Line (digestive/liver focus advised)</p>}
-                      {vedicData.line_mercury_starts_above_heart && <p className="text-[11px] text-teal-700">• Starts above Heart Line (healer / counselor / business acuity)</p>}
+                      {vedicData.line_mercury_starts_below_heart && <p className="text-[11px] text-amber-700">• Starts below Heart Line (more health problems; also called the liver line)</p>}
+                      {vedicData.line_mercury_starts_above_heart && <p className="text-[11px] text-teal-700">• Starts above Heart Line (the "healer line" — doctors, healers, counsellors; business indications in later ages)</p>}
                       {vedicData.line_mercury_joins_moon && <p className="text-[11px] text-purple-700">• Line of Intuition: Reaches Moon Mount</p>}
-                      {vedicData.line_mercury_single_vertical && <p className="text-[11px] text-emerald-700">• Single vertical line: Dhana Lābha (sudden windfall sign)</p>}
+                      {vedicData.line_mercury_single_vertical && <p className="text-[11px] text-emerald-700">• Single vertical line: sudden money gain</p>}
                     </div>
                   )}
                 </div>

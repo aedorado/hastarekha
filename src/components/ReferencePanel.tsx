@@ -156,27 +156,24 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
                   Star (Nakṣatra / Tārā)
                 </strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  <strong>Jupiter:</strong> High political or administrative power, sudden rise.<br />
-                  <strong>Sun:</strong> Extraordinary celebrity fame or artistic genius.<br />
-                  <strong>Mercury:</strong> Oratorical and research agility.<br />
+                  Not specifically taught on the Jupiter, Sun, or Mercury mounts in these lectures (the dedicated Jupiter Mount Signs table lists only Ring of Solomon, Line of Sympathy, Cross, Square, and Triangle).<br />
                   <strong>Lower Mars:</strong> Hot temper, teenage injuries or accident-prone.<br />
                   <strong>Moon:</strong> Danger near water bodies, psychological melancholy.<br />
-                  <strong>Saturn:</strong> Fatalistic karmic burden or historic endurance test.
+                  <strong>Saturn:</strong> Mixed — accident or sudden event (read with Fate line).
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
                 <strong className="text-stone-900 font-bold text-xs">Square (Samacatuṣkoṇa / Rakṣā Kavaca)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  <strong>Universal Rule:</strong> Divine protection shield (talisman). Protects whichever mount or line it appears on. On Jupiter: "Teacher\'s Square" — pedagogical skill and immunity to defamation. On Life line: miraculous recovery from hospitalization.
+                  <strong>Universal Rule:</strong> Protection shield. Protects whichever mount or line it appears on. On Jupiter: "Teacher\'s Square" — teaching ability and protection from defamation. On Life line: miraculous recovery from hospitalization.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
                 <strong className="text-stone-900 font-bold text-xs">Trident (Triśūla)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  <strong>Sun Line end:</strong> Tri-fold renown — status (Sun), commerce (Mercury), perseverance (Saturn).<br />
-                  <strong>Jupiter Mount:</strong> Supreme dharmic leadership, wisdom, and royal respect.
+                  Taught as a line-ending sign (end of Sun Line or Fate Line) — strong drive for and success in one's work/fame, increasing the line's overall strength. Not taught as a Jupiter Mount sign in these lectures.
                 </p>
               </div>
 
@@ -188,16 +185,16 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Canopy / Circle (Chatra / Cakravarti)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Canopy (Note 24 §1.2)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A circular halo capping the end of a major line. Bestows lifetime umbrella of divine protection against public disgrace and humiliation.
+                  A circle at the end of a line — a protection sign, like the square. The transcript's worked example is the Life Line: "however many ups and downs occur, the whole life is protected."
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Fish Sign (Matsya Rekhā)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Fish Sign (Matsya) — Note 20 §2.4</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  Spiritual mastery, philanthropic wealth, and divine grace. At Life line terminus: peaceful spiritual transition and mokṣa inclination.
+                  Power, name/fame, spiritual growth, and researcher-type insight — the teacher is explicit that the fish's first quality is that it does <strong>not</strong> give money.
                 </p>
               </div>
 
@@ -218,52 +215,58 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Supportive Line vs. Parasite Line</strong>
+                <strong className="text-stone-900 font-bold text-xs">Supportive Line (Mars Line) — Note 19 §8, Note 21 §2</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  <strong>Supportive (Mars Line):</strong> Runs parallel on inner side of Life line — acts as an energetic guardian angel (Devatā Rakṣā).<br />
-                  <strong>Parasite Line:</strong> Feeds off and drains the parent line\'s vitality.
+                  Runs parallel to the Life Line without touching it. Meaning: someone (a person/relationship) provides real support through a difficult period, for as long as the line runs alongside. (No Sanskrit name was used for this in class — "Devatā Rakṣā" was an invented label and has been removed.)
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Dot / Spot (Bindu)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Dot / Spot (Note 19 §3.1)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A small depressed point on a line or mount. Marks a sudden, short-lived shock or minor setback at that age/location — generally resolves without lasting damage, unlike an Island.
+                  "Spot" or "dot" — either word is used. <strong>Colour matters:</strong> white is not a permanent mark (can be digestion or incomplete sleep — disregard it); black, blue, or red <em>is</em> considered. A coloured dot is a <strong>negative sign</strong>, generally indicating ill health — which age and which mount it sits on decides the specific issue. A fully filled-in dot can also be a mole or deep mark (treated the same, negative).
+                </p>
+              </div>
+
+              <div className="p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-200/60">
+                <strong className="text-stone-900 font-bold text-xs">Circle (Note 19 §3.1 — "Dot vs Circle")</strong>
+                <p className="text-stone-600 text-xs mt-1 leading-relaxed">
+                  The teacher explicitly separates this from Dot: a circle is <strong>empty inside</strong> (not filled), and unlike a dot it is a <strong>positive sign</strong> — "leave the circle out of the dot rule." A circle on the <strong>Sun Mount</strong> specifically is called very good, and rare.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Net / Grille (Jālī)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Net / Jālī (Note 20 §2.3)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A crosshatched mesh of fine lines covering a mount. Dissipates and scatters that mount's energy — e.g. on Venus: restless/unfocused passions; on Jupiter: dogmatic vanity undermining real ambition.
+                  A lattice of crossing lines — to count, the vertical and horizontal lines must look similarly clear/visible, with at least three of each. Found <strong>mostly on the Venus Mount</strong> ("in everyone's Venus"), also seen on Mercury. A jālī is <strong>always bad</strong> — a cause of misfortune (durbhāgya). On Venus specifically (which governs married/family life): trouble in marriage, family life, childbirth, and a great deal of anxiety. More cuts/crosses/nets on Venus = more trouble.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Conch (Śaṅkha)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Conch / Śaṅkha (Note 21 §1.1)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A sacred spiral/shell-shaped mark. Classical auspicious sign of spiritual merit, good fortune, and an announcing/public voice — often linked to Jupiter or Mercury mount placements.
+                  Very rare — "if 1% get it, they get it," and even when present it's often hard to recognise. Drawn as a conch with a circle on top (other forms are possible but weren't fully described in class). Indicates a <strong>spiritual journey</strong> (seen in hands at a very high spiritual level) and <strong>sudden money gain</strong>. Can appear anywhere on the palm, but mostly in the <strong>Ketu Parvata</strong> area — the same zone the fish sign generally appears in.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Flag (Dhvaja)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Flag / Dhvaja (Note 21 §1.2)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A triangular pennant-like mark, typically on a mount. Signifies victory, public recognition, or a triumphant turning point tied to that mount's domain.
+                  Shaped like a "T," or a line with a flag-like shape attached. <strong>Do not confuse with a Square:</strong> a flag is closed on three sides and open on one; a square is closed on all sides. Can form on a line or on its own. Meaning: famous name, fame, increases willpower. Located mostly on the <strong>Sun Mount</strong> or the <strong>Saturn Mount</strong>.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Tree (Vṛkṣa)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Tree / Vṛkṣa (Note 21 §1.3)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A branching mark resembling a tree trunk with limbs. Indicates growth that spreads in many directions at once — diversified income, multiple disciples/followers, or scattered focus depending on placement.
+                  Appears at the <strong>very end of a line</strong> (whichever line), branching like a tree — any number of branches on either side. Meaning: growth, prosperity, name and fame; the teacher noted that a longer formation increases the strength of the sign, though the exact meaning was left unclear in class.
                 </p>
               </div>
 
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Temple (Mandira)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Temple / Mandira (Note 21 §1.4)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  A structured, multi-tiered geometric formation (layered squares/triangles). Rare sign of sustained institutional success — building something (literal or figurative) that outlasts the individual.
+                  Can form in many shapes (several were drawn in class). <strong>No meaning was stated for this sign</strong> — the teacher said her own hand isn't quite a temple either, though it sometimes resembles one. Left here for identification only, not interpretation.
                 </p>
               </div>
             </div>
@@ -300,21 +303,21 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
                 </p>
               </div>
               <div className="p-2.5 bg-indigo-50 rounded-lg border border-indigo-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Life × Fate Line Junction Timing</strong>
+                <strong className="text-stone-900 font-bold text-xs">Life × Fate Line Junction Timing (Note 21 §4)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  Where the Fate Line crosses the Life Line, read the age on each line at that crossing point. This junction marks family-support vs. independence windows — e.g. a crossing read as "Life age 22 / Fate age 22" often marks the point a person starts standing on their own financially. Taught across Lectures 21 (origin), 22 (branches), and 23 (career timing).
+                  Wherever the Fate Line and Life Line join, draw the connection between the two points — that stretch is the duration being read. The Life Line's age at that point and the Fate Line's age at that same point are normally <em>different</em> numbers, because the two lines have different origin points/scales — e.g. the teacher's own example reads ~35–40 on the Life Line against ~25 (or earlier, 15–20) on the Fate Line at the same junction, not matching ages. Up to the point the lines separate = family support; from that point on = self/independent. This reading depends on what question is being asked — it is one technique among several, not a universal rule.
                 </p>
               </div>
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Mercury / Health Line (Svasthya Rekhā)</strong>
+                <strong className="text-stone-900 font-bold text-xs">Mercury / Health Line (Svasthya Rekhā, Note 27 §9)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  Absent entirely: classically the best outcome — robust digestive/hepatic vitality needs no warning line. Starting below the Heart Line: digestive or liver attention needed. Starting above the Heart Line: healer's or business/trade acumen. Reaching the Moon Mount: "Line of Intuition" — strong gut instinct, prophetic dreams. A single clean vertical line crossing it on the Mercury Mount: sudden windfall (Dhana Lābha).
+                  Absent: the teacher states "it is good that it is not [there]" — presence (not absence) is linked to health/liver issues ("also called the liver line"). Starting below the Heart Line: more health problems in general. Starting above the Heart Line: the "healer line" — business indications in later ages, found in doctors/healers/counsellors (Mercury governs speech). Reaching the Moon Mount: "Line of Intuition" — strong gut instinct, prophetic dreams. A single clean vertical line on the Mercury Mount: sudden money gain.
                 </p>
               </div>
               <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-200/70">
-                <strong className="text-stone-900 font-bold text-xs">Diamond Chain & Canopy on the Brain/Mind Line</strong>
+                <strong className="text-stone-900 font-bold text-xs">Diamond Chain &amp; Canopy — where they're actually taught (Note 24)</strong>
                 <p className="text-stone-600 text-xs mt-1 leading-relaxed">
-                  Same wish-fulfilment (Diamond Chain) and protective-halo (Canopy) symbolism as on the Fate/Sun lines, but here they bless the mind: a Diamond Chain terminating the Head Line indicates intellectual achievements reaching full fruition; a Canopy shields against public intellectual embarrassment or reputational attacks on one's judgment.
+                  Diamond Chain is "mostly seen at the end of the fate line or the sun line" — Note 24 does not apply it to the Head/Brain Line. Canopy's one worked example in the transcript is the Life Line: "however many ups and downs occur, the whole life is protected." If either is observed at the end of the Head Line, treat the meaning as unconfirmed/not stated rather than asserting intellectual-achievement or reputation-protection claims.
                 </p>
               </div>
             </div>

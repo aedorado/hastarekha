@@ -13,7 +13,11 @@ interface OptimizedHandImageProps {
   width?: number;
   height?: number;
   draggable?: boolean;
+  unoptimized?: boolean;
 }
+
+// Module-level cache of successfully loaded URLs across re-renders and re-sorts
+const LOADED_IMAGE_CACHE = new Set<string>();
 
 export default function OptimizedHandImage({
   src,
@@ -25,13 +29,20 @@ export default function OptimizedHandImage({
   width,
   height,
   draggable = false,
+  unoptimized: propUnoptimized,
 }: OptimizedHandImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  // If already loaded previously in this session, start as loaded immediately (no spinner flicker)
+  const [isLoaded, setIsLoaded] = useState(() => Boolean(src && LOADED_IMAGE_CACHE.has(src)));
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(false);
-    setHasError(false);
+    if (src && LOADED_IMAGE_CACHE.has(src)) {
+      setIsLoaded(true);
+      setHasError(false);
+    } else {
+      setIsLoaded(false);
+      setHasError(false);
+    }
   }, [src]);
 
   if (!src || hasError) {
@@ -45,8 +56,8 @@ export default function OptimizedHandImage({
   const isDataUrl = src.startsWith('data:');
   const isBlobUrl = src.startsWith('blob:');
 
-  // For data URLs or blob URLs, we use unoptimized mode
-  const shouldBypassOptimization = isDataUrl || isBlobUrl;
+  // Bypass Next.js dev server image-proxy bottleneck for direct fast delivery
+  const shouldBypassOptimization = propUnoptimized !== undefined ? propUnoptimized : (isDataUrl || isBlobUrl || true);
 
   const imageProps = {
     src,
@@ -54,9 +65,12 @@ export default function OptimizedHandImage({
     priority,
     draggable,
     unoptimized: shouldBypassOptimization,
-    onLoad: () => setIsLoaded(true),
+    onLoad: () => {
+      if (src) LOADED_IMAGE_CACHE.add(src);
+      setIsLoaded(true);
+    },
     onError: () => setHasError(true),
-    className: `${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`,
+    className: `${className} transition-opacity duration-150 ${isLoaded ? 'opacity-100' : 'opacity-0'}`,
   };
 
   if (fill) {
@@ -64,7 +78,7 @@ export default function OptimizedHandImage({
       <>
         {!isLoaded && (
           <div
-            className="absolute inset-0 bg-stone-100 flex items-center justify-center animate-pulse overflow-hidden"
+            className="absolute inset-0 bg-stone-100 flex items-center justify-center overflow-hidden"
             aria-hidden="true"
           >
             <div className="w-5 h-5 rounded-full border-2 border-stone-200 border-t-accent-gold/60 animate-spin opacity-50" />
@@ -83,7 +97,7 @@ export default function OptimizedHandImage({
     <div className="relative inline-block overflow-hidden">
       {!isLoaded && (
         <div
-          className="absolute inset-0 bg-stone-100 flex items-center justify-center animate-pulse"
+          className="absolute inset-0 bg-stone-100 flex items-center justify-center"
           aria-hidden="true"
         >
           <div className="w-4 h-4 rounded-full border-2 border-stone-200 border-t-accent-gold/60 animate-spin opacity-50" />
