@@ -93,12 +93,22 @@ export default function HandCanvas({
   const visibleDrawings = drawings.filter((d) => d.view === activeView);
 
   // Calculate coordinates relative to container percentage (0 to 100)
-  const getRelativeCoords = (e: React.MouseEvent<any>) => {
+  const getPointCoords = (clientX: number, clientY: number) => {
     if (!containerRef.current) return { x: 0, y: 0 };
     const rect = containerRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
     return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+  };
+
+  const getRelativeCoords = (e: React.MouseEvent<any> | React.TouchEvent<any>) => {
+    if ('touches' in e && e.touches.length > 0) {
+      return getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    if ('clientX' in e) {
+      return getPointCoords((e as React.MouseEvent).clientX, (e as React.MouseEvent).clientY);
+    }
+    return { x: 0, y: 0 };
   };
 
   const handleSvgMouseDown = (e: React.MouseEvent<any>) => {
@@ -109,10 +119,18 @@ export default function HandCanvas({
     setCurrentPoints([coords]);
   };
 
-  const handleSvgMouseMove = (e: React.MouseEvent<any>) => {
+  const handleSvgTouchStart = (e: React.TouchEvent<any>) => {
+    if (mode === 'measure') return;
+    if (mode !== 'draw' || !imageUrl) return;
+    if (e.touches.length !== 1) return;
+    setIsDrawing(true);
+    const coords = getRelativeCoords(e);
+    setCurrentPoints([coords]);
+  };
+
+  const handleInteractionMove = (coords: { x: number; y: number }) => {
     if (mode === 'measure') {
       if (draggingNode && profile && onChangeProfile && measurements) {
-        const coords = getRelativeCoords(e);
         const updatedMeasurements = {
           ...measurements,
           [draggingNode]: coords,
@@ -179,11 +197,22 @@ export default function HandCanvas({
     }
 
     if (mode !== 'draw' || !isDrawing) return;
-    const coords = getRelativeCoords(e);
     setCurrentPoints((prev) => [...prev, coords]);
   };
 
-  const handleSvgMouseUp = () => {
+  const handleSvgMouseMove = (e: React.MouseEvent<any>) => {
+    const coords = getRelativeCoords(e);
+    handleInteractionMove(coords);
+  };
+
+  const handleSvgTouchMove = (e: React.TouchEvent<any>) => {
+    if (e.touches.length > 0) {
+      const coords = getRelativeCoords(e);
+      handleInteractionMove(coords);
+    }
+  };
+
+  const handleEndInteraction = () => {
     if (mode === 'measure') {
       setDraggingNode(null);
       return;
@@ -201,6 +230,34 @@ export default function HandCanvas({
       onChangeDrawings([...drawings, newDrawing]);
     }
     setCurrentPoints([]);
+  };
+
+  const handleSvgMouseUp = () => {
+    handleEndInteraction();
+  };
+
+  const handleSvgTouchEnd = (e: React.TouchEvent<any>) => {
+    // If in pin mode and it was a single tap touch, drop pin
+    if (mode === 'pin' && imageUrl && e.changedTouches.length === 1 && !isDrawing) {
+      const touch = e.changedTouches[0];
+      const target = typeof document !== 'undefined' ? document.elementFromPoint(touch.clientX, touch.clientY) : null;
+      if (!target?.closest('.annotation-pin-trigger')) {
+        const coords = getPointCoords(touch.clientX, touch.clientY);
+        const newPin: Pin = {
+          id: crypto.randomUUID(),
+          view: activeView,
+          x: coords.x,
+          y: coords.y,
+          label: 'New Marker',
+          description: 'Enter notes about this sign/location.',
+          color: currentColor,
+        };
+        onChangePins([...pins, newPin]);
+        onSelectPin(newPin);
+        setSelectedDrawingId(null);
+      }
+    }
+    handleEndInteraction();
   };
 
   const handleSvgClick = (e: React.MouseEvent<any>) => {
@@ -595,10 +652,14 @@ export default function HandCanvas({
           {/* Canvas Area */}
           <div
             ref={containerRef}
-            className="canvas-wrapper flex-1 relative min-h-[400px] shadow-sm select-none border border-stone-200 rounded-xl bg-stone-50/50 m-2"
+            className="canvas-wrapper flex-1 relative min-h-[400px] shadow-sm select-none border border-stone-200 rounded-xl bg-stone-50/50 m-2 touch-none"
+            style={{ touchAction: 'none' }}
             onMouseMove={handleSvgMouseMove}
             onMouseUp={handleSvgMouseUp}
             onMouseLeave={() => setDraggingNode(null)}
+            onTouchMove={handleSvgTouchMove}
+            onTouchEnd={handleSvgTouchEnd}
+            onTouchCancel={handleSvgTouchEnd}
           >
             {/* The Base Hand Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -614,6 +675,7 @@ export default function HandCanvas({
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
               onMouseDown={handleSvgMouseDown}
+              onTouchStart={handleSvgTouchStart}
               onClick={handleSvgClick}
             >
               {/* Render already drawn lines */}
@@ -668,6 +730,14 @@ export default function HandCanvas({
                       }}
                       onMouseUp={(e) => {
                         e.stopPropagation();
+                      }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
+                        setSelectedDrawingId(isSelected ? null : drawing.id);
+                        onSelectPin(null);
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -868,6 +938,10 @@ export default function HandCanvas({
                     e.stopPropagation();
                     setDraggingNode('palm_start');
                   }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setDraggingNode('palm_start');
+                  }}
                 >
                   <div className="w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-white shadow-md transition-transform duration-150 hover:scale-125 active:scale-110 flex items-center justify-center">
                     <div className="w-1 h-1 bg-white rounded-full" />
@@ -886,6 +960,10 @@ export default function HandCanvas({
                     transform: 'translate(-50%, -50%)',
                   }}
                   onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setDraggingNode('palm_end');
+                  }}
+                  onTouchStart={(e) => {
                     e.stopPropagation();
                     setDraggingNode('palm_end');
                   }}
@@ -910,6 +988,10 @@ export default function HandCanvas({
                     e.stopPropagation();
                     setDraggingNode('finger_end');
                   }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setDraggingNode('finger_end');
+                  }}
                 >
                   <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white shadow-md transition-transform duration-150 hover:scale-125 active:scale-110 flex items-center justify-center">
                     <div className="w-1 h-1 bg-white rounded-full" />
@@ -931,6 +1013,10 @@ export default function HandCanvas({
                     e.stopPropagation();
                     setDraggingNode('width_start');
                   }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setDraggingNode('width_start');
+                  }}
                 >
                   <div className="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white shadow-md transition-transform duration-150 hover:scale-125 active:scale-110 flex items-center justify-center">
                     <div className="w-1.5 h-1.5 bg-white rounded-full" />
@@ -949,6 +1035,10 @@ export default function HandCanvas({
                     transform: 'translate(-50%, -50%)',
                   }}
                   onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setDraggingNode('width_end');
+                  }}
+                  onTouchStart={(e) => {
                     e.stopPropagation();
                     setDraggingNode('width_end');
                   }}
@@ -977,6 +1067,9 @@ export default function HandCanvas({
                 {/* The Dropped Pin Icon */}
                 <div
                   onClick={(e) => handlePinClick(pin, e)}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                  }}
                   className={`w-4.5 h-4.5 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 border border-white shadow ${selectedPinId === pin.id
                     ? 'scale-125 ring-2 ring-offset-1 ring-offset-white ring-accent-gold shadow-md'
                     : 'hover:scale-110 shadow-sm'
@@ -1001,6 +1094,9 @@ export default function HandCanvas({
                     onClick={(e) => {
                       e.stopPropagation();
                       removePin(pin.id);
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
                     }}
                     className="absolute -top-4 -right-4 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-0.5 border border-white transition-transform active:scale-95 shadow-md z-40"
                     title="Remove marker"

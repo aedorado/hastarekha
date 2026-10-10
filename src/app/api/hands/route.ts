@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/utils/supabase/server';
+import { validateHandProfilePayload, isValidUuid } from '@/lib/validation';
 
 const isConfigured = !!(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -22,6 +23,13 @@ export async function GET(request: Request) {
     const supabase = await createClient();
 
     if (id) {
+      if (!isValidUuid(id)) {
+        return NextResponse.json(
+          { error: 'Invalid UUID format for id parameter' },
+          { status: 400 }
+        );
+      }
+
       const { data, error } = await supabase
         .from('hands')
         .select('*')
@@ -63,26 +71,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
-    const supabase = await createClient();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Malformed JSON payload' }, { status: 400 });
+    }
 
-    const payload = {
-      id: body.id,
-      name: body.name,
-      age: body.age ? parseInt(body.age, 10) : null,
-      gender: body.gender,
-      dominant_hand: body.dominant_hand,
-      images: body.images,
-      general_notes: body.general_notes,
-      mounts_data: body.mounts_data,
-      lines_data: body.lines_data,
-      pins: body.pins,
-      drawings: body.drawings,
-      tags: body.tags,
-      dob: body.dob || null,
-      tob: body.tob || null,
-      pob: body.pob || null,
-    };
+    const validation = validateHandProfilePayload(body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const supabase = await createClient();
+    const payload = validation.data;
 
     const { data, error } = await supabase
       .from('hands')
@@ -117,6 +119,10 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
+    }
+
+    if (!isValidUuid(id)) {
+      return NextResponse.json({ error: 'Invalid UUID format for id parameter' }, { status: 400 });
     }
 
     const supabase = await createClient();
