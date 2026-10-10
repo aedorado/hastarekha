@@ -429,8 +429,10 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
       readings.push('🟡 Yellowish Palm: Liver / Pitta dosha indicator, potential metabolic fatigue.');
     } else if (vedic.palm_color.includes('Reddish')) {
       readings.push('🔴 Reddish Palm: High heat/Agni, quick-tempered, passionate, intense blood pressure tendencies.');
-    } else if (vedic.palm_color.includes('Blue')) {
-      readings.push('🟣 Blue/Purple Palm: Circulatory or respiratory stagnation; flagged health concern.');
+    } else if (vedic.palm_color.includes('Purple') || vedic.palm_color.includes('Aubergine')) {
+      readings.push('🟣 Purple / Aubergine Palm: Terminal alert — critical condition indicator; urgent circulatory or respiratory distress.');
+    } else if (vedic.palm_color.includes('Blu')) {
+      readings.push('🔵 Bluish Palm: Renal / kidney distress indicator (veins on Venus); circulatory stagnation flagged.');
     }
   }
 
@@ -465,13 +467,21 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
   if (vedic.nail_color) {
     if (vedic.nail_color.includes('White spots')) readings.push('💅 White Spots on Nails: Classical sign of sudden gains / zinc-mineral assimilation marker.');
     else if (vedic.nail_color.includes('Yellow')) readings.push('⚠️ Yellow Nails: Sluggish liver/jaundice flag; check metabolic health.');
-    else if (vedic.nail_color.includes('Blue')) readings.push('⚠️ Blue/Purple Nails: Poor circulation or oxygenation distress.');
+    else if (vedic.nail_color.includes('Blu') || vedic.nail_color.includes('Purple')) readings.push('⚠️ Blue/Purple Nails: Poor circulation or oxygenation distress.');
     else if (vedic.nail_color.includes('Pale')) readings.push('💅 Pale Nails: Low hemoglobin/prāṇic vitality indicator.');
   }
   if (vedic.nail_surface) {
-    if (vedic.nail_surface.includes('Ridged/Vertical')) readings.push('💅 Vertical Nail Ridges: Nervous exhaustion, thyroid/digestive stress or prolonged anxiety.');
-    else if (vedic.nail_surface.includes('Horizontal')) readings.push('⚠️ Horizontal Nail Ridges (Beau lines): Past acute illness or severe metabolic shock.');
-    else if (vedic.nail_surface.includes('Brittle')) readings.push('💅 Brittle Nails: Vāta aggravation, calcium/mineral deficit.');
+    if (vedic.nail_surface.includes('Fluted')) {
+      readings.push('🚨 Fluted Nail Ridges: Deep longitudinal cracks; severe arthritis, chronic degenerative or vascular risk.');
+    } else if (vedic.nail_surface.includes('Vertical') || vedic.nail_surface.includes('Ridged')) {
+      readings.push('💅 Vertical Nail Ridges: Father-line inheritance marker, nervous exhaustion, stress or vāta-doṣa.');
+    } else if (vedic.nail_surface.includes('Horizontal')) {
+      readings.push('⚠️ Horizontal Nail Ridges (Beau lines): Mother-line inheritance marker, acute illness shock or protein deficiency.');
+    } else if (vedic.nail_surface.includes('Brittle')) {
+      readings.push('💅 Brittle Nails: Vāta aggravation, calcium/mineral deficit.');
+    } else if (vedic.nail_surface.includes('Spotted')) {
+      readings.push('💅 Spotted Nail Surface: Uneven mineral absorption or metabolic fluctuation.');
+    }
   }
   if (vedic.nail_lunula === 'Absent (health concern)') {
     readings.push('⚠️ Absent Nail Moons (Lunulae): Low metabolic fire (mandāgni), sluggish circulation.');
@@ -635,6 +645,11 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     vedic.life_fate_junctions.forEach((j) => {
       readings.push(`⏳ Life×Fate Junction (Life age ${j.life_age} / Fate age ${j.fate_age}): ${j.reading || 'Support/independence window — see notes.'}`);
     });
+  }
+
+  // 18c. Simian / Semi-Simian Formations (Lectures 24-27)
+  if (vedic.simian_type && vedic.simian_type !== 'None') {
+    readings.push(`🧬 ${vedic.simian_type}: Fusion of head and heart energies; high intensity focus and driven singular path.`);
   }
 
   // 19. Karmic Hand Comparison (Lectures 01, 06, 22)
