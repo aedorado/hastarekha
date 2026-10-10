@@ -156,7 +156,7 @@ export interface VedicData {
   mount_mars_lower: MountSignData | null;
   mount_mars_plain: MountSignData | null;
 
-  // ─── Structured Line Analysis (Notes 19-27) ───
+  // ─── Structured Line Analysis ───
   line_life: LineAnalysisData | null;
   line_fate: LineAnalysisData | null;
   line_head: LineAnalysisData | null;

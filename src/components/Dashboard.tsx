@@ -86,12 +86,27 @@ export default function Dashboard({
     return Array.from(tattvas).sort();
   }, [profileVedicMap]);
 
-  // JSON export backup
+  // JSON export backup (bundles profiles + SRS flashcard study history)
   const handleExport = () => {
     try {
-      const dataStr = JSON.stringify(profiles, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      let srsProgress = {};
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('hastarekha_srs_progress_v1');
+          if (raw) srsProgress = JSON.parse(raw);
+        } catch {}
+      }
 
+      const backupBundle = {
+        version: 2,
+        exported_at: new Date().toISOString(),
+        profiles_count: profiles.length,
+        profiles,
+        srs_progress: srsProgress,
+      };
+
+      const dataStr = JSON.stringify(backupBundle, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
       const exportFileDefaultName = `hastarekha-databank-backup-${new Date().toISOString().split('T')[0]}.json`;
 
       const linkElement = document.createElement('a');
@@ -103,7 +118,7 @@ export default function Dashboard({
     }
   };
 
-  // JSON import restore
+  // JSON import restore (supports both v2 bundle and legacy flat array)
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (e.target.files && e.target.files[0]) {
@@ -111,12 +126,35 @@ export default function Dashboard({
       fileReader.onload = (event) => {
         try {
           const parsed = JSON.parse(event.target?.result as string);
+          let importedProfiles: HandProfile[] = [];
+          let importedSrs: Record<string, any> | null = null;
+
           if (Array.isArray(parsed)) {
-            if (confirm(`Import ${parsed.length} hand profiles? Existing records with matching IDs will be overwritten.`)) {
-              onImportData(parsed);
+            // Legacy format: raw array of profiles
+            importedProfiles = parsed;
+          } else if (parsed && Array.isArray(parsed.profiles)) {
+            // v2 bundle format: object with profiles & srs_progress
+            importedProfiles = parsed.profiles;
+            if (parsed.srs_progress && typeof parsed.srs_progress === 'object') {
+              importedSrs = parsed.srs_progress;
             }
           } else {
-            alert('Invalid file format. Must be a JSON array of hand profiles.');
+            alert('Invalid backup format. Must be a JSON array or HastaRekhā backup bundle.');
+            return;
+          }
+
+          if (confirm(`Import ${importedProfiles.length} hand profiles${importedSrs ? ' and flashcard study progress' : ''}? Existing records with matching IDs will be updated.`)) {
+            if (importedSrs && typeof window !== 'undefined') {
+              try {
+                const existingRaw = localStorage.getItem('hastarekha_srs_progress_v1');
+                const existing = existingRaw ? JSON.parse(existingRaw) : {};
+                const merged = { ...existing, ...importedSrs };
+                localStorage.setItem('hastarekha_srs_progress_v1', JSON.stringify(merged));
+              } catch (storageErr) {
+                console.warn('Could not restore SRS progress into localStorage', storageErr);
+              }
+            }
+            onImportData(importedProfiles);
           }
         } catch (error) {
           alert('Failed to parse JSON file.');
@@ -252,8 +290,17 @@ export default function Dashboard({
           return (
             <div
               key={p.id}
-              className="glass-panel glass-panel-hover flex flex-row overflow-hidden group border border-stone-200/80 bg-white cursor-pointer hover:shadow-lg transition-all duration-300"
+              role="button"
+              tabIndex={0}
+              aria-label={`Open profile for ${p.name}`}
+              className="glass-panel glass-panel-hover flex flex-row overflow-hidden group border border-stone-200/80 bg-white cursor-pointer hover:shadow-lg focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:outline-hidden transition-all duration-300"
               onClick={() => onSelectProfile(p.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectProfile(p.id);
+                }
+              }}
             >
               {/* Small Square Thumbnail */}
               <div className="w-28 h-28 shrink-0 relative bg-stone-100/50 overflow-hidden self-center mx-4 my-3 rounded-lg border border-stone-200/60">

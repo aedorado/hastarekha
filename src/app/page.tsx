@@ -108,21 +108,21 @@ export default function Home() {
     <PageLayout>
       <div className="space-y-6">
         {/* Tab Selector */}
-        <div className="flex justify-start gap-4 border-b border-stone-200 pb-px mb-2">
+        <div className="flex justify-start gap-4 border-b border-stone-200 pb-px mb-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden whitespace-nowrap">
           <button
-            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold"
+            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold shrink-0"
           >
             Hand Profiles
           </button>
           <button
             onClick={() => router.push('/all-hands')}
-            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850"
+            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
           >
             All Hands
           </button>
           <button
             onClick={() => router.push('/study')}
-            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850"
+            className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
           >
             Study Guide & Lectures
           </button>

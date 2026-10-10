@@ -16,6 +16,8 @@ import {
   Clock,
   Layers,
   Award,
+  Download,
+  Upload,
 } from 'lucide-react';
 import {
   Flashcard,
@@ -118,6 +120,40 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
     if (currentIndex < queue.length - 1) setCurrentIndex((prev) => prev + 1);
   };
 
+  const handleExportSrs = () => {
+    try {
+      const dataStr = JSON.stringify(progressMap, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      const link = document.createElement('a');
+      link.setAttribute('href', dataUri);
+      link.setAttribute('download', `hastarekha-srs-progress-${new Date().toISOString().split('T')[0]}.json`);
+      link.click();
+    } catch (e) {
+      alert('Failed to export SRS progress');
+    }
+  };
+
+  const handleImportSrs = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        const data = parsed.srs_progress || parsed;
+        if (typeof data === 'object' && data !== null) {
+          const merged = { ...progressMap, ...data };
+          setProgressMap(merged);
+          localStorage.setItem('hastarekha_srs_progress_v1', JSON.stringify(merged));
+          alert(`Imported study progress for ${Object.keys(data).length} card records.`);
+        }
+      } catch {
+        alert('Invalid SRS progress JSON file');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleShuffle = () => {
     setIsFlipped(false);
     setCurrentIndex(Math.floor(Math.random() * Math.max(1, queue.length)));
@@ -194,7 +230,7 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-1.5 text-xs flex-wrap">
             <button
               onClick={handleShuffle}
               disabled={queue.length <= 1}
@@ -204,8 +240,24 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
               <Shuffle className="w-3.5 h-3.5" />
               Shuffle
             </button>
+            <button
+              onClick={handleExportSrs}
+              className="btn-outline px-2.5 py-1 text-xs flex items-center gap-1 cursor-pointer"
+              title="Backup SRS progress to JSON"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Backup
+            </button>
+            <label
+              className="btn-outline px-2.5 py-1 text-xs flex items-center gap-1 cursor-pointer"
+              title="Restore SRS progress from JSON"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Restore
+              <input type="file" accept=".json" onChange={handleImportSrs} className="hidden" />
+            </label>
             {queue.length > 0 && (
-              <span className="text-stone-400 font-mono text-[11px] font-semibold">
+              <span className="text-stone-400 font-mono text-[11px] font-semibold ml-1">
                 {currentIndex + 1} / {queue.length}
               </span>
             )}

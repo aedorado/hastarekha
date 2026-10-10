@@ -25,6 +25,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   const [isUploading, setIsUploading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ view: HandView | 'd1_chart'; file: File } | null>(null);
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
 
   const hasUnsavedChanges = isProfileChanged(lastSavedProfile, activeProfile);
 
@@ -72,6 +73,20 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [lastSavedProfile, activeProfile]);
+
+  // Power user shortcut: Cmd+S / Ctrl+S saves immediately in-place
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSave({ inPlace: true });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeProfile, isSupabaseConnected]);
 
   // Local client-side image compression/resizing
   const compressAndResizeImage = (file: File): Promise<string> => {
@@ -172,9 +187,10 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
 
   // Save changes (Save to SQLite/Postgres or LocalStorage).
   // `silent: true` is used by the autosave timer: persists in the background
-  // without the success alert or navigating away from the editor.
-  const handleSave = async (opts?: { silent?: boolean }) => {
+  // `inPlace: true` is used by Cmd/Ctrl+S to save without redirecting
+  const handleSave = async (opts?: { silent?: boolean; inPlace?: boolean }) => {
     const silent = opts?.silent ?? false;
+    const inPlace = opts?.inPlace ?? false;
 
     if (!activeProfile.name) {
       if (!silent) alert('Please fill out the Subject Identifier / Name.');
@@ -195,7 +211,10 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         if (res.ok) {
           updateProfileInCache(activeProfile);
           setLastSavedProfile(activeProfile);
-          if (!silent) {
+          if (inPlace) {
+            setSaveSuccessMessage('Saved (⌘S)');
+            setTimeout(() => setSaveSuccessMessage(null), 3000);
+          } else if (!silent) {
             alert('Analysis Profile Saved Successfully!');
             router.push('/');
           }
@@ -206,7 +225,10 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         saveDemoProfile(activeProfile);
         updateProfileInCache(activeProfile);
         setLastSavedProfile(activeProfile);
-        if (!silent) {
+        if (inPlace) {
+          setSaveSuccessMessage('Saved locally (⌘S)');
+          setTimeout(() => setSaveSuccessMessage(null), 3000);
+        } else if (!silent) {
           alert('Saved locally to browser storage!');
           router.push('/');
         }
@@ -214,6 +236,14 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
     } catch (e) {
       if (silent) {
         // Don't bounce the user around or alert for a background autosave failure; it will retry.
+        return;
+      }
+      if (inPlace) {
+        saveDemoProfile(activeProfile);
+        updateProfileInCache(activeProfile);
+        setLastSavedProfile(activeProfile);
+        setSaveSuccessMessage('Saved to local storage (⌘S)');
+        setTimeout(() => setSaveSuccessMessage(null), 3000);
         return;
       }
       alert('Error saving profile. Saving locally to browser fallback...');
@@ -273,7 +303,11 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
             </div>
           </div>
           <div className="text-[11px] font-semibold flex items-center gap-1.5 shrink-0">
-            {isAutosaving ? (
+            {saveSuccessMessage ? (
+              <span className="text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-bold shadow-2xs animate-fade-in">
+                ✓ {saveSuccessMessage}
+              </span>
+            ) : isAutosaving ? (
               <span className="text-amber-600 animate-pulse">● Autosaving…</span>
             ) : hasUnsavedChanges ? (
               <span className="text-stone-400">○ Unsaved changes</span>

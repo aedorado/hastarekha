@@ -467,10 +467,14 @@ export default function AnalysisForm({
         <button
           onClick={onSave}
           disabled={isSaving || !hasChanges || !profile.name}
+          title="Save Profile (Cmd+S or Ctrl+S)"
           className="btn-gold px-5 py-2.5 text-sm flex items-center gap-2 shadow-md disabled:opacity-55 disabled:cursor-not-allowed"
         >
           <Check className="w-4 h-4" />
           {isSaving ? 'Saving...' : 'Save Profile'}
+          <kbd className="hidden sm:inline-block text-[10px] bg-stone-900/20 px-1 py-0.5 rounded font-mono font-normal">
+            ⌘S
+          </kbd>
         </button>
       </div>
 
