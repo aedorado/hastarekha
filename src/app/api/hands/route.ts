@@ -84,12 +84,26 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createClient();
-    const payload = validation.data;
+    const payload = {
+      ...validation.data,
+      updated_at: validation.data.updated_at || new Date().toISOString(),
+    };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('hands')
       .upsert(payload)
       .select();
+
+    // Fallback: If remote table does not yet have updated_at column, retry without it
+    if (error && (error.message?.includes('updated_at') || error.code === 'PGRST204')) {
+      const { updated_at, ...cleanPayload } = payload;
+      const retry = await supabase
+        .from('hands')
+        .upsert(cleanPayload)
+        .select();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw error;
 
@@ -98,7 +112,7 @@ export async function POST(request: Request) {
     revalidatePath('/');
     revalidatePath('/all-hands');
 
-    return NextResponse.json(data[0]);
+    return NextResponse.json(data && data.length > 0 ? data[0] : payload);
   } catch (error: any) {
     console.error('Database save error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

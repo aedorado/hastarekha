@@ -172,6 +172,7 @@ export function validateHandProfilePayload(body: any): ValidationResult<any> {
       dob,
       tob,
       pob,
+      updated_at: typeof body.updated_at === 'string' ? body.updated_at : undefined,
     },
   };
 }

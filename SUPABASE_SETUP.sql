@@ -17,8 +17,12 @@ CREATE TABLE IF NOT EXISTS public.hands (
   pins JSONB DEFAULT '[]'::jsonb,
   drawings JSONB DEFAULT '[]'::jsonb,
   tags TEXT[] DEFAULT '{}'::text[],
-  created_at TIMESTAMPTZ DEFAULT now()
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- If your table already exists, add the updated_at column with this migration:
+ALTER TABLE public.hands ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.hands ENABLE ROW LEVEL SECURITY;

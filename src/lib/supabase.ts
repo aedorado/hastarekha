@@ -665,6 +665,7 @@ export interface HandProfile {
   drawings: Drawing[];
   tags: string[];
   created_at?: string;
+  updated_at?: string;
   dob?: string;
   tob?: string;
   pob?: string;
@@ -683,11 +684,16 @@ export const saveDemoProfile = (profile: HandProfile): HandProfile[] => {
   if (typeof window === 'undefined') return [];
   const current = getDemoProfiles();
   const existingIndex = current.findIndex(p => p.id === profile.id);
+  const now = new Date().toISOString();
 
   if (existingIndex >= 0) {
-    current[existingIndex] = { ...profile, created_at: current[existingIndex].created_at || new Date().toISOString() };
+    current[existingIndex] = {
+      ...profile,
+      created_at: current[existingIndex].created_at || now,
+      updated_at: now,
+    };
   } else {
-    current.push({ ...profile, created_at: new Date().toISOString() });
+    current.push({ ...profile, created_at: now, updated_at: now });
   }
 
   localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(current));

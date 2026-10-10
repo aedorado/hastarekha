@@ -3,6 +3,7 @@
 import React, { useRef, useState, MouseEvent } from 'react';
 import { MapPin, Edit3, RotateCcw, Palette, UploadCloud, Eye, Trash2, Ruler, Sparkles } from 'lucide-react';
 import { Pin, Drawing, HandView, HAND_VIEW_LABELS, HandProfile, parseVedicData, serializeVedicData } from '@/lib/supabase';
+import ConfirmModal from './ConfirmModal';
 
 interface HandCanvasProps {
   images: Record<string, string>;
@@ -56,6 +57,7 @@ export default function HandCanvas({
   const [confirmClear, setConfirmClear] = useState(false);
   const [confirmClearPins, setConfirmClearPins] = useState(false);
   const [confirmRemovePhoto, setConfirmRemovePhoto] = useState(false);
+  const [showClearDrawingsConfirm, setShowClearDrawingsConfirm] = useState(false);
   const [draggingNode, setDraggingNode] = useState<'palm_start' | 'palm_end' | 'finger_start' | 'finger_end' | 'width_start' | 'width_end' | null>(null);
 
   const DEFAULT_MEASUREMENTS = {
@@ -300,9 +302,7 @@ export default function HandCanvas({
   };
 
   const clearAllDrawingsForView = () => {
-    if (confirm(`Clear all lines on the ${HAND_VIEW_LABELS[activeView]}?`)) {
-      onChangeDrawings(drawings.filter((d) => d.view !== activeView));
-    }
+    setShowClearDrawingsConfirm(true);
   };
 
   const clearAllPinsForView = () => {
@@ -1150,6 +1150,20 @@ export default function HandCanvas({
           )}
         </div>
       )}
+
+      {/* Clear Drawings Confirm Modal */}
+      <ConfirmModal
+        isOpen={showClearDrawingsConfirm}
+        title="Clear Drawn Lines?"
+        message={`Are you sure you want to clear all drawn lines and strokes on the ${HAND_VIEW_LABELS[activeView]}? This action cannot be undone.`}
+        confirmText="Clear Lines"
+        variant="danger"
+        onConfirm={() => {
+          onChangeDrawings(drawings.filter((d) => d.view !== activeView));
+          setShowClearDrawingsConfirm(false);
+        }}
+        onCancel={() => setShowClearDrawingsConfirm(false)}
+      />
     </div>
   );
 }

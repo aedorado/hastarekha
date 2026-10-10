@@ -9,6 +9,7 @@ import AnalysisForm from '@/components/AnalysisForm';
 import PageLayout from '@/components/PageLayout';
 import { ChevronLeft } from 'lucide-react';
 import ImageCropperModal from './ImageCropperModal';
+import ConfirmModal from './ConfirmModal';
 
 interface AnalysisEditorProps {
   initialProfile: HandProfile;
@@ -26,6 +27,11 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [pendingUpload, setPendingUpload] = useState<{ view: HandView | 'd1_chart'; file: File } | null>(null);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [conflictDetails, setConflictDetails] = useState<{
+    remoteUpdatedAt: string;
+    remoteProfile: HandProfile;
+  } | null>(null);
 
   const hasUnsavedChanges = isProfileChanged(lastSavedProfile, activeProfile);
 
@@ -188,13 +194,39 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
   // Save changes (Save to SQLite/Postgres or LocalStorage).
   // `silent: true` is used by the autosave timer: persists in the background
   // `inPlace: true` is used by Cmd/Ctrl+S to save without redirecting
-  const handleSave = async (opts?: { silent?: boolean; inPlace?: boolean }) => {
+  // `force: true` bypasses conflict detection when user explicitly chooses to overwrite
+  const handleSave = async (opts?: { silent?: boolean; inPlace?: boolean; force?: boolean }) => {
     const silent = opts?.silent ?? false;
     const inPlace = opts?.inPlace ?? false;
+    const force = opts?.force ?? false;
 
     if (!activeProfile.name) {
       if (!silent) alert('Please fill out the Subject Identifier / Name.');
       return;
+    }
+
+    // Conflict detection guard: before overwriting remote, check if another session updated it
+    if (isSupabaseConnected && !force && activeProfile.id) {
+      try {
+        const checkRes = await fetch(`/api/hands?id=${activeProfile.id}`);
+        if (checkRes.ok) {
+          const remote = await checkRes.json();
+          if (
+            remote &&
+            remote.updated_at &&
+            lastSavedProfile.updated_at &&
+            new Date(remote.updated_at).getTime() > new Date(lastSavedProfile.updated_at).getTime() + 1500
+          ) {
+            setConflictDetails({
+              remoteUpdatedAt: remote.updated_at,
+              remoteProfile: remote,
+            });
+            return;
+          }
+        }
+      } catch {
+        // network check error, proceed with normal save
+      }
     }
 
     if (silent) setIsAutosaving(true);
@@ -285,8 +317,10 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (!isProfileChanged(lastSavedProfile, activeProfile) || confirm('Discard unsaved modifications and return to dashboard?')) {
+                if (!isProfileChanged(lastSavedProfile, activeProfile)) {
                   router.push('/');
+                } else {
+                  setShowDiscardConfirm(true);
                 }
               }}
               className="p-2 rounded-lg bg-white hover:bg-stone-50 text-stone-600 hover:text-accent-gold border border-stone-200 transition-colors shadow-sm cursor-pointer"
@@ -367,6 +401,54 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
           onCancel={() => setPendingUpload(null)}
         />
       )}
+
+      {/* Discard Changes Modal */}
+      <ConfirmModal
+        isOpen={showDiscardConfirm}
+        title="Discard Unsaved Changes?"
+        message="You have unsaved edits on this profile. Returning to the dashboard will lose these modifications permanently."
+        confirmText="Discard and Leave"
+        cancelText="Keep Editing"
+        variant="warning"
+        onConfirm={() => {
+          setShowDiscardConfirm(false);
+          router.push('/');
+        }}
+        onCancel={() => setShowDiscardConfirm(false)}
+      />
+
+      {/* Conflict Resolution Modal */}
+      <ConfirmModal
+        isOpen={!!conflictDetails}
+        title="Remote Version Conflict"
+        message={
+          conflictDetails ? (
+            <span className="space-y-2 block">
+              <span className="block text-stone-800 font-semibold">
+                Another browser tab or device updated this profile at{' '}
+                {new Date(conflictDetails.remoteUpdatedAt).toLocaleTimeString()}.
+              </span>
+              <span className="block text-stone-500 text-xs">
+                Would you like to overwrite remote changes with your current edits, or reload the latest remote version?
+              </span>
+            </span>
+          ) : ''
+        }
+        confirmText="Overwrite Remote"
+        cancelText="Reload Remote Version"
+        variant="warning"
+        onConfirm={() => {
+          setConflictDetails(null);
+          handleSave({ force: true, inPlace: true });
+        }}
+        onCancel={() => {
+          if (conflictDetails) {
+            setActiveProfile(conflictDetails.remoteProfile);
+            setLastSavedProfile(conflictDetails.remoteProfile);
+            setConflictDetails(null);
+          }
+        }}
+      />
     </PageLayout>
   );
 }

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { HandProfile, parseVedicData, getVedicInterpretations } from '@/lib/supabase';
 import { Search, Plus, Calendar, Download, Upload, Trash2, Eye, HelpCircle, ImageIcon } from 'lucide-react';
 import OptimizedHandImage from '@/components/OptimizedHandImage';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface DashboardProps {
   profiles: HandProfile[];
@@ -28,8 +29,10 @@ export default function Dashboard({
   const [selectedHandType, setSelectedHandType] = useState('');
   const [selectedHandTattva, setSelectedHandTattva] = useState('');
   const [selectedDominant, setSelectedDominant] = useState('');
+  const [sortBy, setSortBy] = useState<'updated' | 'created' | 'name'>('updated');
   const [expandedReadings, setExpandedReadings] = useState<Record<string, boolean>>({});
   const [profileToDelete, setProfileToDelete] = useState<HandProfile | null>(null);
+  const [pendingImport, setPendingImport] = useState<{ profiles: HandProfile[]; srs: Record<string, any> | null } | null>(null);
 
   // Memoized Vedic analysis per profile: parsed once when profiles update, 0ms re-renders
   const profileVedicMap = useMemo(() => {
@@ -65,8 +68,21 @@ export default function Dashboard({
       const matchesDominant = !selectedDominant || p.dominant_hand === selectedDominant;
 
       return matchesSearch && matchesHandType && matchesHandTattva && matchesDominant;
+    }).sort((a, b) => {
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      if (sortBy === 'created') {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeB - timeA;
+      }
+      // default 'updated': most recently updated or created first
+      const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return timeB - timeA;
     });
-  }, [profiles, profileVedicMap, searchQuery, selectedHandType, selectedHandTattva, selectedDominant]);
+  }, [profiles, profileVedicMap, searchQuery, selectedHandType, selectedHandTattva, selectedDominant, sortBy]);
 
   // Classical Hand types present in data
   const handTypes = useMemo(() => {
@@ -143,24 +159,34 @@ export default function Dashboard({
             return;
           }
 
-          if (confirm(`Import ${importedProfiles.length} hand profiles${importedSrs ? ' and flashcard study progress' : ''}? Existing records with matching IDs will be updated.`)) {
-            if (importedSrs && typeof window !== 'undefined') {
-              try {
-                const existingRaw = localStorage.getItem('hastarekha_srs_progress_v1');
-                const existing = existingRaw ? JSON.parse(existingRaw) : {};
-                const merged = { ...existing, ...importedSrs };
-                localStorage.setItem('hastarekha_srs_progress_v1', JSON.stringify(merged));
-              } catch (storageErr) {
-                console.warn('Could not restore SRS progress into localStorage', storageErr);
-              }
-            }
-            onImportData(importedProfiles);
+          if (importedProfiles.length === 0) {
+            alert('No valid hand profiles found in the uploaded file.');
+            return;
           }
+
+          setPendingImport({ profiles: importedProfiles, srs: importedSrs });
         } catch (error) {
           alert('Failed to parse JSON file.');
         }
       };
     }
+  };
+
+  const handleConfirmImport = () => {
+    if (!pendingImport) return;
+    const { profiles: importedProfiles, srs: importedSrs } = pendingImport;
+    if (importedSrs && typeof window !== 'undefined') {
+      try {
+        const existingRaw = localStorage.getItem('hastarekha_srs_progress_v1');
+        const existing = existingRaw ? JSON.parse(existingRaw) : {};
+        const merged = { ...existing, ...importedSrs };
+        localStorage.setItem('hastarekha_srs_progress_v1', JSON.stringify(merged));
+      } catch (storageErr) {
+        console.warn('Could not restore SRS progress into localStorage', storageErr);
+      }
+    }
+    onImportData(importedProfiles);
+    setPendingImport(null);
   };
 
   return (
@@ -226,11 +252,11 @@ export default function Dashboard({
           />
         </div>
 
-        {/* Dropdowns Row (3 equal-width columns) */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Dropdowns Row (4 equal-width responsive columns) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <select
-              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              className="form-input bg-white border border-stone-200 text-xs sm:text-sm text-stone-850 w-full"
               value={selectedHandType}
               onChange={(e) => setSelectedHandType(e.target.value)}
             >
@@ -245,7 +271,7 @@ export default function Dashboard({
 
           <div>
             <select
-              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              className="form-input bg-white border border-stone-200 text-xs sm:text-sm text-stone-850 w-full"
               value={selectedHandTattva}
               onChange={(e) => setSelectedHandTattva(e.target.value)}
             >
@@ -260,13 +286,25 @@ export default function Dashboard({
 
           <div>
             <select
-              className="form-input bg-white border border-stone-200 text-sm text-stone-850 w-full"
+              className="form-input bg-white border border-stone-200 text-xs sm:text-sm text-stone-850 w-full"
               value={selectedDominant}
               onChange={(e) => setSelectedDominant(e.target.value)}
             >
               <option value="">All Dominance</option>
               <option value="Right">Right Handed</option>
               <option value="Left">Left Handed</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              className="form-input bg-white border border-stone-200 text-xs sm:text-sm text-stone-850 w-full font-medium"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+            >
+              <option value="updated">Sort: Recently Edited</option>
+              <option value="created">Sort: Recently Created</option>
+              <option value="name">Sort: Name (A–Z)</option>
             </select>
           </div>
         </div>
@@ -280,7 +318,11 @@ export default function Dashboard({
           const readings = analysis?.readings || [];
           const handType = vedic.hand_type || 'Unspecified';
           const description = vedic.notes || 'No description provided';
-          const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'Recently';
+          const dateStr = p.updated_at
+            ? `Edited ${new Date(p.updated_at).toLocaleDateString()}`
+            : p.created_at
+            ? new Date(p.created_at).toLocaleDateString()
+            : 'Recently';
 
           // Extract first available image url
           const thumbnailUrl = p.images.right_palm || p.images.left_palm || p.images.right_back || p.images.left_back || '';
@@ -489,49 +531,46 @@ export default function Dashboard({
       )}
 
       {/* Delete Confirmation Modal */}
-      {profileToDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fade-in"
-          onClick={() => setProfileToDelete(null)}
-        >
-          <div
-            className="bg-white rounded-2xl border border-stone-200/90 shadow-2xl max-w-md w-full p-6 space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-serif font-bold text-lg text-stone-900">Delete Analysis Profile?</h3>
-                <p className="text-xs text-stone-500">This action cannot be undone.</p>
-              </div>
-            </div>
-            <p className="text-sm text-stone-600 leading-relaxed">
+      <ConfirmModal
+        isOpen={!!profileToDelete}
+        title="Delete Analysis Profile?"
+        message={
+          profileToDelete ? (
+            <span>
               Are you sure you want to permanently delete the profile for{' '}
               <strong className="text-stone-900 font-semibold">{profileToDelete.name}</strong>? All associated markings, pins, drawings, and notes will be removed.
-            </p>
-            <div className="flex justify-end items-center gap-2 pt-2 border-t border-stone-100">
-              <button
-                onClick={() => setProfileToDelete(null)}
-                className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded-xl transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const id = profileToDelete.id;
-                  setProfileToDelete(null);
-                  onDeleteProfile(id);
-                }}
-                className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition cursor-pointer shadow-sm active:scale-95"
-              >
-                Delete Profile
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </span>
+          ) : ''
+        }
+        confirmText="Delete Profile"
+        variant="danger"
+        onConfirm={() => {
+          if (profileToDelete) {
+            const id = profileToDelete.id;
+            setProfileToDelete(null);
+            onDeleteProfile(id);
+          }
+        }}
+        onCancel={() => setProfileToDelete(null)}
+      />
+
+      {/* Import Database Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!pendingImport}
+        title="Import Hand Profiles?"
+        message={
+          pendingImport ? (
+            <span>
+              Import <strong className="text-stone-900 font-semibold">{pendingImport.profiles.length}</strong> hand profiles
+              {pendingImport.srs ? ' and flashcard study history' : ''}? Existing records with matching IDs will be overwritten with the imported versions.
+            </span>
+          ) : ''
+        }
+        confirmText="Proceed with Import"
+        variant="warning"
+        onConfirm={handleConfirmImport}
+        onCancel={() => setPendingImport(null)}
+      />
     </div>
   );
 }
