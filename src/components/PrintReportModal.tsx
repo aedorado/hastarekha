@@ -220,7 +220,7 @@ export default function PrintReportModal({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {detectedYogas.map((y, idx) => (
-                    <div key={idx} className="bg-white p-2.5 rounded-lg border border-amber-200/60 shadow-2xs">
+                    <div key={idx} className="bg-white p-2 rounded-lg border border-amber-200/60 shadow-2xs">
                       <div className="font-bold text-stone-900 flex items-center gap-1">
                         <span>{y.icon}</span>
                         <span>{y.name}</span>
@@ -239,17 +239,17 @@ export default function PrintReportModal({
                 1. Core Hand Prakṛti &amp; Dimensional Balance
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-150">
+                <div className="p-2 bg-stone-50 rounded-lg border border-stone-150">
                   <span className="text-[10px] text-stone-400 font-bold uppercase block">Elemental Tattva</span>
                   <span className="font-bold text-stone-800">{vedicData.hand_tattva || 'Not configured'}</span>
                 </div>
-                <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-150">
+                <div className="p-2 bg-stone-50 rounded-lg border border-stone-150">
                   <span className="text-[10px] text-stone-400 font-bold uppercase block">Palm Shape &amp; Type</span>
                   <span className="font-bold text-stone-800">
                     {vedicData.palm_shape || 'Standard'} • {vedicData.hand_type || 'Classic'}
                   </span>
                 </div>
-                <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-150">
+                <div className="p-2 bg-stone-50 rounded-lg border border-stone-150">
                   <span className="text-[10px] text-stone-400 font-bold uppercase block">Finger / Palm Ratio</span>
                   <span className="font-mono font-bold text-stone-800">
                     {vedicData.palm_length && vedicData.finger_length
@@ -257,7 +257,7 @@ export default function PrintReportModal({
                       : 'N/A'}
                   </span>
                 </div>
-                <div className="p-2.5 bg-stone-50 rounded-lg border border-stone-150">
+                <div className="p-2 bg-stone-50 rounded-lg border border-stone-150">
                   <span className="text-[10px] text-stone-400 font-bold uppercase block">Thumb Will &amp; Logic</span>
                   <span className="font-semibold text-stone-800">
                     {vedicData.thumb_willpower || 'Average'} Will • {vedicData.thumb_second_phalange || 'Normal'} Logic
@@ -277,7 +277,7 @@ export default function PrintReportModal({
                   {mounts.map((m) => {
                     const data = m.mount as MountSignData;
                     return (
-                      <div key={m.key} className="p-2.5 bg-stone-50 rounded-lg border border-stone-200">
+                      <div key={m.key} className="p-2 bg-stone-50 rounded-lg border border-stone-200">
                         <span className="font-bold text-stone-900 block text-xs">{m.name}</span>
                         <div className="text-[11px] text-stone-600 space-y-0.5 mt-1">
                           {data.height && <div>Height: <strong>{data.height}</strong></div>}
@@ -300,7 +300,7 @@ export default function PrintReportModal({
                   <FileText className="w-3.5 h-3.5 text-amber-600" />
                   3. Primary &amp; Secondary Rekhās (Palm Lines)
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {lines.map((l, idx) => {
                     const d = l.line as LineAnalysisData;
                     return (
