@@ -35,6 +35,7 @@ export interface Drawing {
   color: string;
   thickness: number;
   label?: string;
+  lineCategory?: 'line_life' | 'line_fate' | 'line_head' | 'line_heart' | 'line_sun' | 'line_mercury' | 'other';
 }
 
 // ─── Mount sign type ───
@@ -175,7 +176,8 @@ export interface VedicData {
   line_mercury_data: LineAnalysisData | null;
 
   // ─── Age Calculation (Notes 20, 22, 27) ───
-  age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg';
+  age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg' | '18-6-cadence';
+  max_age?: number; // customizable maximum lifespan scale (default 75 for India deśa-kāla)
 
   // ─── Life × Fate Line Junction Timing (Notes 21, 22, 23) ───
   // Where the Fate Line crosses the Life Line reveals family-support / independence windows.
@@ -276,6 +278,7 @@ export const parseVedicData = (notesField: string): VedicData => {
     line_mercury_data: null,
     // Age
     age_method: '',
+    max_age: 75,
     life_fate_junctions: [],
     // Comparison
     lh_vs_rh_notes: '',
@@ -498,9 +501,16 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
   // 16. Mount Signs & Apex (Lectures 13-18)
   if (vedic.mount_jupiter) {
     const signs = vedic.mount_jupiter.signs || [];
-    if (signs.includes('Cross')) readings.push('♃ Cross on Jupiter: Highly auspicious — happy marriage, noble education, blessed spousal connection.');
+    if (signs.includes('Cross')) readings.push('♃ Cross on Jupiter: Highly auspicious — happy marriage, noble education, blessed spousal connection (the only positive place for a cross).');
     if (signs.includes('Square')) readings.push('♃ Square on Jupiter (Teacher\'s Square): Natural instructional gift; protection from reputational attacks.');
     if (signs.includes('Triangle')) readings.push('♃ Triangle on Jupiter: Scientific, research-oriented, diplomatic nature.');
+    if (signs.includes('Conch (Śaṅkha) 🐚')) readings.push('♃ Conch on Jupiter: Noble spiritual destiny and sudden spiritual uplift (Note 21 §1.1).');
+    if (signs.includes('Flag 🚩')) readings.push('♃ Flag on Jupiter: Celebrated fame and magnified leadership willpower (Note 21 §1.2).');
+    if (vedic.mount_jupiter.apex === 'Centered') readings.push('🎯 Jupiter Apex Centered: Dominant Guru influence — high vivek, moral discernment, patience, and fortunate expansion.');
+    if (vedic.mount_jupiter.apex === 'Toward Saturn') readings.push('🎯 Jupiter Apex → Saturn: Knowledge gains seriousness (gambhīrtā), technical acumen, research depth ("khojī"), and respect for social norms.');
+    if (vedic.mount_jupiter.apex === 'Toward Thumb') readings.push('🎯 Jupiter Apex → Thumb: Knowledge directed toward self ("I") — natural leadership ability, assertive authority, potential overconfidence.');
+    if (vedic.mount_jupiter.apex === 'Toward Head Line') readings.push('🎯 Jupiter Apex → Mind Line: Intellect added to wisdom — practicality, multidisciplinary research capacity active from childhood.');
+    if (vedic.mount_jupiter.apex === 'Toward Heart Line') readings.push('🎯 Jupiter Apex → Heart Line: Wisdom guided by emotional empathy — practical compassion and listening to one\'s heart.');
   }
 
   if (vedic.mount_saturn) {
@@ -509,6 +519,10 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (signs.includes('Star')) readings.push('🪐 Star on Saturn: Heavy karmic events, sudden stroke of fatalistic destiny or great endurance test.');
     if (signs.includes('Square')) readings.push('🪐 Square on Saturn: Supreme protective shield against physical accidents and karmic catastrophes.');
     if (signs.includes('Single Vertical Line')) readings.push('🪐 Single Vertical Line on Saturn: Prosperous and peaceful old age; unshakeable steady income.');
+    if (signs.includes('Flag 🚩')) readings.push('🪐 Flag on Saturn: Prominence in karmic/scholarly works and high perseverance (Note 21 §1.2).');
+    if (vedic.mount_saturn.apex === 'Centered') readings.push('🎯 Saturn Apex Centered: Dominant Śani influence — strong sense of duty, philosophical solitude, disciplined labor.');
+    if (vedic.mount_saturn.apex === 'Toward Jupiter') readings.push('🎯 Saturn Apex → Jupiter: Wisdom and dharma added to work — brings shubhtā (auspiciousness) and softens karmic delays.');
+    if (vedic.mount_saturn.apex === 'Toward Sun') readings.push('🎯 Saturn Apex → Sun: Fame through karma/work, but delayed recognition; watch for arthritis or BP.');
   }
 
   if (vedic.mount_sun) {
@@ -518,7 +532,11 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (signs.includes('Diamond Chain')) readings.push('☀️ Diamond Chain on Sun: Wish fulfilment symbol — doubles the fame and protective radiance.');
     if (signs.includes('Canopy / Circle')) readings.push('☀️ Canopy / Circle on Sun: Lifetime umbrella of divine honor; impervious to disgrace.');
     if (signs.includes('Square')) readings.push('☀️ Square on Sun: Immunity from defamation, financial security against property loss.');
-    if (signs.includes('Cross') || signs.includes('Island')) readings.push('☀️ Cross/Island on Sun: Public scandal, eye strain/troubles, obstruction to recognition.');
+    if (signs.includes('Cross')) readings.push('☀️ Cross on Sun: Obstruction to fame and recognition, defamation risk.');
+    if (signs.includes('Flag 🚩')) readings.push('☀️ Flag on Sun: High renown, widespread celebrity, strengthened willpower (Note 21 §1.2).');
+    if (vedic.mount_sun.apex === 'Centered') readings.push('🎯 Sun Apex Centered: Dominant Sūrya influence — natural creative brilliance, dignified presence, healthy self-respect.');
+    if (vedic.mount_sun.apex === 'Toward Saturn') readings.push('🎯 Sun Apex → Saturn: Serious/disciplined art; delayed fame achieved through laborious patience.');
+    if (vedic.mount_sun.apex === 'Toward Mercury') readings.push('🎯 Sun Apex → Mercury: Eloquent speech, commercial flair in arts, charismatic presentation.');
   }
 
   if (vedic.mount_mercury) {
@@ -526,6 +544,9 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (signs.includes('Star')) readings.push('☿ Star on Mercury: Brilliance in rhetoric, scientific research, mathematical agility.');
     if (signs.includes('Square')) readings.push('☿ Square on Mercury: Protected against business ruin and fraud.');
     if (signs.includes('3+ Vertical Lines (Medical Stigmata)')) readings.push('☿ Medical Stigmata (3+ Lines): Natural healing hands, empathy, suited for medicine or therapy.');
+    if (vedic.mount_mercury.apex === 'Centered') readings.push('🎯 Mercury Apex Centered: Dominant Budha influence — analytical logic, versatility, commercial diplomacy.');
+    if (vedic.mount_mercury.apex === 'Toward Sun') readings.push('🎯 Mercury Apex → Sun: Communication backed by charm and charisma; persuasive orator in trade.');
+    if (vedic.mount_mercury.apex === 'Toward Outside Edge') readings.push('🎯 Mercury Apex → Percussion Edge: Rough boundary crossing — classical texts associate with increased life struggle.');
   }
 
   if (vedic.mount_moon) {
@@ -533,6 +554,11 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (signs.includes('Triangle')) readings.push('🌙 Triangle on Moon: Heightened psychic intuition, prophetic visions, mastery of occult arts.');
     if (signs.includes('Star') || signs.includes('Cross')) readings.push('🌙 Star/Cross on Moon: Psychological turbulence, vulnerability to over-imagination, caution near water bodies.');
     if (signs.includes('Square')) readings.push('🌙 Square on Moon: Protection during long travels and mental emotional balance under pressure.');
+    if (signs.includes('Conch (Śaṅkha) 🐚')) readings.push('🌙 Conch on Moon/Ketū: High spiritual attainment, prophetic intuition, and sudden wealth (Note 21 §1.1).');
+    if (vedic.mount_moon.apex === 'Centered / Sāmānya') readings.push('🎯 Moon Mount Centered/Balanced: Normal imaginative flow, adaptable to all environments, peace of mind.');
+    if (vedic.mount_moon.apex === 'Toward Upper Mars') readings.push('🎯 Moon Bulge → Upper Mars: Restlessness, tendency toward irritation and quarrels; potential Chandra-Mangal wealth yoga.');
+    if (vedic.mount_moon.apex === 'Toward Wrist / Ketu') readings.push('🎯 Moon Bulge → Ketū/Wrist: Inclination toward solitude, spirituality, and intuition; digestive sensitivity.');
+    if (vedic.mount_moon.apex === 'Toward Venus') readings.push('🎯 Moon Bulge → Venus: Vast life force and expansive Life Line sweep.');
   }
 
   if (vedic.mount_venus) {

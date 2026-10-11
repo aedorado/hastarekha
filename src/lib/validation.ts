@@ -68,12 +68,15 @@ export function validateHandProfilePayload(body: any): ValidationResult<any> {
     generalNotes = body.general_notes.slice(0, 500000);
   }
 
-  // Validate Images
+  // Validate Images (Allow base64 images or storage URLs up to 25MB)
+  const MAX_IMAGE_STRING_LEN = 25 * 1024 * 1024;
   let images: Record<string, string> = {};
   if (body.images && typeof body.images === 'object' && !Array.isArray(body.images)) {
     for (const [k, v] of Object.entries(body.images)) {
-      if (typeof v === 'string') {
-        images[k] = v.slice(0, 500000);
+      if (typeof v === 'string' && VALID_VIEWS.includes(k as HandView)) {
+        if (v.length <= MAX_IMAGE_STRING_LEN) {
+          images[k] = v;
+        }
       }
     }
   }

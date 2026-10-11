@@ -9,14 +9,14 @@
 
 ---
 
-# 1. Signs and Symbols (continuation from "fish")
+## 1. Signs and Symbols (continuation from "fish")
 
 Teacher recap: she had taught signs up to the **fish**. Today she begins with signs and symbols again.
 
 > [!IMPORTANT] Signs come and go
 > The teacher noted that signs appear and disappear on the hand.
 
-## 1.1 Śaṅkha (Conch)
+### 1.1 Śaṅkha (Conch)
 
 > [!INFO] Śaṅkha sign
 > - **Very rare** ("if 1% get it, they get it"). No guarantee that anyone will find it. Even when present, it is often hard to recognise.
@@ -25,7 +25,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - Also indicates **sudden money gain**.
 > - **Location:** can appear anywhere on the palm; mostly in the **ketu parvata (Ketu Mount)** area, the same area where the fish generally appears.
 
-## 1.2 Flag
+### 1.2 Flag
 
 > [!INFO] Flag sign
 > - **Shape:** like a "T"; or a line with a flag-type shape attached (various forms drawn).
@@ -34,20 +34,20 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - **Meaning:** famous name, fame, increases will power.
 > - **Location:** mostly on the **sūrya parvata (Sun Mount)** or the **śani parvata (Saturn Mount)**.
 
-## 1.3 Tree
+### 1.3 Tree
 
 > [!INFO] Tree sign
 > - **Location:** at the **very end of a line** (last stretch), whichever line it is.
 > - **Shape:** branching like a tree. May be one branch on one side, two on the other, even three, any number.
 > - **Meaning:** growth, prosperity, name and fame. The teacher said length increases strength [exact meaning unclear in transcript].
 
-## 1.4 Temple
+### 1.4 Temple
 
 > [!INFO] Temple sign
 > - Can form in **many shapes** (several drawn, resembling the temple symbol). The teacher said hers is not a temple though she sometimes feels it is something like it.
 > - **No meaning was stated in this class.**
 
-## 1.5 Chain
+### 1.5 Chain
 
 - Already taught: chain is seen most at the **start of the jīvana rekhā (Life Line)**; a chain there indicates **struggle**.
 - A chain can appear in several ways: besides the Life Line chain, a line may run smooth and another line may **wind around it like a chain (jañjīra)**. That also works as a chain.
@@ -59,7 +59,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - If the family ring has **no chain**, married / family life is **not called very good**. A chain there is "very necessary".
 > - The family ring will be taught fully later.
 
-## 1.6 Signs on the Saturn Mount (śani parvata)
+### 1.6 Signs on the Saturn Mount (śani parvata)
 
 | Sign | Where | Meaning given |
 |---|---|---|
@@ -77,7 +77,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 2. Life Line: Double Life Line vs Supportive Line
+## 2. Life Line: Double Life Line vs Supportive Line
 
 > [!EXAMPLE] Case: Sushant Singh Rajput (picture sent to the practice group)
 > - **Who/what:** Sushant Singh Rajput (named by the teacher).
@@ -100,7 +100,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 3. Life Line Turning Toward the Thumb (Inward) vs Outward Branches
+## 3. Life Line Turning Toward the Thumb (Inward) vs Outward Branches
 
 > [!INFO] Life Line curving inward toward the thumb
 > - The more it goes **inward, especially toward the thumb**: **100+ years of life** can be said. "A good life".
@@ -116,19 +116,19 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 4. Life Line + Fate Line Connections (Timing Method)
+## 4. Life Line + Fate Line Connections (Timing Method)
 
 > [!INFO] Teacher's note on scope
 > The Fate Line has its own chapter later. Only the necessary part is given now. There can be many combinations of the Life Line with the Fate Line (a line joining straight, joining as a branch, etc.; any kind of connection).
 
-## 4.1 Method for the duration
+### 4.1 Method for the duration
 
 1. Wherever the Fate Line and Life Line **join**, draw the connection to join the two points. That stretch is the **duration**.
 2. Life Line age runs from childhood at the start to old age.
 3. Fate Line age is calculated from **where the Fate Line begins** (not necessarily at the bottom; it need not rise straight for everyone). The teacher said this is only an idea.
 4. Example (teacher's illustration): a point on the Life Line may show **35–40**; the same junction on the Fate Line may show **25** (and earlier **15–20**).
 
-## 4.2 Reading: family support
+### 4.2 Reading: family support
 
 > [!EXAMPLE] Reading a Fate Line branch touching the Life Line
 > - **Interpretation given:** A branch from the Life Line touching the Fate Line = **family (father's) support** for career and education; the Life Line/Fate Line junction shows **when** the support started. Example: if the connection is at **15–18**, the father's support was greater for career and education then.
@@ -153,12 +153,12 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 5. Life Line Going Toward Specific Mounts
+## 5. Life Line Going Toward Specific Mounts
 
-## 5.1 Toward Ketu Mount
+### 5.1 Toward Ketu Mount
 - Line going straight onto **ketu parvata**: makes the person **very spiritual**. Reasoning: Ketu = spirituality.
 
-## 5.2 Toward Moon Mount (candra parvata)
+### 5.2 Toward Moon Mount (candra parvata)
 
 > [!WARNING] Life Line (or its branches) toward the Moon Mount
 > - Moon = a **female** planet. In a **male's hand** [transcript says "heart"; likely "hand"], the Life Line going to the Moon Mount can indicate **addiction, expenditure, travel**.
@@ -172,7 +172,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 6. The "Macchа" Sign on the Life Line (Samrāṭ Yoga)
+## 6. The "Macchа" Sign on the Life Line (Samrāṭ Yoga)
 
 > [!INFO] Macchа rekhā sign
 > - Teacher called it **macchа rekhā**; she said she has not seen it herself ("I don't know how often it appears").
@@ -183,7 +183,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 7. Discussion: Learning Method (inserted during class)
+## 7. Discussion: Learning Method (inserted during class)
 
 > [!NOTE] Teacher's request for more hands
 > - Students keep sending **their own** hands; teacher asks them to also send hands of neighbours, children, spouse, etc.
@@ -195,17 +195,17 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 8. More Life Line Indications
+## 8. More Life Line Indications
 
-## 8.1 Sudden break
+### 8.1 Sudden break
 - A line coming suddenly across the Life Line: a **sudden stop / sudden accident**, "a break in your life".
 - If the line **continues after** the break, life can still go well, but the break **will come once**. It can be an accident, or anything.
 
-## 8.2 Jāli (Net / Grille)
+### 8.2 Jāli (Net / Grille)
 - On the **outer side** of the Life Line: **three vertical and three horizontal lines**, forming a net.
 - Calculate the age of the period it covers: indicates **yoga for accident** and **health problems** at that time.
 
-## 8.3 Venus Mount, spouse and in-laws
+### 8.3 Venus Mount, spouse and in-laws
 
 > [!INFO] Venus Mount (śukra parvata)
 > - Shows the **spouse**; also read for the **in-laws (sasurāla)**.
@@ -225,7 +225,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 9. A Branch from the Life Line Toward Other Fingers / Mounts
+## 9. A Branch from the Life Line Toward Other Fingers / Mounts
 
 > [!EXAMPLE] Teacher's own hand — branch toward Saturn
 > - **Who/what:** Teacher's own hand.
@@ -244,7 +244,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > [!WARNING] Don't confuse the line
 > A line rising **from the outside / Life Line** toward the Sun = fame. The **same-looking line coming from the inside** is a **Mars line**; if it cuts the Sun line, it gives **defame**. Be careful which line, and where it comes from.
 
-## 9.1 Mars lines crossing other lines
+### 9.1 Mars lines crossing other lines
 
 > [!IMPORTANT] Mars line crossing sequence
 > 1. A Mars line **touching the Life Line** → trouble in life.
@@ -252,7 +252,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > 3. Going further and cutting the **heart line** → trouble in the heart. Calculate by the heart-line age; the cut is at roughly **40–45+** (see below).
 > - A depression-like state can come **twice** (once at the mind line, once at the heart line); at each junction age, trouble comes.
 
-## 9.2 Preview: heart line age ("18, 6, 18, 6")
+### 9.2 Preview: heart line age ("18, 6, 18, 6")
 
 > [!INFO] Heart line age (preview only; to be taught in detail later)
 > - The area at the **base of a finger** = **18**; the **gap between fingers** = **6**; then the next finger = 18; then gap = 6; then 18.
@@ -271,7 +271,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 10. Case Study: A Friend's Hand (sent by a student; the friend has kidney disease)
+## 10. Case Study: A Friend's Hand (sent by a student; the friend has kidney disease)
 
 > [!EXAMPLE] Case: Student's friend (unnamed)
 > - **Who/what:** An unnamed friend of the sending student; the student describes her as human-parent type (like a "parent"/close friend). The teacher did not know whose hand it was until the student explained. Student: **age 32** ("born '93, so 31–32"); later the teacher said "35 as you told" [conflict — see Open items]. Has a **5-year-old son**; **health issues**; very focused on her son; was working, **left the job** after the son was born (husband travels for work; she is alone with the child); housewife now; married in **2020** (6 years), age at marriage guessed 26–28; husband earns well; she depends on him. **Kidney working at ~6%** since the child was born; **waiting for a kidney transplant**, on the waiting list, not on dialysis. She "thinks a lot", worries a lot, has negative thoughts; tends to anger quickly then calms down.
@@ -327,7 +327,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 11. Lava Vasaviya Line (Mercury's "Sister Line") — Poison Line
+## 11. Lava Vasaviya Line (Mercury's "Sister Line") — Poison Line
 
 > [!WARNING] Lava Vasaviya / poison line [name unclear in transcript]
 > - Teacher noticed a small line in the friend's hand and said its name is odd; she called it the **poison line**, "**Mercury's sister line**".
@@ -339,7 +339,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 12. Method: Fixing Reference Points on the Life Line for Age
+## 12. Method: Fixing Reference Points on the Life Line for Age
 
 > [!TIP] Teacher's drawing demonstration (on Arvinda ji's hand picture)
 > Steps as the teacher stated them (some points unclear in transcript):
@@ -363,7 +363,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# 13. Fish and Lines in Students' Hands
+## 13. Fish and Lines in Students' Hands
 
 > [!EXAMPLE] Case: Speaker 5's picture — fish?
 > - **Speaker 5:** asked whether the teacher sees a **fish** at the bottom of her hand. Speaker 6: it appears, but it is open at the bottom ("fish train ho raha hai" — unclear).
@@ -394,7 +394,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# Questions & Answers (collected)
+## Questions & Answers (collected)
 
 > [!FAQ] Q&A
 > **Q (Speaker 3):** How do you tell a double life line from a supportive line?
@@ -447,7 +447,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ---
 
-# Open items (unclear points to resolve)
+## Open items (unclear points to resolve)
 
 1. **Speaker labels** around the friend's-hand case: horoscope details (Ketu in 5th, Jupiter combust, Saturn in lagna, Moon in 2nd), the "mom in New Jersey" remark, and the second-child question appear under mixed speaker numbers (1, 3, 5). Who said what is unclear.
 2. **Age of the friend:** Speaker 5 said 32 (born '93, "31–32"); the teacher later said "you said 35". Which is correct?

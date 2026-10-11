@@ -16,16 +16,17 @@ export default function AnalysisPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Instant lookup from client cache on mount
+    // Instant initial render from client cache
     const cachedMatch = getCachedProfiles()?.find((p) => p.id === id) || null;
     if (cachedMatch) {
       setProfile(cachedMatch);
       setIsLoading(false);
-      return;
     }
 
     async function loadProfile() {
-      setIsLoading(true);
+      if (!cachedMatch) {
+        setIsLoading(true);
+      }
       if (isSupabaseConfigured) {
         try {
           const res = await fetch(`/api/hands?id=${id}`);
@@ -43,10 +44,12 @@ export default function AnalysisPage() {
         }
       }
 
-      const demoProfiles = getDemoProfiles();
-      const found = demoProfiles.find((p) => p.id === id);
-      if (found) {
-        setProfile(found);
+      if (!cachedMatch) {
+        const demoProfiles = getDemoProfiles();
+        const found = demoProfiles.find((p) => p.id === id);
+        if (found) {
+          setProfile(found);
+        }
       }
       setIsLoading(false);
     }

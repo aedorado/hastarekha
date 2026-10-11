@@ -2248,7 +2248,7 @@ export default function AnalysisForm({
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'mounts' && (() => {
           // Note 19: Islands exist only on lines, never on mounts.
-          const ALL_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Dot •', 'Grille #', 'Mole', 'Fish 🐟', 'Flag', 'Trident ψ', 'Circle', 'Diamond Chain', 'Canopy (Circle at end)'];
+          const ALL_SIGNS = ['Star ⭐', 'Cross ✝', 'Square □', 'Triangle △', 'Dot •', 'Grille #', 'Mole', 'Fish 🐟', 'Flag 🚩', 'Trident ψ', 'Circle ⭕', 'Conch (Śaṅkha) 🐚', 'Temple (Mandir) 🛕'];
 
           const MOUNT_CONFIGS = [
             {
@@ -2266,6 +2266,7 @@ export default function AnalysisForm({
                 { value: 'Toward Saturn', label: '→ Toward Saturn (Karma / Research)', meaning: 'Knowledge gains seriousness (gambhīrtā), technical acumen, research depth ("khojī"), hardworking patience, and respect for societal rules.' },
                 { value: 'Toward Thumb', label: '→ Toward Thumb (Self / Leadership)', meaning: 'Knowledge directed toward "I" (self) — natural leadership ability, extroverted authority, desire to prove oneself, possible overconfidence.' },
                 { value: 'Toward Head Line', label: '→ Toward Mind / Head Line (Intellect)', meaning: 'Knowledge channelled through mind & intellect — practicality added to wisdom, multi-disciplinary learning, early research capacity (active from childhood).' },
+                { value: 'Toward Heart Line', label: '→ Toward Heart Line (Wisdom + Compassion)', meaning: 'Wisdom tempered by heart — practicality added to wisdom, but because it touches the Heart Line, the native also listens to their heart.' },
               ],
               signMeanings: {
                 'Ring of Solomon ⭕': '⭕ Ring of Solomon (Guru Valaya, Notes 13 & 20): Curved semi-circle toward thumb — high sixth sense, ability to listen to nature/animals, psychic and healing wisdom.',
@@ -2274,6 +2275,9 @@ export default function AnalysisForm({
                 'Cross ✝': '✝ Cross on Jupiter (Note 19): Auspicious here (the ONLY positive place for a cross). Signifies happy marriage and education achievements.',
                 'Square □': '□ Square on Jupiter: Teaching capacity / strong protection from downfall.',
                 'Triangle △': '△ Triangle on Jupiter: Scientific, research-oriented, diplomatic nature.',
+                'Conch (Śaṅkha) 🐚': '🐚 Conch (Śaṅkha): High spiritual journey and noble dharmic destiny (Note 21 §1.1).',
+                'Temple (Mandir) 🛕': '🛕 Temple (Mandir): Sacred protective roof and devotional excellence (Note 21 §1.4).',
+                'Flag 🚩': '🚩 Flag on Jupiter: Renowned reputation and enhanced leadership willpower (Note 21 §1.2).',
               },
             },
             {
@@ -2295,6 +2299,7 @@ export default function AnalysisForm({
                 'Cross ✝': '✝ Cross on Saturn: Accident sign. Disease sign. Not auspicious here.',
                 'Square □': '□ Square on Saturn: Protection from accidents/downfall.',
                 'Triangle △': '△ Triangle on Saturn: Research/occult/metaphysical talent.',
+                'Flag 🚩': '🚩 Flag on Saturn: Prominence in karmic/scholarly works and high perseverance (Note 21 §1.2).',
               },
             },
             {
@@ -2317,6 +2322,7 @@ export default function AnalysisForm({
                 'Square □': '□ Square on Sun: Protection of reputation/name.',
                 'Triangle △': '△ Triangle on Sun: Scientific/artistic fame through structured work.',
                 'Trident ψ': 'ψ Trident on Sun: Fame in 2+ domains (Sun + Saturn + Mercury streams).',
+                'Flag 🚩': '🚩 Flag on Sun: High renown, widespread celebrity, strengthened willpower (Note 21 §1.2).',
               },
             },
             {
@@ -2350,17 +2356,19 @@ export default function AnalysisForm({
               normal: 'Imagination, intuition, creativity, emotional sensitivity, love of travel, poetry, music.',
               over: 'Over-developed: excessive fantasy, emotional instability, restlessness.',
               under: 'Under-developed: lack of imagination, rigid thinking, poor adaptability.',
-              apexLabel: 'Bulge Direction',
+              apexLabel: 'Bulge / Shift Direction',
               apexOptions: [
-                { value: 'Toward Upper Mars', label: '→ Toward Upper Mars (Bulge Direction)', meaning: 'Increased aggression, tendency toward quarrels and irritation.' },
-                { value: 'Toward Wrist / Ketu', label: '→ Toward Wrist / Ketū (Bulge Direction)', meaning: 'Inclination toward spirituality, good intuition, may prefer solitude — but not good for health; stomach tends to get upset frequently.' },
-                { value: 'Toward Venus', label: '→ Toward Venus (Bulge Direction)', meaning: 'Not read directly from Moon\'s own shape — only inferred indirectly via Venus mount\'s growth or an unusually wide Life Line; no specific trait was stated for this in the source.' },
+                { value: 'Centered / Sāmānya', label: 'Centered / Sāmānya (Balanced Moon)', meaning: 'Normal balanced imagination, healthy sociability, calm equanimity in all circumstances.' },
+                { value: 'Toward Upper Mars', label: '→ Toward Upper Mars (Bulge Direction)', meaning: 'Increased aggression, tendency toward quarrels and irritation. Can also indicate wealth/property synergy if substantiated by lines.' },
+                { value: 'Toward Wrist / Ketu', label: '→ Toward Wrist / Ketū (Bulge Direction)', meaning: 'Inclination toward spirituality, good intuition, may prefer solitude — but stomach tends to get upset frequently.' },
+                { value: 'Toward Venus', label: '→ Toward Venus (Indirect Indication)', meaning: 'Inferred via Venus mount expansion or an unusually wide Life Line sweep claiming Moon territory.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Moon: Suicidal tendency or severe emotional crisis — serious warning.',
                 'Cross ✝': '✝ Cross on Moon: Emotional turmoil, depression risk.',
                 'Square □': '□ Square on Moon: Protection from drowning/emotional crises.',
                 'Triangle △': '△ Triangle on Moon: Intuitive, psychic, or travel-related talent.',
+                'Conch (Śaṅkha) 🐚': '🐚 Conch (Śaṅkha) near Moon/Ketū: High spiritual attainment and sudden wealth (Note 21 §1.1).',
               },
             },
             {
@@ -2372,9 +2380,9 @@ export default function AnalysisForm({
               normal: 'Love, passion, vitality, generosity, beauty, family warmth, attraction, music, luxury.',
               over: 'Over-developed: excess sensuality, indulgence, possessiveness in relationships.',
               under: 'Under-developed: coldness, poor family bonds, lack of physical vitality.',
-              apexLabel: 'Apex Direction',
+              apexLabel: 'Apex / Boundary Assessment',
               apexOptions: [
-                { value: 'Not Covered', label: 'Not covered in these lectures', meaning: 'Apex reading for Venus was not covered in these lectures — the teacher deferred it to a later class.' },
+                { value: 'No Apex (Judged by Height & Boundary Sweep)', label: 'No Apex — Judged by Height & Life Line Boundary (Note 18)', meaning: 'Venus mount has no apex displacement in classical palmistry. It is evaluated by height (normal/raised/depressed) and the territory claimed by the Life Line curve.' },
               ],
               signMeanings: {
                 'Star ⭐': '⭐ Star on Venus: Multiple love affairs or fame connected to personal charisma.',
@@ -3126,8 +3134,8 @@ export default function AnalysisForm({
                 {([
                   {
                     key: '30-midpoint',
-                    label: '30-Midpoint Method (Current class method)',
-                    desc: 'Midpoint of Life Line = age 30. Upper half: 0→30 (halved again for 15). Lower half: 30→75 (halved for 52.5). Fate Line: same scale from wrist (age 0). Heart Line: Method A — 18+6+18+6…',
+                    label: '30-Midpoint Method (Current class method / Arvind Ji Drawing)',
+                    desc: 'Midpoint of Life Line = age 30. Upper half: 0→30 (halved again for 15). Lower half: 30→75 (halved for 52.5, 41.25, 47, 63.75). Fate Line: same scale from wrist (age 0). Heart Line: Method A — 18+6+18+6…',
                     color: 'amber',
                   },
                   {
@@ -3148,6 +3156,12 @@ export default function AnalysisForm({
                     desc: 'Each of Life Line, Head Line, and Heart Line represents 100 years independently. Average the three readings for any given age point.',
                     color: 'teal',
                   },
+                  {
+                    key: '18-6-cadence',
+                    label: '18 + 6 Cadence Method (Heart & Head Lines)',
+                    desc: 'Heart and Head lines timed in blocks of 18 active years separated by 6-year transition gaps (18, 24, 42, 48, 66, 72). Lecture 27 §6.',
+                    color: 'rose',
+                  },
                 ] as const).map(({ key, label, desc, color }) => (
                   <label key={key} className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border-2 transition-all ${vedicData.age_method === key ? `border-${color}-400 bg-${color}-50` : 'border-stone-200 bg-stone-50 hover:border-stone-300'}`}>
                     <input type="radio" className="mt-0.5" name="age_method"
@@ -3159,6 +3173,25 @@ export default function AnalysisForm({
                     </div>
                   </label>
                 ))}
+              </div>
+
+              {/* Lifespan Scale (deśa-kāla) */}
+              <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-4">
+                <div>
+                  <div className="font-bold text-xs text-stone-800">Calibrated Lifespan Scale (deśa-kāla)</div>
+                  <div className="text-[11px] text-stone-500">Base scale for India is ~70-75; Western/higher longevity is 80-100.</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="50"
+                    max="120"
+                    className="form-input text-xs w-20 text-center font-bold"
+                    value={vedicData.max_age ?? 75}
+                    onChange={(e) => updateVedicField('max_age', parseInt(e.target.value, 10) || 75)}
+                  />
+                  <span className="text-xs text-stone-600 font-semibold">yrs</span>
+                </div>
               </div>
             </div>
 
@@ -3299,6 +3332,33 @@ export default function AnalysisForm({
               </div>
             )}
 
+            {vedicData.age_method === '18-6-cadence' && (
+              <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
+                <h4 className="font-bold text-sm text-stone-900 border-b border-stone-100 pb-2">📏 18 + 6 Cadence Method (Heart & Head Lines)</h4>
+                <div className="space-y-2 text-xs">
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 leading-relaxed">
+                    <strong>Lecture 27 §6:</strong> Start counting from little finger side (Heart Line) or thumb side (Head Line).
+                    Alternates blocks of 18 active years with 6-year transition gaps:
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { span: '0 → 18 yrs', type: 'Active block (18y)' },
+                      { span: '18 → 24 yrs', type: 'Transition gap (6y)' },
+                      { span: '24 → 42 yrs', type: 'Active block (18y)' },
+                      { span: '42 → 48 yrs', type: 'Transition gap (6y)' },
+                      { span: '48 → 66 yrs', type: 'Active block (18y)' },
+                      { span: '66 → 72 yrs', type: 'Transition gap (6y)' },
+                    ].map(({ span, type }, i) => (
+                      <div key={i} className={`flex justify-between p-2 rounded-lg border font-semibold ${type.includes('gap') ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+                        <span>{span}</span>
+                        <span className="text-[11px] font-normal">{type}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Age Event Log */}
             <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
               <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
@@ -3311,49 +3371,81 @@ export default function AnalysisForm({
                 const lineLabels: Record<string, string> = {
                   line_life: '❤️ Life Line', line_fate: '⚡ Fate Line', line_head: '🧠 Head Line', line_heart: '💖 Heart Line', line_sun: '☀️ Sun Line',
                 };
+                const events = lineData.age_events || [];
                 return (
-                  <div key={lineKey} className="border border-stone-100 rounded-xl p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-stone-700">{lineLabels[lineKey]}</span>
+                  <div key={lineKey} className="border border-stone-200/80 rounded-xl p-3.5 space-y-2.5 bg-stone-50/40">
+                    <div className="flex items-center justify-between pb-1 border-b border-stone-200/60">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-stone-800">{lineLabels[lineKey]}</span>
+                        <span className="text-[10px] bg-stone-200/80 text-stone-600 px-1.5 py-0.2 rounded font-semibold">
+                          {events.length} {events.length === 1 ? 'event' : 'events'}
+                        </span>
+                      </div>
                       <button type="button"
-                        className="text-[10px] btn-gold px-2 py-0.5 shadow-sm"
+                        className="text-[11px] btn-gold px-2.5 py-1 shadow-xs font-semibold flex items-center gap-1 cursor-pointer"
                         onClick={() => {
-                          const events = [...(lineData.age_events || []), { age: 0, event: '' }];
-                          updateVedicField(lineKey, { ...lineData, age_events: events });
+                          const nextEvents = [...events, { age: 0, event: '' }];
+                          updateVedicField(lineKey, { ...lineData, age_events: nextEvents });
                         }}>
                         + Add Event
                       </button>
                     </div>
-                    {(lineData.age_events || []).map((evt, idx) => (
-                      <div key={idx} className="flex gap-2 items-center">
-                        <input type="number" min="0" max="120"
-                          className="form-input text-xs w-20 shrink-0"
-                          placeholder="Age"
-                          value={evt.age || ''}
-                          onChange={(e) => {
-                            const events = [...lineData.age_events];
-                            events[idx] = { ...events[idx], age: parseInt(e.target.value) || 0 };
-                            updateVedicField(lineKey, { ...lineData, age_events: events });
-                          }} />
-                        <input type="text"
-                          className="form-input text-xs flex-1"
-                          placeholder="Event / sign observed (e.g. island 25-32, star at 40)"
-                          value={evt.event || ''}
-                          onChange={(e) => {
-                            const events = [...lineData.age_events];
-                            events[idx] = { ...events[idx], event: e.target.value };
-                            updateVedicField(lineKey, { ...lineData, age_events: events });
-                          }} />
-                        <button type="button"
-                          className="text-rose-500 hover:text-rose-700 text-xs p-1 shrink-0"
-                          onClick={() => {
-                            const events = lineData.age_events.filter((_, i) => i !== idx);
-                            updateVedicField(lineKey, { ...lineData, age_events: events });
-                          }}>✕</button>
+
+                    {events.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-stone-500 uppercase tracking-wider px-1">
+                          <span className="shrink-0 text-center" style={{ width: '5.5rem' }}>Age (Yrs)</span>
+                          <span className="flex-1">Palmistry Sign / Life Event Notes</span>
+                          <span className="w-7 shrink-0 text-center"></span>
+                        </div>
+                        {events.map((evt, idx) => (
+                          <div key={idx} className="flex gap-2 items-center bg-white p-1.5 rounded-lg border border-stone-200/80 shadow-2xs">
+                            <input
+                              type="number"
+                              min="0"
+                              max="120"
+                              step="0.5"
+                              style={{ width: '5.5rem', minWidth: '5.5rem', maxWidth: '5.5rem' }}
+                              className="form-input text-xs shrink-0 text-center font-bold text-stone-900 !py-1 !px-2 bg-stone-50/80"
+                              placeholder="Age"
+                              value={evt.age !== undefined && evt.age !== null ? evt.age : ''}
+                              onChange={(e) => {
+                                const nextEvents = [...events];
+                                nextEvents[idx] = { ...nextEvents[idx], age: parseFloat(e.target.value) || 0 };
+                                updateVedicField(lineKey, { ...lineData, age_events: nextEvents });
+                              }}
+                            />
+                            <input
+                              type="text"
+                              className="form-input text-xs flex-1 min-w-0 !py-1 !px-2.5 text-stone-850"
+                              placeholder="e.g. Triangle △ Property purchase, Star, Island, Break, Marriage"
+                              value={evt.event || ''}
+                              onChange={(e) => {
+                                const nextEvents = [...events];
+                                nextEvents[idx] = { ...nextEvents[idx], event: e.target.value };
+                                updateVedicField(lineKey, { ...lineData, age_events: nextEvents });
+                              }}
+                            />
+                            <button
+                              type="button"
+                              title="Delete milestone"
+                              className="w-7 h-7 flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md text-xs shrink-0 cursor-pointer transition-colors"
+                              onClick={() => {
+                                const nextEvents = events.filter((_, i) => i !== idx);
+                                updateVedicField(lineKey, { ...lineData, age_events: nextEvents });
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    {(lineData.age_events || []).length === 0 && (
-                      <p className="text-[10px] text-stone-400 italic">No events logged. Click &quot;+ Add Event&quot; to begin.</p>
+                    )}
+
+                    {events.length === 0 && (
+                      <p className="text-[10px] text-stone-400 italic py-1">
+                        No events logged for this line yet. Click &quot;+ Add Event&quot; or click directly along the line on the hand canvas in Aging mode.
+                      </p>
                     )}
                   </div>
                 );

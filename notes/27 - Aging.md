@@ -14,14 +14,14 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 1. Why aging first
+## 1. Why aging first
 
 - Before starting any new topic, the class learns to **see age on the lines**. The teacher had prepared a hand picture (anyone's) and asked students to **follow along with copy and pencil**.
 - She will give **several methods**: the old ones (so students know them) and the one now followed. **She has not practised the older method herself**, so it needs practice. Students are asked to **test every method on their own hands**, since they know their own events.
 
 ---
 
-# 2. Method 1 – Old Indian method: ṣaḍaṁśa paddhati (division by 6)
+## 2. Method 1 – Old Indian method: ṣaḍaṁśa paddhati (division by 6)
 
 > [!INFO] What it was
 > - Old method; **no longer used**, but students should know it so that they recognise it when they read/hear of it.
@@ -37,7 +37,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 3. Method 2 – Cheiro's method: saptāṁśa paddhati (division by 7)
+## 3. Method 2 – Cheiro's method: saptāṁśa paddhati (division by 7)
 
 - Cheiro (a western palmist) did much research; some still follow his method.
 - **Total age taken: 98 (about 98–100).** **Division by 7**, i.e., the "table of seven": 98 ÷ 7 = **14 equal parts**. Called **saptāṁśa paddhati** — "the six-based one is the **ṣaḍaṁśa paddhati**."
@@ -49,7 +49,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 4. Method 3 – Three-line average (100 years per line)
+## 4. Method 3 – Three-line average (100 years per line)
 
 > [!IMPORTANT] Steps
 > 1. Take **three lines: Life Line, Mind Line and Heart Line** (the **Fate Line is left out**).
@@ -69,7 +69,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 5. What the class is following now – Method 4: the "30 at the midpoint" method
+## 5. What the class is following now – Method 4: the "30 at the midpoint" method
 
 > [!IMPORTANT] Life Line (as taught, now repeated with paper)
 > 1. **Zero** at the Life Line's start (thumb side); lay the thread/paper along the line up to the **maṇibandha rekhā** and join it.
@@ -84,7 +84,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 6. Heart Line age (two methods)
+## 6. Heart Line age (two methods)
 
 > [!IMPORTANT] Method A (preferred)
 > - From where the Heart Line **starts**: **18 years**; then the **gap in the middle = 6 years**; then **18 years**; then **6 years**; then **18**; and so on — **18 + 6 + 18 + 6 + 18 …** — until the point where the Heart Line **stops**.
@@ -94,7 +94,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 > - Take the **centre** of the Heart Line as **16** (the side toward the start); then **36** at the next marker; then **50** at the next; and beyond that "**50 and above, any**".
 > - **Teacher's view:** **Method A is better**, because you generally find the Heart Line's data only **up to about age 50** — beyond that it is not found.
 
-# 7. Mind Line age
+## 7. Mind Line age
 
 - The Mind Line's age is **generally not calculated** — "all aging should be done on the **Life Line**; the **best aging** is obtained there."
 - If you still want it: **start at zero where it starts**; do **exactly as for the Heart Line**: **18, then 6, then 18, then 6 …** (e.g., "this is 18, this 6, this 18, this 6 … this 24 here").
@@ -104,19 +104,19 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 8. Class housekeeping relevant to practice
+## 8. Class housekeeping relevant to practice
 
 - A student asked to **compile a PDF of all hands shared in the group**, each with its **age** noted, for later students. Teacher agreed and suggested keeping a **folder**; recommended also making a **plain hand with thick lines** and marking the age methods on it, for teaching. (Several students offered to help.) The teacher asked Arvind ji to prepare age drawings of the three methods on a plain hand.
 
 ---
 
-# 9. Budha Rekhā (Mercury Line)
+## 9. Budha Rekhā (Mercury Line)
 
 > [!INFO] Definition
 > - **Any line going toward Mercury is the Mercury Line.** It is **simple — not much in it.** Also called the **health line**.
 > - **Not present in every hand** — and "it is good that it is not": **if the line is there it is not good for health**, though it **can be good for business**.
 
-## 9.1 Where it starts
+### 9.1 Where it starts
 
 | Start | Meaning |
 |---|---|
@@ -125,7 +125,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 - **Healer line** — found in the hands of **doctors, healers, counsellors** — anyone **whose talk leaves you better and removes your trouble**. **Reason:** Mercury is the significator of **speech (vāṇī)**; if you can **heal even by talking**, this line will be in your hand.
 
-## 9.2 Intuition line
+### 9.2 Intuition line
 
 - A line **starting from the Moon Mount and going to Mercury** is the **intuition line** (rare).
 - It can also form another way: **the Mercury line is already running, and another line from the Moon side joins it** → it **develops intuition**.
@@ -134,12 +134,12 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 - **Q (student, whose hand has a line from the Moon side joining the Mercury line, making a "7" shape):** confirmed that **a line from the Moon joining the Mercury line indicates intuition** ("yes, absolutely, if from the Moon"; the teacher also asked whether it came from Mars).
 - **Q (Harishchandra ji):** What is an intuition line? **A:** you get a **premonition**; "you see".
 
-## 9.3 Many Mercury lines; liver line
+### 9.3 Many Mercury lines; liver line
 
 - **Having a Mercury line gives health problems.** It is also called the **liver line**. Anyone who has it should **take care of food and health**; where it is absent, don't call the person healthy — see the other combinations — but **those who have it have more health problems**.
 - *(A student said she has many Mercury lines — "you will have many, many".)*
 
-## 9.4 Signs on the Mercury Mount
+### 9.4 Signs on the Mercury Mount
 
 | Sign | Meaning |
 |---|---|
@@ -158,7 +158,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
   - **More than three** is still a jālī; **less than three** is not.
 - **Jālī under the Sun finger** (a student's hand) → **not good**, both for **health** and for **Sun-related events**.
 
-## 9.5 Wealth indications (Mercury)
+### 9.5 Wealth indications (Mercury)
 
 > [!SUCCESS] Single vertical line on the Mercury Mount
 > - **Recall:** the **white spot on the nail** was a wealth sign (taught earlier). **Another on Mercury:** **if only ONE straight line is found there** → **sudden money gain**.
@@ -175,7 +175,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 10. Questions & Answers
+## 10. Questions & Answers
 
 > [!FAQ] Q1 (student): You said 75; the other method says 100?
 > **A (Teacher):** Many methods exist; she is telling methods in use. **Change the lifespan by deśa-kāla** — India's average is **about 70 or 72**.
@@ -197,7 +197,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 11. Case Studies
+## 11. Case Studies
 
 > [!EXAMPLE] Case 1 – Arvind ji's uncle (tāūjī), male, b. 1956 (age ≈ 70)
 > - **Who:** Arvind ji's paternal uncle (tāūjī); sits in the **shop** with him; ring removed for the photograph (the hand shown, side **[unclear in transcript]**). **Heart history:** **bypass surgery in 2017**; later heart trouble and **pacemaker in 2024**.
@@ -238,7 +238,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 12. Learning Summary
+## 12. Learning Summary
 
 > [!SUMMARY]
 > - **Old Indian method (ṣaḍaṁśa):** Life Line to maṇibandha = 72, in **6-year parts**; early Indian palmists used the **Heart Line** as the life line.
@@ -251,7 +251,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-# 13. Open items
+## 13. Open items
 
 1. **Old six-method 30 vs 24:** the teacher's remark that 30 falls near 24 in the old method is garbled; recorded as understood.
 2. The **"another name" for the healer line** ("medical-related name") — teacher could not recall; she said she would check.

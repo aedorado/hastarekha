@@ -15,7 +15,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 1. Opening
+## 1. Opening
 
 - A student (Arvind ji *[speaker unclear]*) found **two squares on his own Jupiter Mount**.
 - **Teacher:** squares on Jupiter are good; **generally all symbols on Jupiter are good.** Today some more symbols of Jupiter, with their meanings, will be taught.
@@ -23,9 +23,9 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 2. Signs & Symbols (continued)
+## 2. Signs & Symbols (continued)
 
-## 2.1 Triangle
+### 2.1 Triangle
 
 - Seen **mostly on the Life Line and the luck line (fate line / bhāgya rekhā)**.
 - A **very good sign — the bigger the triangle, the better.** Called a **rare sign**; the teacher had seen it in only one or two hands. Example: **Arvind ji's hand** (seen the day before) had a very clear triangle.
@@ -40,7 +40,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 > - **Conditions:** the cleaner the better. If an **island** or **many lines** fall inside it, it is **not called as good**.
 > - **Colour condition:** in the middle (Rāhu area) there should not be much **blue or black** colour; **yellow or light blue** is also **not called very good**.
 
-## 2.2 Trident (triśūla)
+### 2.2 Trident (triśūla)
 
 - Seen **at the end of a line** — so you must know which line it is and where its end is.
   - On the **fate line** the end is **not** a trident: there, a bunch/cluster is seen in most hands.
@@ -55,7 +55,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 > - **Interpretation / reasoning (Teacher):** **a formation low on the Fate Line does not count.** The fate line's **origin is below** (counted from the **maṇibandha rekhā**, from the lower side, from wherever it starts); look **at the top of the line**. If it is **right below the Sun finger**, then it is accepted.
 > - **Outcome:** the student said it splits "but I do not know if it is exactly three parts" and then agreed it is **not a trident** (she joked "so I am not so lucky").
 
-## 2.3 Net / grille (jālī)
+### 2.3 Net / grille (jālī)
 
 - A lattice of crossing lines.
 - **Where found:** **most on the Venus Mount** ("filled with a net, in everyone's Venus"); also seen on the Mercury mount.
@@ -66,7 +66,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
   - Since **Venus shows married life and family life**: trouble in **married life, family life, child birth**, and **a great deal of anxiety** in the person.
   - **General rule:** the more cuts, crosses, nets, lines on Venus → the more trouble there.
 
-## 2.4 Fish (matsya)
+### 2.4 Fish (matsya)
 
 - Teacher: only a few signs per day so they are remembered — **fish is the last sign of the day**.
 - Example: **Dravin ji's hand has a very good fish.**
@@ -83,7 +83,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 3. Jupiter Mount Signs
+## 3. Jupiter Mount Signs
 
 *(Teacher: "Fate line will be completed by tomorrow.")*
 
@@ -102,9 +102,9 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 4. Life Line – Continued
+## 4. Life Line – Continued
 
-## 4.1 Ambition line
+### 4.1 Ambition line
 
 - **Definition:** a line rising **from the Life Line toward the Jupiter Mount**; it can **rise from anywhere** on the Life Line (no fixed point). Called the **Ambition line**.
 - Lines keep forming (especially in the **active hand**), so it need not have been there since childhood.
@@ -120,18 +120,18 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 > [!EXAMPLE] Teaching hand – a plain (white) hand drawing
 > The teacher used a **blank hand with lines drawn** ("not anyone's hand", so the class does not get lost in one person's hand) and then compared Arvind ji's hand: she confirmed the line he showed (rising from the Life Line to Jupiter) **is the Ambition line**.
 
-## 4.2 Life Line starting from Jupiter
+### 4.2 Life Line starting from Jupiter
 
 - A Life Line that **starts from the Jupiter Mount** (the top-most of the lines in the picture): from **childhood the home/family atmosphere** is of **studies, spirituality**; **happiness from childhood** and a **comfortable life**, because Venus's range increases. The person shows **Jupiter's qualities from childhood**.
 - **The lower the start (the smaller the range), the lower the comfort level.**
 
-## 4.3 Wavy / up-and-down course, sudden break
+### 4.3 Wavy / up-and-down course, sudden break
 
 - A Life Line that goes **inward, then outward** repeatedly (6–8 times). *Teacher asked the class to predict.*
   - **Student (Arvind ji):** whenever it turns **inward**, struggle/some situation in life; when it turns **outward**, good at that time. → **Teacher:** yes — **ups and downs, many of them, in this person's life.**
 - **Two lines, sudden break (taught earlier):** a break in a straight line, with a point where a problem arrives (age to be defined).
 
-## 4.4 Supportive line vs parasite line (restated, with additions)
+### 4.4 Supportive line vs parasite line (restated, with additions)
 
 | | Supportive line | Parasite line |
 |---|---|---|
@@ -145,7 +145,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
   - **Outside (from the outer side)** → **outer circumstances**: **career**, **neighbours** (e.g., having taken a house and quarrels daily), or a **house loan** paid with great difficulty.
 - **Combination with property:** is a house being built? That must also show: **a triangle or a square** shows property; then if a **parasite line also runs inside**, property is made but with a burden (e.g., loan). Every hand differs — "no two hands are same".
 
-## 4.5 Island (additional points)
+### 4.5 Island (additional points)
 
 - **Where:** on **lines only, not on mounts** (confirmed again to Harishchandra ji).
 - Can be very large or so small it can't be recognised. **Islands are seen most on the Heart Line and Mind Line**, because the effect of trouble is greatest on **heart and mind**; sometimes you will not know it is an island but you will see the **patch**.
@@ -156,7 +156,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
   - A **wavy Mind Line** (up and down) → can show **depression**; so does a Mind Line that **dips down** at a place ("going into a depressive state"); the **Heart Line** may also look wavy. Any trouble's impact falls on heart and mind.
 - **Hand type also counts:** a **watery hand** with a wavy Mind Line and an island is already **emotional** and gets upset quickly; an **earthy hand** is **practical** and is less affected however much trouble comes. "**Do not forget everything taught earlier.**"
 
-## 4.6 Triangle on the Life Line – detailed
+### 4.6 Triangle on the Life Line – detailed
 
 - **Where:** anywhere — outside or inside; **big or small**.
 - **Example:** Arvind ji's hand has a very big triangle on the outer side, touching the Fate Line *(he said it touches the Mind Line and lies between the Mind, Fate and Life Lines; **Teacher: no — it touches the Fate Line; if it touched the Mind Line it would be higher up**; to be checked by placing a hand)*.
@@ -169,7 +169,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
   - A line going **outward** at that age → something **from outside** (not necessarily abroad; **shifting out of where you lived**, or e.g. **a second shop**, **online business**) → **expansion in career**, because it is joined to the Fate Line. We see career mostly **after 15–20 years of age**.
   - **Family support:** wherever the Fate Line and Life Line **touch** or are **connected** (even if one runs at a distance but connects by a line) → **your work progresses with family support** — a job placed by an acquaintance, a **father's support**, starting work on **ancestral land**; "a thousand ways". *Teacher's own example:* her Fate and Life Lines join, and her father has always supported her in her job.
 
-## 4.7 Square on the Life Line
+### 4.7 Square on the Life Line
 
 - Can form **outside, inside**, or other positions: it is a **protective shield** (surakṣā kavaca): in that time, however big the trouble, you **get out of it**. Also **property** indicated.
 - **Inner-side square** → some consider it **bandhana yoga** ("jail yoga") — like **bandhana yoga in astrology** (the teacher also mentioned a numerology "9454" combination called bandhana yoga — *unclear*) **[unclear in transcript]**.
@@ -178,12 +178,12 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
   - Whether it is truly "jail yoga" is checked from the **Sun line and Mercury line** too (to be taught). Meaning: you are **stuck in a situation and cannot get out**.
   - **Where else to look:** if due to **career** → a negative sign on the **career line**; due to **health** → possibly the **Mercury line**; **mental stress** → **Heart Line or Mind Line**.
 
-## 4.8 Cross on the Life Line
+### 4.8 Cross on the Life Line
 
 - **Not** a cross: a line's own **path** (e.g., the Mercury line may start anywhere — mid-palm, or through the Venus Mount). **Teacher:** "like the course of a river — you don't call it bad." A cross is **seen separately on a line**, with its own crossing on top.
 - **Meaning:** wherever a cross comes — a **trouble/disaster in life** at that time. **What follows depends on the condition of the Life Line afterwards**: good later line → good life; otherwise bad.
 
-## 4.9 Chains at the start; dark lines
+### 4.9 Chains at the start; dark lines
 
 - **Chains** are **seen where the Life Line starts** (mostly in everyone). Two things: a **cluster of lines**, or **chains**.
   - **Not called islands** because many chains run together.
@@ -194,7 +194,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 5. Age Calculation on the Life Line (first lesson)
+## 5. Age Calculation on the Life Line (first lesson)
 
 > [!NOTE] Teaching method
 > The teacher said she needed software (Canva/whiteboard) to demonstrate but **the full hand picture was not available**; she also showed the **traditional paper method**. **She will teach it again tomorrow with practice.**
@@ -228,7 +228,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 6. Other Hands Looked at in Class
+## 6. Other Hands Looked at in Class
 
 > [!EXAMPLE] Case 1 – Dravin ji's hand (age ≈ 41–42, as per Part 01) *[speaker label unclear]*
 > - **Observed (teacher/students):** a small **triangle** visible; an **island** ("here, on this age"). The island is faint — a very fine line is running, but it is there.
@@ -266,7 +266,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 7. Questions & Answers (consolidated)
+## 7. Questions & Answers (consolidated)
 
 > [!FAQ] Q1 (Arvind ji): Squares on my Jupiter Mount?
 > **A:** Good — generally every sign on Jupiter is good.
@@ -300,7 +300,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 8. Learning Summary
+## 8. Learning Summary
 
 > [!SUMMARY]
 > - **Triangle** (Life/Fate lines): very good, rare; progress + property/asset; bigger = larger asset and longer time; **outer → asset, inner → liability/stress**; joined to the Fate Line → career expansion/**family support**.
@@ -316,7 +316,7 @@ source: lecture transcript (Hindi–English), 2026-10-07 – "Some Symbols and J
 
 ---
 
-# 9. Open items
+## 9. Open items
 
 1. Exact direction/start of the **line drawn from the half-point toward the Mercury side** in the age-calculation demonstration (§5, step 3), and the "standing line" method mentioned later — unclear in the transcript.
 2. Teacher's **"9454" numerology bandhana-yoga** remark — meaning unclear.

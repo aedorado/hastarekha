@@ -422,13 +422,35 @@ export default function LectureNotes() {
     const headers: { level: number; text: string; id: string }[] = [];
     const getUniqueId = createSlugger();
 
+    // Check if this document has multiple # headings (author used # for major sections)
+    let h1Count = 0;
+    lines.forEach(l => {
+      if (/^#\s+/.test(l.trim())) h1Count++;
+    });
+    const multiH1Mode = h1Count > 1;
+
+    let isFirstH1 = true;
     lines.forEach(line => {
       const trimmed = line.trim();
       const match = trimmed.match(/^(#{1,4})\s+(.*)$/);
       if (match) {
-        const level = match[1].length;
+        let level = match[1].length;
         const rawText = match[2].trim();
         const id = getUniqueId(rawText);
+
+        if (multiH1Mode) {
+          if (level === 1) {
+            if (isFirstH1) {
+              isFirstH1 = false;
+              return; // Skip document title
+            }
+            level = 2; // Treat section # as level 2 (Major Topic)
+          } else if (level === 2) {
+            level = 3; // Treat section ## as level 3 (Subtopic)
+          } else if (level === 3) {
+            level = 4;
+          }
+        }
 
         if (level === 2 || level === 3) {
           // Clean markdown styling tags for display in outline index

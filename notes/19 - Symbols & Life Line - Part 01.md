@@ -8,14 +8,14 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
 
 ---
 
-# 1. Plan
+## 1. Plan
 
 - Two topics will run **together**: **Signs & Symbols** and **the lines (rekhā)**.
 - Together they will take **8–10 classes**.
 
 ---
 
-# 2. Signs & Symbols – General Rules
+## 2. Signs & Symbols – General Rules
 
 > [!IMPORTANT] Rules for reading signs and symbols
 > 1. **Where to look:** signs and symbols are seen **on the palm, not on the fingers or the thumb**. They will not be clearly visible there and there is no need to look there. They are seen on the **mounts** and on the **lines (rekhā)**.
@@ -30,9 +30,9 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
 
 ---
 
-# 3. The Signs (in the order taught)
+## 3. The Signs (in the order taught)
 
-## 3.1 Spot / Dot
+### 3.1 Spot / Dot
 
 - **Size:** very small (so small it may not even be visible), or larger; can also be bigger and of other shapes.
 - **Colour matters:**
@@ -58,7 +58,7 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
 > [!FAQ] Q: The circle you described is positive — is it formed by lines, or is it a spot-like circle?
 > **A (Teacher):** How can a circle be formed by lines? — We will show it on one hand shortly; it will become clear. *(Deferred to the hand demonstration; see §5. In the demonstration the teacher said a certain mark was **not** "that circle" — see §6.3.)*
 
-## 3.2 Cross
+### 3.2 Cross
 
 - Shape: two lines crossing, a distinct mark.
 
@@ -71,7 +71,7 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
 - *Most students should have this cross on Jupiter*
 - A cross can show **disease, some kind of trouble, or an accident**.
 
-## 3.3 Star (nakṣatra cihna)
+### 3.3 Star (nakṣatra cihna)
 
 ![Cross & Star](/lecture-notes-images/19/02-cross-and-star.png)
 
@@ -83,7 +83,7 @@ Indications:
   - **health is bad**, for sure.
 - **Cross/star on Mars Mount, especially Lower Mars** (the part near the thumb) — seen there most often.
 
-## 3.4 Island
+### 3.4 Island
 
 ![Island & Square Formation](/lecture-notes-images/19/03-island-and-square-formations.png)
 
@@ -116,7 +116,7 @@ Indications:
 > [!FAQ] Q: Does the island form on lines, or on mounts too?
 > **A (Teacher):** On **lines**. You will see it only on lines.
 
-## 3.5 Square
+### 3.5 Square
 
 - Must be an **individual square**. If it appears only by lines joining/crossing each other, **do not count it**.
 - Can be **anywhere**: on the **outer** side or the **inner** side of a line (e.g., Life Line); on an island or **inside an island**.
@@ -128,7 +128,7 @@ Indications:
 
 ---
 
-# 4. Demonstration Hand – Signs
+## 4. Demonstration Hand – Signs
 
 ![Meenu Ma'am Hand Example](/lecture-notes-images/19/04-meenu-maam-hand-example.png)
 
@@ -150,9 +150,9 @@ Indications:
 
 ---
 
-# 5. Jīvana Rekhā (Life Line)
+## 5. Jīvana Rekhā (Life Line)
 
-## 5.1 Rules before reading any line
+### 5.1 Rules before reading any line
 
 > [!IMPORTANT] Quality of a line – rules to fix **before reading any line**
 > | Line condition | Verdict |
@@ -166,11 +166,11 @@ Indications:
 > - **Even if the quality of the hand is excellent**, if the line is bad, **the result is not good**.
 > - **A negative sign on the line**, however good the line's quality, gives **some negative result in that time period**. It may be related to anything, depending on **deśa–kāla–paristhiti (place, time and circumstance)**.
 
-## 5.2 Names of the Life Line
+### 5.2 Names of the Life Line
 
 - The Life Line is **jīvana rekhā**. Other names: **prāṇa rekhā, āyu rekhā, pitṛ rekhā, gotra rekhā, śakti rekhā** …
 
-## 5.3 What the Life Line is NOT / what it shows
+### 5.3 What the Life Line is NOT / what it shows
 
 > [!WARNING] Common mistake: "Life Line = only age"
 > - **Remove the notion** that the Life Line is merely a line for calculating age. Age may be calculated from it, **but she will not say 100%**; **it alone does not determine longevity (āyu)**.
@@ -188,7 +188,7 @@ Indications:
 > - **Analogy (horoscope):** in astrology, for a given lagna we see which **daśā** comes, then the next, then the next — a flow. We look at the **mahādaśā**, and **by its influence the antardaśās give all the results**. If the mahādaśā says "you have to win at Ludo", you will win at Ludo, **not at chess**.
 > - So the Life Line prepares the **road map**.
 
-## 5.4 Origin and the early "chains" (childhood)
+### 5.4 Origin and the early "chains" (childhood)
 
 - **Origin:** from near the **thumb**. The starting point can be higher or lower — up to the **Jupiter Mount** — depending on the hand.
 - **At the start** many **chains/clusters** are seen. Understand them as **childhood**: the first ~**10–15 years** (*"10–15 years of childhood is struggle-time for all"* and, later, **"from the start up to at most 15 years; 10 or 15 years"**).
@@ -202,9 +202,9 @@ Indications:
 
 ---
 
-# 6. Life Line – Venus Space and Expansion
+## 6. Life Line – Venus Space and Expansion
 
-## 6.1 How much space Venus is given (reading the starting position)
+### 6.1 How much space Venus is given (reading the starting position)
 
 - Previously the Venus Mount's states were taught — **raised, low (nimna), normal**. More important now: **how much space Venus gets**.
 
@@ -225,7 +225,7 @@ Indications:
 > - **Example – labour class:** a labourer's hand may show a **smaller range** — same routine daily, a lot of physical work, little thought about the future, "just busy working". If the range **increases a little**, it becomes the labour-class person who **educates their children** — thinking "I did what I did, but let me give my children a good life". **Their thinking has changed.** *"All of it is about thinking."*
 > - **As the range grows, expansion grows** — in **career, thinking, travel, comfort level**.
 
-## 6.2 Life Line reaching the Moon Mount / a branch going there
+### 6.2 Life Line reaching the Moon Mount / a branch going there
 
 ![Life Line To Moon Mount](/lecture-notes-images/19/06-life-line-to-moon-mount.png)
 
@@ -241,7 +241,7 @@ Indications:
 > - If the **outer line is slightly darker** and the **inner line goes down but fades** (not visible): expansion may be **away from the homeland** — you may go out of your homeland, your circle, "people like you".
 > - **This is one example; many variations will come.**
 
-## 6.3 Life Line reaching the Sun Mount region
+### 6.3 Life Line reaching the Sun Mount region
 
 ![Life Line To Sun & Saturn Areas](/lecture-notes-images/19/07-life-line-to-sun-sa-mount.png)
 
@@ -251,7 +251,7 @@ Indications:
   - "Roaming" can also mean **people recognise you** all over the country/world: **name and fame**, **risk-taking ability**, or generally travelling, or **citizenship of many countries**.
   - So **expansion does not need a travel line** — it can happen without one.
 
-## 6.4 Life Line reaching the Saturn Mount region
+### 6.4 Life Line reaching the Saturn Mount region
 - If the line **stops only at Saturn** (normally found):
   - **Coming and going for the sake of work** will continue; the person **will not think beyond that**.
   - Example of thinking: if someone at home says "let's go on a trip", the person says **"What is there to do? We're sitting here; why go out?"** — it shows **mentality**.
@@ -271,9 +271,9 @@ Indications:
 
 ---
 
-# 7. Life Line – Forks, Setbacks, Branches
+## 7. Life Line – Forks, Setbacks, Branches
 
-## 7.1 Fork (small and large) at the end or start
+### 7.1 Fork (small and large) at the end or start
 
 ![Small Fork At End of Life Line](/lecture-notes-images/19/09-life-line-small-fork-at-end.png)
 ![Larker Fork At End of Life Line](/lecture-notes-images/19/10-life-line-larger-fork-at-end.png)
@@ -290,7 +290,7 @@ Indications:
 > [!FAQ] Q : If the fork at the end of the Life Line closes like an island, is it still a fork?
 > **A:** If it forms like an island it is **considered an island**. **Only if it is open is it a fork.**
 
-## 7.2 Sudden inward turn / break – "drastic change"
+### 7.2 Sudden inward turn / break – "drastic change"
 
 ![Larger Fork At End of Life Line](/lecture-notes-images/19/11-life-line-sudden-curve.png)
 
@@ -304,7 +304,7 @@ Indications:
 - Distinguishing: with this condition, life continues, a major setback came, **but you did not lose courage** — you carry on despite it. *"Understood the difference between the two?"* — we must see **how to give the result**.
 - A line that comes **inward** generally also shows **financial loss (dhana hāni)** — as in the hand where a line turned inward and was strongly a financial-loss indicator; a hand to be shown "also had financial loss". 
 
-## 7.3 Many lines at the very end of the Life Line
+### 7.3 Many lines at the very end of the Life Line
 
 ![Life Line Various Patterns](/lecture-notes-images/19/12-life-line-various-patterns.png)
 
@@ -314,7 +314,7 @@ Indications:
 - **Not good for health**, but you **remain active**.
 - If a **mole (til)** also comes there, **health will be said to be bad at that time**.
 
-## 7.4 Branches going inward vs outward from the Life Line
+### 7.4 Branches going inward vs outward from the Life Line
 
 > [!WARNING] Do not confuse with vertical lines
 > In the area between the thumb and the Venus Mount, **vertical lines** are seen that may **cross the Life Line or touch it**. **These are not the branches meant here.** Only lines **emerging from the Life Line itself** are meant.
@@ -326,7 +326,7 @@ Indications:
 
 - **Inward-branch meaning (responsibility):** e.g., taking on your mother-in-law's care; taking all of children's work until they grow; a **house loan**; supporting your sisters from part of your salary (a **liability** you can't leave even if you wanted). **Chosen willingly**, whether happily or however — you carry it along. The responsibility is a **burden to you**; some people don't *feel* the responsibility as a burden, but in the hands of those who do, these lines will be seen.
 
-## 7.5 Four conditions of the Life Line's course
+### 7.5 Four conditions of the Life Line's course
 
 1. **Straight, smooth line** — life runs as it runs; wherever an **island or star** comes in between, trouble there.
 2. **Line runs, a major break arrives (e.g. at age 30), then the line starts again** — until that age, life was smooth; then a major shock. The nature of the shock must be checked on the **Heart Line** and **Brain Line** (e.g., divorce-like situation, breakup, career setback after thirty).
@@ -339,7 +339,7 @@ Indications:
 
 ---
 
-# 8. Hands Reviewed in Class (Life Line demonstrations)
+## 8. Hands Reviewed in Class (Life Line demonstrations)
 
 > [!EXAMPLE] Case A
 > - **Observed (teacher's walk-through):** **No area of big growth in one stretch**; **growth is visible at another stretch**; then the line **turns inward as a setback**.
@@ -395,7 +395,7 @@ Indications:
 
 ---
 
-# 9. Learning Summary
+## 9. Learning Summary
 
 > [!SUMMARY]
 > - **Signs are read on mounts and lines only; a sign alone never predicts — it needs the age on the line.** Faint signs are ignored.
