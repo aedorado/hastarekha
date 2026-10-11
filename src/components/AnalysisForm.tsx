@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serializeVedicData, VedicData, calculateAge, MountSignData, LineAnalysisData } from '@/lib/supabase';
 import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye, Heart, Clock, Copy, Printer, Share2, BookOpen, CheckCircle2, Award, User, Mountain, Compass, MapPin, Tag } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
+import PrintReportModal from './PrintReportModal';
 
 interface AnalysisFormProps {
   profile: HandProfile;
   onChangeProfile: (profile: HandProfile) => void;
   selectedPin: Pin | null;
+  onSelectPin?: (pin: Pin | null) => void;
   onUpdatePin: (pin: Pin) => void;
   onDeletePin: (pinId: string) => void;
   onSave: () => void;
@@ -20,6 +22,44 @@ interface AnalysisFormProps {
 }
 
 import { HAND_TYPES, HAND_TYPE_DETAILS } from '@/lib/content/handTypes';
+
+export const getDetectedYogas = (vedicData: VedicData): Array<{ name: string; icon: string; desc: string }> => {
+  const detectedYogas: Array<{ name: string; icon: string; desc: string }> = [];
+  if (vedicData.line_life?.features?.includes('Supportive parallel line')) {
+    detectedYogas.push({ name: 'Supportive / Mars Line', icon: '🛡️', desc: 'A line running parallel to the Life Line without touching it (Note 21 §2) — distinguished from a Mars line that touches/crosses the Life Line, which the teacher associates with trouble.' });
+  }
+  if (vedicData.line_head?.features?.includes("Writer's Fork (Fork at end)")) {
+    detectedYogas.push({ name: "Writer's Fork (Head Line)", icon: '✍️', desc: "One branch to Mercury, one to Mars or Moon: multitasking ability, good writer/artist, business mind — but the teacher's explicit caveat is that the mind stays disturbed/not calm despite the multitasking (Note 24 §2.7H)." });
+  }
+  if (vedicData.mount_jupiter?.signs?.includes('Cross')) {
+    detectedYogas.push({ name: 'Cross on Jupiter', icon: '💍', desc: 'The one place a cross is auspicious (Note 19) — happy marriage and education achievements.' });
+  }
+  if (vedicData.mount_jupiter?.signs?.includes('Square')) {
+    detectedYogas.push({ name: "Teacher's Square on Jupiter", icon: '🏫', desc: 'Protective square on Jupiter mount — associated with instructional/teaching ability and protection from defamation.' });
+  }
+  if (vedicData.mount_sun?.signs?.includes('Trident')) {
+    detectedYogas.push({ name: 'Trident on Sun Mount', icon: '🔱', desc: 'Multi-channel fame — renown through more than one path at once.' });
+  }
+  if (vedicData.mount_sun?.signs?.includes('Diamond Chain') || vedicData.line_fate?.signs?.includes('Diamond Chain at end')) {
+    detectedYogas.push({ name: 'Diamond Chain', icon: '💎', desc: "Wish-fulfilment symbol — the transcript's clearest examples are at the end of the Fate Line or Sun Line (Note 24); doubles that line's result." });
+  }
+  {
+    const canopySign = vedicData.mount_sun?.signs?.includes('Canopy / Circle') ? 'Sun Mount' : vedicData.line_life?.signs?.includes('Canopy (Circle at end)') ? 'Life Line' : null;
+    if (canopySign) {
+      detectedYogas.push({ name: 'Canopy / Circle', icon: '👑', desc: `Protective-halo symbol on the ${canopySign}. The transcript's worked example is the Life Line: "whole life is protected" despite its ups and downs (Note 24) — treat the meaning elsewhere as the same protective principle applied to that line/mount, not a separately stated claim.` });
+    }
+  }
+  if (vedicData.line_mercury_present === true && vedicData.line_mercury_joins_moon) {
+    detectedYogas.push({ name: 'Line of Intuition', icon: '👁️', desc: 'Mercury/Health Line reaching the Moon Mount (Note 27 §9.2) — strong intuition, prophetic dreams.' });
+  }
+  if (vedicData.line_mercury_single_vertical) {
+    detectedYogas.push({ name: 'Single Vertical Line on Mercury Mount', icon: '💰', desc: 'Sudden money gain (Note 27 §9.5).' });
+  }
+  if (vedicData.line_fate && vedicData.line_head && vedicData.line_mercury_present === true) {
+    detectedYogas.push({ name: 'Dhana kī Koṭhī (Money Room)', icon: '🏛️', desc: 'Triangle formed by Fate, Head, and Mercury lines (Note 27 §9.5) — capacity to store and grow wealth.' });
+  }
+  return detectedYogas;
+};
 
 const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string => {
   let md = `# Hasta Sāmudrika Śāstra — Consultation & Reading Report\n\n`;
@@ -183,9 +223,9 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
     md += `${vedic.lh_vs_rh_notes}\n\n`;
   }
 
-  if (profile.general_notes) {
+  if (vedic.notes && vedic.notes.trim()) {
     md += `## 9. General Consultation Notes & Remedial Guidance\n`;
-    md += `${profile.general_notes}\n\n`;
+    md += `${vedic.notes.trim()}\n\n`;
   }
 
   return md;
@@ -195,6 +235,7 @@ export default function AnalysisForm({
   profile,
   onChangeProfile,
   selectedPin,
+  onSelectPin,
   onUpdatePin,
   onDeletePin,
   onSave,
@@ -208,6 +249,7 @@ export default function AnalysisForm({
   const [newTag, setNewTag] = useState('');
   const [copiedReport, setCopiedReport] = useState(false);
   const [photoToRemove, setPhotoToRemove] = useState<HandView | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
   // 10-Minute Resting State Timer
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
@@ -2492,8 +2534,8 @@ export default function AnalysisForm({
                     const label = marsKey === 'mount_mars_lower'
                       ? 'Lower Mars / Nimna Maṅgala (Inner Courage & Enemy Lines)'
                       : marsKey === 'mount_mars_upper'
-                      ? 'Upper Mars / Ucca Maṅgala (Outer Courage & Retaliation)'
-                      : 'Plain of Mars / Rāhu Zone (Center Palm)';
+                        ? 'Upper Mars / Ucca Maṅgala (Outer Courage & Retaliation)'
+                        : 'Plain of Mars / Rāhu Zone (Center Palm)';
                     const marsData = getMount(marsKey);
                     return (
                       <div key={marsKey} className="border border-stone-100 rounded-xl p-3 space-y-2">
@@ -2911,7 +2953,7 @@ export default function AnalysisForm({
                   </h4>
                   <span className="text-[10px] font-semibold text-stone-400">Notes 24, 26, 27</span>
                 </div>
-                <div className="p-2.5 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs text-amber-900 font-medium leading-relaxed">
+                <div className="p-2 bg-amber-50/70 border border-amber-200/60 rounded-xl text-xs text-amber-900 font-medium leading-relaxed">
                   📖 <strong>Core Definition (Note 26 §1):</strong> Head Line (intellect) and Heart Line (emotion) run very close together / touching. If a branch runs across and joins them, it becomes a <strong>Full Simian</strong> line. If no branch joins them, it is called a <strong>Semi-Simian</strong> line.
                 </div>
 
@@ -3322,45 +3364,130 @@ export default function AnalysisForm({
 
         {activeTab === 'pins' && (
           <div className="space-y-4">
-            {selectedPin ? (
-              <div className="bg-stone-50 p-4 rounded-xl border border-stone-200 space-y-3 shadow-sm">
+            {selectedPin && (
+              <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200/80 space-y-3 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase" style={{ backgroundColor: selectedPin.color }}>
-                    Active Pin
-                  </span>
-                  <button
-                    onClick={() => onDeletePin(selectedPin.id)}
-                    className="text-rose-600 hover:text-rose-700 transition-colors p-1"
-                    title="Delete marker"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-[10px] font-bold text-white px-2 py-0.5 rounded uppercase shadow-xs"
+                      style={{ backgroundColor: selectedPin.color }}
+                    >
+                      Active Marker
+                    </span>
+                    <span className="text-xs font-semibold text-stone-700">
+                      {HAND_VIEW_LABELS[selectedPin.view] || selectedPin.view}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {onSelectPin && (
+                      <button
+                        type="button"
+                        onClick={() => onSelectPin(null)}
+                        className="text-xs text-stone-500 hover:text-stone-800 underline cursor-pointer"
+                      >
+                        Done Editing
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onDeletePin(selectedPin.id)}
+                      className="text-rose-600 hover:text-rose-700 transition-colors p-1 cursor-pointer"
+                      title="Delete marker"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">Pin Label</label>
+                  <label className="form-label text-xs">Marker Label</label>
                   <input
                     type="text"
-                    className="form-input text-xs"
+                    className="form-input text-xs bg-white"
                     value={selectedPin.label}
                     onChange={(e) => onUpdatePin({ ...selectedPin, label: e.target.value })}
-                    placeholder="e.g. Star sign, Island"
+                    placeholder="e.g. Mystic Cross, Star on Apollo, Island on Life Line"
                   />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label text-xs">Annotation / Notes</label>
                   <textarea
-                    className="form-input h-28 resize-none text-xs"
+                    className="form-input h-24 resize-none text-xs bg-white"
                     value={selectedPin.description}
                     onChange={(e) => onUpdatePin({ ...selectedPin, description: e.target.value })}
                     placeholder="Describe what this marking or sign indicates in your course notes..."
                   />
                 </div>
               </div>
+            )}
+
+            {/* Placed Markers List */}
+            {pinsCount > 0 ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs text-stone-600 font-semibold px-1">
+                  <span>Placed Markers ({pinsCount})</span>
+                  <span className="text-[11px] text-stone-400 font-normal">Click a marker to edit & highlight on canvas</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {(profile.pins || []).map((pin, idx) => {
+                    const isSelected = selectedPin?.id === pin.id;
+                    return (
+                      <div
+                        key={pin.id}
+                        onClick={() => {
+                          onSelectPin?.(pin);
+                          if (onChangeActiveView && pin.view) {
+                            onChangeActiveView(pin.view);
+                          }
+                        }}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                          isSelected
+                            ? 'bg-amber-500/10 border-accent-gold shadow-sm ring-1 ring-accent-gold'
+                            : 'bg-white border-stone-200 hover:border-stone-300 hover:bg-stone-50/50'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                          <div
+                            className="w-3.5 h-3.5 rounded-full mt-0.5 shrink-0 border border-white shadow-xs"
+                            style={{ backgroundColor: pin.color }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-stone-800 truncate">
+                                {pin.label || `Marker #${idx + 1}`}
+                              </h4>
+                              <span className="text-[10px] text-stone-500 bg-stone-100 px-1.5 py-0.5 rounded font-medium shrink-0">
+                                {HAND_VIEW_LABELS[pin.view] || pin.view}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-stone-500 line-clamp-2 mt-0.5">
+                              {pin.description || 'No notes added yet. Click to edit.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeletePin(pin.id);
+                            }}
+                            className="text-stone-400 hover:text-rose-600 p-1 rounded transition cursor-pointer"
+                            title="Delete marker"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
               <div className="text-center py-10 text-stone-500 text-xs border-2 border-dashed border-stone-200 rounded-xl bg-stone-50/50">
-                📍 Click on "Place Pins" mode above the canvas, then click on the hand picture to drop a marker pin here.
+                📍 Click on &quot;Place Pins&quot; mode above the canvas, then click on the hand picture to drop a marker pin here.
               </div>
             )}
           </div>
@@ -3564,11 +3691,11 @@ export default function AnalysisForm({
                     </button>
                     <button
                       type="button"
-                      onClick={handlePrint}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 text-xs font-semibold shadow-sm hover:bg-stone-50 transition-all cursor-pointer"
+                      onClick={() => setShowPrintModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent-gold text-white text-xs font-bold shadow-md hover:bg-amber-600 transition-all cursor-pointer"
                     >
-                      <Printer className="w-4 h-4 text-stone-500" />
-                      <span>Print / PDF</span>
+                      <Printer className="w-4 h-4 text-white" />
+                      <span>Official Report / Print PDF</span>
                     </button>
                   </div>
                 </div>
@@ -3870,13 +3997,13 @@ export default function AnalysisForm({
               )}
 
               {/* Section 8: General Consultation Notes */}
-              {profile.general_notes && (
+              {vedicData.notes && vedicData.notes.trim() && (
                 <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 space-y-2 shadow-sm">
                   <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-stone-600" />
                     8. Practitioner&apos;s Consultation Notes &amp; Remedial Observations
                   </h4>
-                  <p className="text-xs text-stone-700 leading-relaxed whitespace-pre-wrap">{profile.general_notes}</p>
+                  <p className="text-xs text-stone-700 leading-relaxed whitespace-pre-wrap">{vedicData.notes}</p>
                 </div>
               )}
             </div>
@@ -3905,6 +4032,16 @@ export default function AnalysisForm({
           }
         }}
         onCancel={() => setPhotoToRemove(null)}
+      />
+
+      {/* Official Printable Consultation Report Modal */}
+      <PrintReportModal
+        isOpen={showPrintModal}
+        onClose={() => setShowPrintModal(false)}
+        profile={profile}
+        vedicData={vedicData}
+        detectedYogas={getDetectedYogas(vedicData)}
+        generateReportMarkdown={generateReportMarkdown}
       />
     </div>
   );

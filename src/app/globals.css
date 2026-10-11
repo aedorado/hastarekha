@@ -457,12 +457,43 @@ body {
 
 /* Print utility styles */
 @media print {
+  @page {
+    margin: 1.2cm;
+    size: auto;
+  }
   body {
     background-color: white !important;
     background-image: none !important;
     color: #1a1714 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .no-print {
     display: none !important;
+  }
+
+  body.printing-report * {
+    visibility: hidden;
+  }
+  body.printing-report #printable-consultation-report,
+  body.printing-report #printable-consultation-report * {
+    visibility: visible;
+  }
+  body.printing-report #printable-consultation-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }

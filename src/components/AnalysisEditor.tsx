@@ -197,11 +197,11 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
 
   // Save changes (Save to SQLite/Postgres or LocalStorage).
   // `silent: true` is used by the autosave timer: persists in the background
-  // `inPlace: true` is used by Cmd/Ctrl+S to save without redirecting
+  // Saves in-place by default without redirecting
   // `force: true` bypasses conflict detection when user explicitly chooses to overwrite
   const handleSave = async (opts?: { silent?: boolean; inPlace?: boolean; force?: boolean }) => {
     const silent = opts?.silent ?? false;
-    const inPlace = opts?.inPlace ?? false;
+    const inPlace = opts?.inPlace ?? true;
     const force = opts?.force ?? false;
 
     if (!activeProfile.name) {
@@ -245,14 +245,20 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         });
 
         if (res.ok) {
-          updateProfileInCache(activeProfile);
-          setLastSavedProfile(activeProfile);
-          if (inPlace) {
-            setSaveSuccessMessage('Saved (⌘S)');
+          const savedData = await res.json().catch(() => null);
+          const updated = (savedData && savedData.data) ? savedData.data : activeProfile;
+          updateProfileInCache(updated);
+          setLastSavedProfile(updated);
+          setActiveProfile(updated);
+
+          // If creating a brand-new profile, update URL to its id without navigation reload
+          if (typeof window !== 'undefined' && updated.id && !window.location.pathname.includes(updated.id)) {
+            router.replace(`/analysis/${updated.id}`);
+          }
+
+          if (inPlace || !silent) {
+            setSaveSuccessMessage('Saved');
             setTimeout(() => setSaveSuccessMessage(null), 3000);
-          } else if (!silent) {
-            alert('Analysis Profile Saved Successfully!');
-            router.push('/');
           }
         } else {
           throw new Error('API save failed');
@@ -261,32 +267,18 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
         saveDemoProfile(activeProfile);
         updateProfileInCache(activeProfile);
         setLastSavedProfile(activeProfile);
-        if (inPlace) {
-          setSaveSuccessMessage('Saved locally (⌘S)');
-          setTimeout(() => setSaveSuccessMessage(null), 3000);
-        } else if (!silent) {
-          alert('Saved locally to browser storage!');
-          router.push('/');
-        }
-      }
-    } catch (e) {
-      if (silent) {
-        // Don't bounce the user around or alert for a background autosave failure; it will retry.
-        return;
-      }
-      if (inPlace) {
-        saveDemoProfile(activeProfile);
-        updateProfileInCache(activeProfile);
-        setLastSavedProfile(activeProfile);
-        setSaveSuccessMessage('Saved to local storage (⌘S)');
+        setSaveSuccessMessage('Saved locally');
         setTimeout(() => setSaveSuccessMessage(null), 3000);
+      }
+    } catch {
+      if (silent) {
         return;
       }
-      alert('Error saving profile. Saving locally to browser fallback...');
       saveDemoProfile(activeProfile);
       updateProfileInCache(activeProfile);
       setLastSavedProfile(activeProfile);
-      router.push('/');
+      setSaveSuccessMessage('Saved to local storage');
+      setTimeout(() => setSaveSuccessMessage(null), 3000);
     } finally {
       if (silent) setIsAutosaving(false);
       else setIsSaving(false);
@@ -421,6 +413,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
               profile={activeProfile}
               onChangeProfile={(prof) => setActiveProfile(prof)}
               selectedPin={activePin}
+              onSelectPin={(pin) => setSelectedPinId(pin ? pin.id : null)}
               onUpdatePin={handleUpdatePin}
               onDeletePin={handleDeletePin}
               onSave={() => handleSave()}
@@ -471,7 +464,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
               <span className="block text-stone-500 text-xs">
                 Would you like to overwrite remote changes with your current edits, or reload the latest remote version?
               </span>
-              <span className="block text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl p-2.5 text-xs">
+              <span className="block text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl p-2 text-xs">
                 💡 If you choose to reload, a backup of your local edits will be kept so you can restore them anytime if needed.
               </span>
             </span>

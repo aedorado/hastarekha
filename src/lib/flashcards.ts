@@ -1,9 +1,12 @@
+import { getCuratedDeckForNote } from '@/data/learning';
+
 export interface Flashcard {
   id: string;
   sourceNoteId: string;
   sourceTitle: string;
-  category: 'measurement' | 'principle' | 'warning' | 'rule' | 'trait';
+  category: 'measurement' | 'principle' | 'warning' | 'rule' | 'trait' | 'symbol' | 'scenario' | 'contrast';
   tag: string;
+  subtopic?: string;
   front: string;
   back: string;
   tip?: string;
@@ -30,11 +33,15 @@ function cleanMarkdown(text: string): string {
 }
 
 /**
- * Dynamically extract high-yield flashcards from raw markdown note content.
- * Parses callout blocks (> [!TIP], > [!WARNING], > [!INFO], > [!CAUTION], > [!SUCCESS]),
- * markdown comparison tables, and list rules.
+ * Extract flashcards for a note. Prioritizes curated high-yield decks if available,
+ * falling back to dynamic markdown extraction.
  */
 export function extractFlashcardsFromNote(noteId: string, title: string, content: string): Flashcard[] {
+  const curated = getCuratedDeckForNote(noteId);
+  if (curated && curated.flashcards && curated.flashcards.length > 0) {
+    return curated.flashcards;
+  }
+
   const cards: Flashcard[] = [];
   const lines = content.split('\n');
 

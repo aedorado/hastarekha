@@ -379,6 +379,12 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
                   {currentCard?.tag}
                 </span>
 
+                {currentCard?.subtopic && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/80">
+                    {currentCard.subtopic}
+                  </span>
+                )}
+
                 {masteryBadge === 'mastered' ? (
                   <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-1.5 py-0.5 flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" /> Mastered
@@ -426,7 +432,7 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
                   <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest flex items-center justify-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5" /> Classical Rule / Verdict
                   </span>
-                  <div className="text-base sm:text-lg text-stone-850 font-medium leading-relaxed text-left bg-stone-50/80 p-4 rounded-xl border border-stone-200">
+                  <div className="text-base sm:text-lg text-stone-850 font-medium leading-relaxed text-left bg-stone-50/80 p-5 rounded-xl border border-stone-200 whitespace-pre-line shadow-xs">
                     {currentCard?.back}
                   </div>
                 </div>
