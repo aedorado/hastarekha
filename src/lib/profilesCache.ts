@@ -26,14 +26,14 @@ export function subscribeProfilesCache(callback: (profiles: HandProfile[]) => vo
 }
 
 export function getCachedProfiles(): HandProfile[] | null {
-  if (inMemoryProfiles) return inMemoryProfiles;
+  if (inMemoryProfiles && inMemoryProfiles.length > 0) return inMemoryProfiles;
 
   if (typeof window !== 'undefined') {
     try {
       const stored = sessionStorage.getItem(CACHE_KEY) || localStorage.getItem(CACHE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           inMemoryProfiles = parsed;
           const time = Number(sessionStorage.getItem(CACHE_TIMESTAMP_KEY) || localStorage.getItem(CACHE_TIMESTAMP_KEY) || '0');
           inMemoryTimestamp = time;
@@ -49,6 +49,21 @@ export function getCachedProfiles(): HandProfile[] | null {
 }
 
 export function setCachedProfiles(profiles: HandProfile[]) {
+  if (!profiles || profiles.length === 0) {
+    inMemoryProfiles = null;
+    inMemoryTimestamp = 0;
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.removeItem(CACHE_KEY);
+        sessionStorage.removeItem(CACHE_TIMESTAMP_KEY);
+      } catch (e) {
+        // ignore
+      }
+    }
+    notifySubscribers([]);
+    return;
+  }
+
   inMemoryProfiles = profiles;
   inMemoryTimestamp = Date.now();
 
@@ -88,8 +103,8 @@ export async function loadHandProfiles(options?: { force?: boolean }): Promise<{
   const cached = getCachedProfiles();
   const isFresh = inMemoryTimestamp > 0 && Date.now() - inMemoryTimestamp < CACHE_TTL_MS;
 
-  // If we have fresh cached data and no force refresh requested, return immediately
-  if (cached && isFresh && !options?.force) {
+  // Only skip network if we actually have profiles in cache and it's fresh
+  if (cached && cached.length > 0 && isFresh && !options?.force) {
     return {
       profiles: cached,
       isSupabaseConnected: isSupabaseConfigured,
@@ -101,7 +116,7 @@ export async function loadHandProfiles(options?: { force?: boolean }): Promise<{
       const res = await fetch('/api/hands');
       if (res.ok) {
         const data = await res.json();
-        if (!data.isDemo) {
+        if (Array.isArray(data)) {
           setCachedProfiles(data);
           return { profiles: data, isSupabaseConnected: true };
         }
@@ -117,6 +132,10 @@ export async function loadHandProfiles(options?: { force?: boolean }): Promise<{
   }
 
   const demo = getDemoProfiles();
-  setCachedProfiles(demo);
-  return { profiles: demo, isSupabaseConnected: false };
+  if (demo && demo.length > 0) {
+    setCachedProfiles(demo);
+    return { profiles: demo, isSupabaseConnected: false };
+  }
+
+  return { profiles: [], isSupabaseConnected: isSupabaseConfigured };
 }
