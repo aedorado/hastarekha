@@ -384,7 +384,7 @@ export function computeAgeTicks(
             point: geom.point,
             normal: geom.normal,
             label: `${age}`,
-            isMajor: age === 35 || age === 70 || age === 98,
+            isMajor: i % 2 === 0 || i === 14,
             method: 'cheiro-98',
             color: methodInfo.color,
             description: `Part ${i} (Cheiro 7-yr scale)`,

@@ -33,7 +33,8 @@ export default function Home() {
     });
 
     async function loadData() {
-      if (!getCachedProfiles()) {
+      const cached = getCachedProfiles();
+      if (!cached || cached.length === 0) {
         setIsLoading(true);
       }
       const res = await loadHandProfiles();

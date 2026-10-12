@@ -56,8 +56,8 @@ export async function GET(request: Request) {
       },
     });
   } catch (error: any) {
-    console.error('Database fetch error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Database fetch error:', error?.message || error);
+    return NextResponse.json({ error: error?.message || 'Database error' }, { status: 500 });
   }
 }
 

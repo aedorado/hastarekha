@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   MapPin,
   Edit3,
@@ -71,19 +71,43 @@ interface CanvasHistoryEntry {
 }
 
 const COLORS = [
-  { name: 'Gold', value: '#b88d21' },
-  { name: 'Purple', value: '#7c3aed' },
-  { name: 'Red', value: '#e11d48' },
-  { name: 'Teal', value: '#0d9488' },
-  { name: 'Green', value: '#16a34a' },
-  { name: 'Blue', value: '#2563eb' },
-  { name: 'White', value: '#f8fafc' },
+  { name: 'Cyan (High Contrast)', value: '#06b6d4' },
+  { name: 'Rose / Pink', value: '#f43f5e' },
+  { name: 'Emerald Green', value: '#10b981' },
+  { name: 'Electric Blue', value: '#3b82f6' },
+  { name: 'Vivid Orange', value: '#f97316' },
+  { name: 'Royal Purple', value: '#8b5cf6' },
+  { name: 'Gold / Amber', value: '#f59e0b' },
+  { name: 'Pure White', value: '#ffffff' },
+  { name: 'Lime Green', value: '#84cc16' },
+  { name: 'Deep Crimson', value: '#be123c' },
+];
+
+const OPACITY_OPTIONS = [
+  { label: 'Ghost', value: 0.35, desc: '35% See-through (Maximum view of palm signs underneath)' },
+  { label: 'Translucent', value: 0.65, desc: '65% Balanced (Clear line with visible palm creases)' },
+  { label: 'Solid', value: 1.0, desc: '100% Solid line' },
+];
+
+const SIGN_OPTIONS = [
+  'Triangle △ (Property / Shield / Wealth)',
+  'Fish 🐟 (Spiritual / Prosperity)',
+  'Star ✳ (Sudden impact / Renown)',
+  'Cross ✝ (Obstacle / Conflict / Heartbreak)',
+  'Square □ (Protection / Shield / Bandhana)',
+  'Island ⬭ (Health decline / Loss of vitality)',
+  'Break / Gap (Life shift / Relocation / Expansion)',
+  'Upward Branch (Ambition / Rise in career)',
+  'Downward Branch (Loss of vitality / Sadness)',
+  'Enemy Line / Cut (Rahu / Mars affliction)',
+  'Supportive Line (Family support / Mars guardian)',
+  'General Milestone',
 ];
 
 const THICKNESS_OPTIONS = [
   { label: 'Fine', value: 1.8, desc: '1.8px (Fine creases & signs)' },
-  { label: 'Med', value: 3.2, desc: '3.2px (Standard lines)' },
-  { label: 'Bold', value: 5.5, desc: '5.5px (Mounts & major paths)' },
+  { label: 'Med', value: 2.8, desc: '2.8px (Standard lines)' },
+  { label: 'Bold', value: 4.8, desc: '4.8px (Mounts & major paths)' },
 ];
 
 const FILTERS = [
@@ -132,10 +156,11 @@ export default function HandCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const containerWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Tools & Styling
-  const [mode, setMode] = useState<'pin' | 'draw' | 'pan' | 'measure' | 'aging'>('pin');
-  const [currentColor, setCurrentColor] = useState('#b88d21');
-  const [thickness, setThickness] = useState<number>(3.2);
+  // Tools & Styling (default to 'pan' so clicking does not accidentally place pins)
+  const [mode, setMode] = useState<'pin' | 'draw' | 'pan' | 'measure' | 'aging'>('pan');
+  const [currentColor, setCurrentColor] = useState('#06b6d4');
+  const [thickness, setThickness] = useState<number>(2.2);
+  const [lineOpacity, setLineOpacity] = useState<number>(0.65);
   const [strokeStyle, setStrokeStyle] = useState<'solid' | 'dashed'>('solid');
   const [imageFilter, setImageFilter] = useState<ImageFilterId>('normal');
   const [showLayers, setShowLayers] = useState(true);
@@ -170,6 +195,7 @@ export default function HandCanvas({
   const [selectedAgingDrawingId, setSelectedAgingDrawingId] = useState<string | null>(null);
   const [showAllMethodsComparison, setShowAllMethodsComparison] = useState(false);
   const [showArvindJiAxialGrid, setShowArvindJiAxialGrid] = useState(false);
+  const [agingTickDensity, setAgingTickDensity] = useState<'all' | 'major'>('major');
   const [axialGrid, setAxialGrid] = useState<{
     wrist: Point2D;
     midpoint: Point2D;
@@ -198,6 +224,7 @@ export default function HandCanvas({
     lineCategory: LineCategory;
     sign: string;
     note: string;
+    editingIndex?: number;
   } | null>(null);
 
   // Modals & confirmation
@@ -413,7 +440,7 @@ export default function HandCanvas({
     setPan({ x: 0, y: 0 });
     setSelectedDrawingId(null);
     onSelectPin(null);
-    if (mode === 'measure') setMode('pin');
+    if (mode === 'measure') setMode('pan');
   };
 
   // Pixel distance calculation
@@ -1052,7 +1079,7 @@ export default function HandCanvas({
     e.preventDefault();
     e.stopPropagation();
     if (mode === 'measure') {
-      setMode('pin');
+      setMode('pan');
       return;
     }
     setMode('measure');
@@ -1113,7 +1140,7 @@ export default function HandCanvas({
     e.preventDefault();
     e.stopPropagation();
     if (mode === 'aging') {
-      setMode('pin');
+      setMode('pan');
       setHoveredAgeData(null);
       return;
     }
@@ -1157,7 +1184,7 @@ export default function HandCanvas({
 
   const handleSaveAgeEvent = () => {
     if (!ageEventModal || !profile || !onChangeProfile) return;
-    const { age, point, lineCategory, sign, note } = ageEventModal;
+    const { age, point, lineCategory, sign, note, editingIndex } = ageEventModal;
 
     const currentVedic = parseVedicData(profile.general_notes);
     const lineKey = lineCategory as keyof VedicData;
@@ -1171,30 +1198,91 @@ export default function HandCanvas({
       notes: '',
     };
 
-    existingLine.age_events = [
-      ...(existingLine.age_events || []),
-      { age, event: `${sign}${note ? `: ${note}` : ''}` },
-    ];
+    const eventText = `${sign}${note ? `: ${note}` : ''}`;
+
+    if (editingIndex !== undefined && existingLine.age_events && existingLine.age_events[editingIndex]) {
+      // Editing existing event
+      const prevAge = existingLine.age_events[editingIndex].age;
+      const updatedEvents = [...existingLine.age_events];
+      updatedEvents[editingIndex] = { age, event: eventText };
+      existingLine.age_events = updatedEvents;
+
+      // Update matching pin label if any
+      const nextPins = pins.map((p) => {
+        if (p.view === activeView && (p.label.startsWith(`Age ${prevAge}:`) || p.label.startsWith(`Age ${age}:`))) {
+          return {
+            ...p,
+            label: `Age ${age}: ${sign.split(' ')[0]}`,
+            description: `${sign} on ${LINE_LABELS[lineCategory]}${note ? ` — ${note}` : ''}`,
+          };
+        }
+        return p;
+      });
+      onChangePins(nextPins);
+      pushHistory(drawings, nextPins);
+    } else {
+      // New event
+      existingLine.age_events = [
+        ...(existingLine.age_events || []),
+        { age, event: eventText },
+      ];
+
+      // Place a new Pin on canvas at that exact position
+      const newPin: Pin = {
+        id: crypto.randomUUID(),
+        view: activeView,
+        x: point.x,
+        y: point.y,
+        label: `Age ${age}: ${sign.split(' ')[0]}`,
+        description: `${sign} on ${LINE_LABELS[lineCategory]}${note ? ` — ${note}` : ''}`,
+        color: AGING_METHODS[agingMethod].color,
+      };
+
+      const nextPins = [...pins, newPin];
+      onChangePins(nextPins);
+      pushHistory(drawings, nextPins);
+    }
+
     if (lineKey === 'line_life') currentVedic.line_life = existingLine;
     else if (lineKey === 'line_fate') currentVedic.line_fate = existingLine;
     else if (lineKey === 'line_head') currentVedic.line_head = existingLine;
     else if (lineKey === 'line_heart') currentVedic.line_heart = existingLine;
     else if (lineKey === 'line_sun') currentVedic.line_sun = existingLine;
 
-    // Place a new Pin on canvas at that exact position
-    const newPin: Pin = {
-      id: crypto.randomUUID(),
-      view: activeView,
-      x: point.x,
-      y: point.y,
-      label: `Age ${age}: ${sign.split(' ')[0]}`,
-      description: `${sign} on ${LINE_LABELS[lineCategory]}${note ? ` — ${note}` : ''}`,
-      color: AGING_METHODS[agingMethod].color,
-    };
+    onChangeProfile({
+      ...profile,
+      general_notes: serializeVedicData(currentVedic),
+    });
 
-    const nextPins = [...pins, newPin];
-    onChangePins(nextPins);
-    pushHistory(drawings, nextPins);
+    setAgeEventModal(null);
+  };
+
+  const handleDeleteAgeEvent = (lineCategory: LineCategory, eventIndex: number) => {
+    if (!profile || !onChangeProfile) return;
+    const currentVedic = parseVedicData(profile.general_notes);
+    const lineKey = lineCategory as keyof VedicData;
+    const existingLine = currentVedic[lineKey] as LineAnalysisData | null;
+    if (!existingLine || !existingLine.age_events) return;
+
+    const targetEvent = existingLine.age_events[eventIndex];
+    const updatedEvents = existingLine.age_events.filter((_, i) => i !== eventIndex);
+    existingLine.age_events = updatedEvents;
+
+    if (lineKey === 'line_life') currentVedic.line_life = existingLine;
+    else if (lineKey === 'line_fate') currentVedic.line_fate = existingLine;
+    else if (lineKey === 'line_head') currentVedic.line_head = existingLine;
+    else if (lineKey === 'line_heart') currentVedic.line_heart = existingLine;
+    else if (lineKey === 'line_sun') currentVedic.line_sun = existingLine;
+
+    if (targetEvent) {
+      const remainingPins = pins.filter(
+        (p) => !(p.view === activeView && p.label.startsWith(`Age ${targetEvent.age}:`))
+      );
+      if (remainingPins.length !== pins.length) {
+        onChangePins(remainingPins);
+        pushHistory(drawings, remainingPins);
+      }
+    }
 
     onChangeProfile({
       ...profile,
@@ -1240,6 +1328,76 @@ export default function HandCanvas({
         72
       )
       : [];
+
+  // Collision-free, strictly monotonic layout for aging ticks & badges (no zigzag stalks, no overlaps, no order inversions)
+  const agingTickLayouts = useMemo(() => {
+    if (!currentAgingTicks || currentAgingTicks.length === 0) return [];
+
+    // 1. Calculate base coordinates with uniform, clean tick lengths (no zigzag stalks!)
+    const items = currentAgingTicks.map((tick, idx) => {
+      const tickLen = tick.isMajor ? 1.6 : 1.1;
+      const x1 = tick.point.x - tick.normal.x * 0.4;
+      const y1 = tick.point.y - tick.normal.y * 0.4;
+      const x2 = tick.point.x + tick.normal.x * tickLen;
+      const y2 = tick.point.y + tick.normal.y * tickLen;
+
+      // Badge sits cleanly at tick tip with uniform, gentle offset
+      const textOffset = tickLen + 0.8;
+      const textX = tick.point.x + tick.normal.x * textOffset;
+      const textY = tick.point.y + tick.normal.y * textOffset;
+
+      // Compact micro-badge dimensions (prevents bulky box collisions)
+      const badgeW = tick.label.length > 2 ? 2.8 : tick.label.length === 2 ? 2.3 : 1.7;
+      const badgeH = 1.3;
+
+      return {
+        tick,
+        idx,
+        x1,
+        y1,
+        x2,
+        y2,
+        textX,
+        textY,
+        badgeW,
+        badgeH,
+        showLabel: false,
+      };
+    });
+
+    // 2. Pass 1: Prioritize MAJOR milestones first (14, 28, 42, 56, 70, 84, 98)
+    const placedBadges: typeof items = [];
+
+    for (const item of items) {
+      if (item.tick.isMajor) {
+        item.showLabel = true;
+        placedBadges.push(item);
+      }
+    }
+
+    // 3. Pass 2: If 'all' mode is selected, try to place minor milestones ONLY if they have clearance
+    if (agingTickDensity === 'all') {
+      for (const item of items) {
+        if (!item.tick.isMajor) {
+          // Check collision against all already-placed badges
+          const collides = placedBadges.some((p) => {
+            const dx = Math.abs(item.textX - p.textX);
+            const dy = Math.abs(item.textY - p.textY);
+            const reqX = (item.badgeW + p.badgeW) / 2 + 0.35;
+            const reqY = (item.badgeH + p.badgeH) / 2 + 0.35;
+            return dx < reqX && dy < reqY;
+          });
+
+          if (!collides) {
+            item.showLabel = true;
+            placedBadges.push(item);
+          }
+        }
+      }
+    }
+
+    return items;
+  }, [currentAgingTicks, agingTickDensity]);
 
   return (
     <div
@@ -1385,81 +1543,108 @@ export default function HandCanvas({
                     </button>
                   </div>
 
-                  {/* Mode buttons */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMode('pin');
-                    }}
-                    className={`btn-outline px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${mode === 'pin'
-                      ? 'border-accent-gold text-accent-gold bg-amber-500/10 font-bold shadow-xs'
-                      : ''
-                      }`}
-                    title="Place Pins (Click on hand to place markers)"
-                  >
-                    <MapPin className="w-3.5 h-3.5" />
-                    Pins
-                  </button>
+                  {/* Mode buttons with prominent active styling */}
+                  <div className={`inline-flex items-center p-1 rounded-xl border gap-1 shadow-2xs ${isFullscreen
+                    ? 'bg-stone-900 border-stone-750'
+                    : 'bg-stone-100/90 border-stone-250/80'
+                    }`}>
+                    {/* 1. Pan (Default & primary navigation) */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setMode('pan');
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'pan'
+                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                        : isFullscreen
+                          ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                          : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                        }`}
+                      title="Pan & Zoom (Default: Drag to move hand, scroll to zoom)"
+                    >
+                      <Hand className={`w-3.5 h-3.5 ${mode === 'pan' ? 'text-white' : 'text-stone-500'}`} />
+                      <span>Pan</span>
+                      {mode === 'pan' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMode('draw');
-                    }}
-                    className={`btn-outline px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${mode === 'draw'
-                      ? 'border-accent-gold text-accent-gold bg-amber-500/10 font-bold shadow-xs'
-                      : ''
-                      }`}
-                    title="Trace Lines (Click & drag to trace palm lines)"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    Trace
-                  </button>
+                    {/* 2. Pins */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setMode('pin');
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'pin'
+                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                        : isFullscreen
+                          ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                          : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                        }`}
+                      title="Place Pins (Click on hand to place markers)"
+                    >
+                      <MapPin className={`w-3.5 h-3.5 ${mode === 'pin' ? 'text-white' : 'text-stone-500'}`} />
+                      <span>Pins</span>
+                      {mode === 'pin' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMode('pan');
-                    }}
-                    className={`btn-outline px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${mode === 'pan'
-                      ? 'border-accent-gold text-accent-gold bg-amber-500/10 font-bold shadow-xs'
-                      : ''
-                      }`}
-                    title="Pan Hand (Click & drag to move hand, or hold Spacebar)"
-                  >
-                    <Hand className="w-3.5 h-3.5" />
-                    Pan
-                  </button>
+                    {/* 3. Trace */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setMode('draw');
+                      }}
+                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'draw'
+                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                        : isFullscreen
+                          ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                          : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                        }`}
+                      title="Trace Lines (Click & drag to trace palm lines)"
+                    >
+                      <Edit3 className={`w-3.5 h-3.5 ${mode === 'draw' ? 'text-white' : 'text-stone-500'}`} />
+                      <span>Trace</span>
+                      {mode === 'draw' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={handleSetMeasureMode}
-                    className={`btn-outline px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${mode === 'measure'
-                      ? 'border-accent-gold text-accent-gold bg-amber-500/10 font-bold shadow-xs'
-                      : ''
-                      }`}
-                    title="Measure Hand (Align handles for palm/finger ratios)"
-                    disabled={!profile}
-                  >
-                    <Ruler className="w-3.5 h-3.5" />
-                    Measure
-                  </button>
+                    {/* 4. Measure */}
+                    <button
+                      type="button"
+                      onClick={handleSetMeasureMode}
+                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'measure'
+                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                        : !profile
+                          ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-50'
+                          : isFullscreen
+                            ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                            : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                        }`}
+                      title="Measure Hand (Align handles for palm/finger ratios)"
+                      disabled={!profile}
+                    >
+                      <Ruler className={`w-3.5 h-3.5 ${mode === 'measure' ? 'text-white' : 'text-stone-500'}`} />
+                      <span>Measure</span>
+                      {mode === 'measure' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={handleSetAgingMode}
-                    className={`btn-outline px-2.5 py-1.5 text-xs flex items-center gap-1.5 ${mode === 'aging'
-                      ? 'border-accent-gold text-accent-gold bg-amber-500/10 font-bold shadow-xs'
-                      : ''
-                      }`}
-                    title="Aging Ruler & Grid (Calculate age milestones along lines & axial geometry)"
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    Aging Ruler
-                  </button>
+                    {/* 5. Aging Ruler */}
+                    <button
+                      type="button"
+                      onClick={handleSetAgingMode}
+                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'aging'
+                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                        : isFullscreen
+                          ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                          : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                        }`}
+                      title="Aging Ruler & Grid (Calculate age milestones along lines & axial geometry)"
+                    >
+                      <Clock className={`w-3.5 h-3.5 ${mode === 'aging' ? 'text-white' : 'text-stone-500'}`} />
+                      <span>Aging Ruler</span>
+                      {mode === 'aging' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Image Filters & Right Actions */}
@@ -1576,20 +1761,28 @@ export default function HandCanvas({
                 </div>
               </div>
 
-              {/* Sub-bar: Color Palette & Line Settings (When Draw or Pin Mode is active) */}
-              {(mode === 'draw' || mode === 'pin') && (
+              {/* Sub-bar: Color Palette & Line Settings (When Draw, Pin, or Aging Mode is active) */}
+              {(mode === 'draw' || mode === 'pin' || mode === 'aging') && (
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-stone-200/80">
                   <div className="flex items-center gap-2">
                     <Palette className="w-3.5 h-3.5 text-stone-500" />
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 items-center">
                       {COLORS.map((color) => (
                         <button
                           key={color.value}
                           type="button"
-                          onClick={() => setCurrentColor(color.value)}
+                          onClick={() => {
+                            setCurrentColor(color.value);
+                            if (mode === 'aging' && activeAgingDrawing) {
+                              const updated = drawings.map((d) =>
+                                d.id === activeAgingDrawing.id ? { ...d, color: color.value } : d
+                              );
+                              onChangeDrawings(updated);
+                            }
+                          }}
                           className="relative w-5 h-5 rounded-full flex items-center justify-center border border-stone-300 transition-transform active:scale-95 shadow-xs"
                           style={{ backgroundColor: color.value }}
-                          title={color.name}
+                          title={mode === 'aging' ? `Change line color to ${color.name}` : color.name}
                         >
                           {currentColor === color.value && (
                             <div className="w-1.5 h-1.5 bg-white rounded-full shadow" />
@@ -1599,16 +1792,17 @@ export default function HandCanvas({
                     </div>
                   </div>
 
-                  {mode === 'draw' && (
-                    <div className="flex items-center gap-3 text-xs">
-                      {/* Thickness Selector */}
-                      <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
-                        {THICKNESS_OPTIONS.map((opt) => (
+                  <div className="flex items-center gap-2.5 text-xs">
+                    {/* Line Transparency / Opacity Selector (See-through so palm signs underneath are visible!) */}
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-stone-500 font-semibold hidden sm:inline">See-Through:</span>
+                      <div className="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+                        {OPACITY_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}
                             type="button"
-                            onClick={() => setThickness(opt.value)}
-                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${thickness === opt.value
+                            onClick={() => setLineOpacity(opt.value)}
+                            className={`px-2 py-0.5 rounded text-[10.5px] font-medium transition ${lineOpacity === opt.value
                               ? 'bg-white text-stone-900 shadow-xs font-bold'
                               : 'text-stone-500 hover:text-stone-800'
                               }`}
@@ -1618,34 +1812,56 @@ export default function HandCanvas({
                           </button>
                         ))}
                       </div>
-
-                      {/* Line Style (Solid vs Dashed) */}
-                      <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
-                        <button
-                          type="button"
-                          onClick={() => setStrokeStyle('solid')}
-                          className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${strokeStyle === 'solid'
-                            ? 'bg-white text-stone-900 shadow-xs font-bold'
-                            : 'text-stone-500 hover:text-stone-800'
-                            }`}
-                          title="Solid continuous line"
-                        >
-                          Solid
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setStrokeStyle('dashed')}
-                          className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${strokeStyle === 'dashed'
-                            ? 'bg-white text-stone-900 shadow-xs font-bold'
-                            : 'text-stone-500 hover:text-stone-800'
-                            }`}
-                          title="Dashed / broken line (ideal for interrupted creases)"
-                        >
-                          Dashed
-                        </button>
-                      </div>
                     </div>
-                  )}
+
+                    {mode === 'draw' && (
+                      <>
+                        {/* Thickness Selector */}
+                        <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+                          {THICKNESS_OPTIONS.map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setThickness(opt.value)}
+                              className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${thickness === opt.value
+                                ? 'bg-white text-stone-900 shadow-xs font-bold'
+                                : 'text-stone-500 hover:text-stone-800'
+                                }`}
+                              title={opt.desc}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Line Style (Solid vs Dashed) */}
+                        <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg border border-stone-200">
+                          <button
+                            type="button"
+                            onClick={() => setStrokeStyle('solid')}
+                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${strokeStyle === 'solid'
+                              ? 'bg-white text-stone-900 shadow-xs font-bold'
+                              : 'text-stone-500 hover:text-stone-800'
+                              }`}
+                            title="Solid continuous line"
+                          >
+                            Solid
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStrokeStyle('dashed')}
+                            className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${strokeStyle === 'dashed'
+                              ? 'bg-white text-stone-900 shadow-xs font-bold'
+                              : 'text-stone-500 hover:text-stone-800'
+                              }`}
+                            title="Dashed / broken line (ideal for interrupted creases)"
+                          >
+                            Dashed
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1749,12 +1965,14 @@ export default function HandCanvas({
                             fill="none"
                             stroke={isSelected ? '#d97706' : drawing.color}
                             strokeWidth={drawing.thickness}
+                            strokeOpacity={lineOpacity}
                             strokeDasharray={isDashed ? '4,3' : undefined}
                             vectorEffect="non-scaling-stroke"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             className="transition-all"
                             style={{
+                              opacity: lineOpacity,
                               filter: isSelected
                                 ? 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4))'
                                 : `drop-shadow(0 1px 2px rgba(0,0,0,0.2))`,
@@ -1858,10 +2076,12 @@ export default function HandCanvas({
                         fill="none"
                         stroke={currentColor}
                         strokeWidth={thickness}
+                        strokeOpacity={lineOpacity}
                         strokeDasharray={strokeStyle === 'dashed' ? '4,3' : undefined}
                         vectorEffect="non-scaling-stroke"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        style={{ opacity: lineOpacity }}
                       />
                     )}
 
@@ -1993,19 +2213,9 @@ export default function HandCanvas({
                     {/* Aging Mode Overlays */}
                     {mode === 'aging' && (
                       <g className="aging-overlay">
-                        {/* 1. Primary Line Aging Ticks */}
-                        {currentAgingTicks.map((tick, idx) => {
-                          const tickLen = tick.isMajor ? 2.6 : 1.5;
-                          const x1 = tick.point.x - tick.normal.x * tickLen;
-                          const y1 = tick.point.y - tick.normal.y * tickLen;
-                          const x2 = tick.point.x + tick.normal.x * tickLen;
-                          const y2 = tick.point.y + tick.normal.y * tickLen;
-
-                          // Text badge offset along normal
-                          const textOffset = tickLen + 1.8;
-                          const textX = tick.point.x + tick.normal.x * textOffset;
-                          const textY = tick.point.y + tick.normal.y * textOffset;
-                          const badgeW = tick.label.length > 2 ? 5.2 : 3.8;
+                        {/* 1. Primary Line Aging Ticks (Uniform, collision-free, strictly chronological) */}
+                        {agingTickLayouts.map((item, idx) => {
+                          const { tick, x1, y1, x2, y2, textX, textY, badgeW, badgeH, showLabel } = item;
 
                           return (
                             <g
@@ -2018,20 +2228,20 @@ export default function HandCanvas({
                                   age: tick.age,
                                   point: tick.point,
                                   lineCategory: activeAgingDrawing?.lineCategory || agingLineCategory,
-                                  sign: 'Triangle △ (Property / Shield)',
+                                  sign: 'Triangle △ (Property / Shield / Wealth)',
                                   note: '',
                                 });
                                 setHoveredAgeData(null);
                               }}
                             >
-                              {/* Perpendicular tick line */}
+                              {/* Clean perpendicular tick mark across curve */}
                               <line
                                 x1={x1}
                                 y1={y1}
                                 x2={x2}
                                 y2={y2}
                                 stroke={tick.color}
-                                strokeWidth={tick.isMajor ? '2.0' : '1.3'}
+                                strokeWidth={tick.isMajor ? '1.8' : '1.1'}
                                 vectorEffect="non-scaling-stroke"
                                 strokeLinecap="round"
                               />
@@ -2039,34 +2249,38 @@ export default function HandCanvas({
                               <circle
                                 cx={tick.point.x}
                                 cy={tick.point.y}
-                                r={tick.isMajor ? 0.7 : 0.45}
+                                r={tick.isMajor ? 0.65 : 0.4}
                                 fill={tick.color}
                                 stroke="#ffffff"
-                                strokeWidth="0.25"
-                              />
-                              {/* Label badge */}
-                              <rect
-                                x={textX - badgeW / 2}
-                                y={textY - 1.2}
-                                width={badgeW}
-                                height="2.4"
-                                rx="0.5"
-                                fill="#1c1917"
-                                opacity="0.9"
-                                stroke={tick.color}
                                 strokeWidth="0.2"
                               />
-                              <text
-                                x={textX}
-                                y={textY + 0.3}
-                                fill="#ffffff"
-                                fontSize="1.0"
-                                fontWeight="bold"
-                                textAnchor="middle"
-                                style={{ pointerEvents: 'none', userSelect: 'none' }}
-                              >
-                                {tick.label}
-                              </text>
+                              {/* Label badge (compact, collision-free, strictly monotonic) */}
+                              {showLabel && (
+                                <>
+                                  <rect
+                                    x={textX - badgeW / 2}
+                                    y={textY - badgeH / 2}
+                                    width={badgeW}
+                                    height={badgeH}
+                                    rx="0.35"
+                                    fill="#1c1917"
+                                    opacity="0.92"
+                                    stroke={tick.color}
+                                    strokeWidth="0.18"
+                                  />
+                                  <text
+                                    x={textX}
+                                    y={textY + 0.24}
+                                    fill="#ffffff"
+                                    fontSize="0.70"
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                    style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                  >
+                                    {tick.label}
+                                  </text>
+                                </>
+                              )}
                             </g>
                           );
                         })}
@@ -2861,6 +3075,35 @@ export default function HandCanvas({
                   </label>
                 </div>
 
+                {/* Marker Density Toggle */}
+                <div className="flex items-center justify-between pt-2 border-t border-stone-800">
+                  <span className="text-[11px] text-stone-300">Marker Density:</span>
+                  <div className="flex items-center gap-1 bg-stone-800/80 p-0.5 rounded border border-stone-700/80 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setAgingTickDensity('major')}
+                      className={`px-2 py-0.5 rounded font-medium transition cursor-pointer ${agingTickDensity === 'major'
+                        ? 'bg-amber-500/25 text-amber-300 font-bold border border-amber-500/40'
+                        : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      title="Key Milestones (14, 28, 42, 56, 70, 84, 98) — clean, non-overlapping"
+                    >
+                      Key (7)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAgingTickDensity('all')}
+                      className={`px-2 py-0.5 rounded font-medium transition cursor-pointer ${agingTickDensity === 'all'
+                        ? 'bg-amber-500/25 text-amber-300 font-bold border border-amber-500/40'
+                        : 'text-stone-400 hover:text-stone-200'
+                        }`}
+                      title="All 14 seven-year divisions with smart anti-collision protection"
+                    >
+                      All 14 Cycles
+                    </button>
+                  </div>
+                </div>
+
                 {/* Milestone Summary & Helper */}
                 {currentAgingTicks.length > 0 && (
                   <div className="pt-2 border-t border-stone-800 space-y-1">
@@ -2900,22 +3143,72 @@ export default function HandCanvas({
                         </span>
                       </div>
                       {loggedEvents.length > 0 ? (
-                        <div className="space-y-1 max-h-32 overflow-y-auto pr-0.5">
-                          {loggedEvents.map((evt, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center justify-between gap-1.5 p-1.5 bg-stone-800/90 rounded border border-stone-700/70 text-[11px]"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 shrink-0 border border-amber-500/30">
-                                  Age {evt.age}
-                                </span>
-                                <span className="text-stone-200 truncate font-medium text-[10.5px]">
-                                  {evt.event}
-                                </span>
+                        <div className="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+                          {loggedEvents.map((evt, idx) => {
+                            const colonIdx = evt.event.indexOf(':');
+                            const signPart = colonIdx !== -1 ? evt.event.substring(0, colonIdx).trim() : evt.event;
+                            const notePart = colonIdx !== -1 ? evt.event.substring(colonIdx + 1).trim() : '';
+
+                            return (
+                              <div
+                                key={idx}
+                                className="group flex items-center justify-between gap-1.5 p-1.5 bg-stone-800/90 hover:bg-stone-750 rounded border border-stone-700/70 hover:border-amber-500/50 text-[11px] transition-all cursor-pointer"
+                                onClick={() => {
+                                  setAgeEventModal({
+                                    isOpen: true,
+                                    age: evt.age,
+                                    point: { x: 50, y: 50 },
+                                    lineCategory: hudLineCategory,
+                                    sign: signPart,
+                                    note: notePart,
+                                    editingIndex: idx,
+                                  });
+                                }}
+                                title="Click to edit milestone"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-amber-500/20 text-amber-300 shrink-0 border border-amber-500/30">
+                                    Age {evt.age}
+                                  </span>
+                                  <span className="text-stone-200 truncate font-medium text-[10.5px]">
+                                    {evt.event}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAgeEventModal({
+                                        isOpen: true,
+                                        age: evt.age,
+                                        point: { x: 50, y: 50 },
+                                        lineCategory: hudLineCategory,
+                                        sign: signPart,
+                                        note: notePart,
+                                        editingIndex: idx,
+                                      });
+                                    }}
+                                    className="p-1 hover:bg-stone-700 rounded text-stone-400 hover:text-amber-300 transition"
+                                    title="Edit Milestone"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteAgeEvent(hudLineCategory, idx);
+                                    }}
+                                    className="p-1 hover:bg-red-500/20 rounded text-stone-400 hover:text-red-400 transition"
+                                    title="Delete Milestone"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="text-[10px] text-stone-400 italic">
@@ -3019,13 +3312,15 @@ export default function HandCanvas({
           >
             {activeView === 'd1_chart'
               ? '☸️ Viewing D-1 Rasi Chart.'
-              : mode === 'pin'
-                ? `Pin Mode: Click on the ${HAND_VIEW_LAB_ATTR(activeView)} to drop an analytical marker pin.`
-                : mode === 'draw'
-                  ? `Trace Mode: Click & drag to trace lines. Press Ctrl+Z / ⌘Z to undo mistakes anytime.`
-                  : mode === 'pan'
-                    ? `Pan Mode: Click & drag to pan around the zoomed image. Scroll wheel to zoom.`
-                    : `Measure Mode: Drag the Blue line (Palm Height) and Green line (Finger Length) endpoints.`}
+              : mode === 'pan'
+                ? `✋ Pan & Zoom Mode (Default): Drag to pan around the image. Scroll wheel to zoom in/out.`
+                : mode === 'pin'
+                  ? `📍 Pin Mode: Click on the ${HAND_VIEW_LAB_ATTR(activeView)} to drop an analytical marker pin.`
+                  : mode === 'draw'
+                    ? `✏️ Trace Mode: Click & drag to trace lines. Press Ctrl+Z / ⌘Z to undo mistakes anytime.`
+                    : mode === 'aging'
+                      ? `⏱️ Aging Ruler & Grid: Calculate age milestones along lines & axial geometry.`
+                      : `📐 Measure Mode: Drag the Blue line (Palm Height) and Green line (Finger Length) endpoints.`}
           </div>
         </>
       ) : (
@@ -3084,7 +3379,7 @@ export default function HandCanvas({
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
               <div className="flex items-center gap-2 text-stone-900 font-bold text-base">
                 <Calendar className="w-5 h-5 text-accent-gold" />
-                <span>Log Age Milestone</span>
+                <span>{ageEventModal.editingIndex !== undefined ? 'Edit Age Milestone' : 'Log Age Milestone'}</span>
               </div>
               <button
                 type="button"
@@ -3179,22 +3474,36 @@ export default function HandCanvas({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-stone-100">
-              <button
-                type="button"
-                onClick={() => setAgeEventModal(null)}
-                className="btn-outline px-3 py-2 text-xs cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveAgeEvent}
-                className="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Save Milestone & Place Pin</span>
-              </button>
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-100">
+              {ageEventModal.editingIndex !== undefined ? (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteAgeEvent(ageEventModal.lineCategory, ageEventModal.editingIndex!)}
+                  className="btn-outline border-rose-300 text-rose-600 hover:bg-rose-50 px-3 py-2 text-xs flex items-center gap-1.5 cursor-pointer font-semibold"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Milestone</span>
+                </button>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAgeEventModal(null)}
+                  className="btn-outline px-3 py-2 text-xs cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAgeEvent}
+                  className="btn-primary px-4 py-2 text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{ageEventModal.editingIndex !== undefined ? 'Save Changes' : 'Save Milestone & Place Pin'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
