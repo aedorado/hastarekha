@@ -1,15 +1,9 @@
 
 # Hasta Sāmudrika Śāstra — Signs & Symbols, and the Life Line 
 
-> [!NOTE] About these notes
-> - Source: Hindi/English class transcript, translated into English; key Hindi/Sanskrit terms kept.
-> - Speakers: **Teacher** = Speaker 1. Students are labelled by speaker number; names are given only where the transcript itself addresses them (Anurādhā ji = Speaker 4, Jīveśa ji = Speaker 3 in the last segment, Arvinda ji = Speaker 6). Speaker labels are sometimes mixed up in the transcript (see Open items).
-> - The teacher drew shapes on a shared screen (Canva). The drawings are not in the transcript, so shapes below are described only as far as she described them in words.
-> - The teacher uses English for "mind line / head line / brain line", "heart line", "family ring", etc. These are kept as she said them.
-
----
-
 ## 1. Signs and Symbols (continuation from "fish")
+
+![Fig 1. Various Symbols](/lecture-notes-images/20/01-various-symbols.png)
 
 Teacher recap: she had taught signs up to the **fish**. Today she begins with signs and symbols again.
 
@@ -19,8 +13,8 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 ### 1.1 Śaṅkha (Conch)
 
 > [!INFO] Śaṅkha sign
-> - **Very rare** ("if 1% get it, they get it"). No guarantee that anyone will find it. Even when present, it is often hard to recognise.
-> - Shape: drawn on screen as a conch with a **circle on top**; it can also form in other ways [shape not captured in transcript].
+> - **Very rare** No guarantee that anyone will find it. Even when present, it is often hard to recognise.
+> - Shape: As a conch with a **circle on top**; it can also form in other ways.
 > - Indicates a **spiritual journey**; seen in the hands of people at a very high spiritual level.
 > - Also indicates **sudden money gain**.
 > - **Location:** can appear anywhere on the palm; mostly in the **ketu parvata (Ketu Mount)** area, the same area where the fish generally appears.
@@ -28,10 +22,10 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 ### 1.2 Flag
 
 > [!INFO] Flag sign
-> - **Shape:** like a "T"; or a line with a flag-type shape attached (various forms drawn).
+> - **Shape:** like a "F" or "P"; or a line with a flag-type shape attached.
 > - **Do not confuse with a square.** A flag is **closed on three sides and open on one side**. A square is closed on all sides. Example given: a line running with a closed box on it = square, not flag. Two lines emerging with one line under them = flag.
 > - Can form **on a line** or **on its own**.
-> - **Meaning:** famous name, fame, increases will power.
+> - **Meaning:** famous, name, fame, increases will power.
 > - **Location:** mostly on the **sūrya parvata (Sun Mount)** or the **śani parvata (Saturn Mount)**.
 
 ### 1.3 Tree
@@ -39,12 +33,12 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > [!INFO] Tree sign
 > - **Location:** at the **very end of a line** (last stretch), whichever line it is.
 > - **Shape:** branching like a tree. May be one branch on one side, two on the other, even three, any number.
-> - **Meaning:** growth, prosperity, name and fame. The teacher said length increases strength [exact meaning unclear in transcript].
+> - **Meaning:** growth, prosperity, name and fame. Line strength increases.
 
 ### 1.4 Temple
 
 > [!INFO] Temple sign
-> - Can form in **many shapes** (several drawn, resembling the temple symbol). The teacher said hers is not a temple though she sometimes feels it is something like it.
+> - Can form in **many shapes**.
 > - **No meaning was stated in this class.**
 
 ### 1.5 Chain
@@ -73,30 +67,29 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - Reasoning given: (1) the person has a strong desire for **karma** (action/work) and (2) will get **success in karma**, so the overall strength of the line increases.
 > - Because it is at the **end** (later age), the **career will last until death**: 50, 60, 70 years and beyond. At that age the person gets **name and fame** because of the career, and is still working then.
 > - **Very rare**; not seen in every hand.
-> - Teacher's illustration: many people at 70–80 are still working and do not retire. She named **Dave ji**, who is still active; she plans to see his hand and will ask him to send it to the group (he has not yet).
+> - Illustration: many people at 70–80 are still working and do not retire. She named **Dave ji**, who is still active.
 
 ---
 
 ## 2. Life Line: Double Life Line vs Supportive Line
 
+![Fig 2. Sushant Singh Rajput Example](/lecture-notes-images/20/02-ssr.png)
+
+
 > [!EXAMPLE] Case: Sushant Singh Rajput (picture sent to the practice group)
 > - **Who/what:** Sushant Singh Rajput (named by the teacher).
 > - **Hand:** Right hand ("sīdhe hāth").
-> - **Observed:** Teacher said the hand picture itself is not a good one. Brain line goes connected to the Life Line (teacher: correct). There are **two lines in the life-line area**: one Life Line going on, and another that is faint at the beginning and becomes darker further on. Heart line looks **straight**. (She said a straight heart line is also in Umang Taneja's hand, seen in a video, and told students to check such hands.)
-> - **Students' reading:** Speaker 3: it looks **double**. Teacher: correct. Speaker 4: it looks **parallel**.
+> - **Observed:** Brain line goes connected to the Life Line. There are **two lines in the life-line area**: one Life Line going on, and another that is faint at the beginning and becomes darker further on. Heart line looks **straight**. (A straight heart line is also in Umang Taneja's hand, seen in a video)
 > - **Interpretation given:** It is a **double life line**.
 > - **Reasoning:** The second line is **joined to the Life Line** — two lines emerge from the same Life Line.
 > - **Further remarks:**
->   - Teacher's rule (see box below).
 >   - **Double life line does not mean a longer or better life.** The person lives a **double life**, or can live **two lives equally well**, or has **two careers**. Teacher: as far as she knows, he was first an engineer and did that career well; his family had no one in that field; then he entered a different field and did equally well. "Two ways of leading life, completely different"; exact details unknown. Cannot say long life.
 >   - Teacher noted that his case was a suicide, but his **brain line** is **very straight and practical**, so by the brain line "it doesn't seem like a suicide case". Brain line will be taught later.
 > - **Outcome:** Teacher said the Life Line is "a living example" of what a double life line means.
 
-> [!TIP] Double life line vs supportive line (Teacher's rule)
+> [!TIP] Double life line vs supportive line
 > - **Both lines from one Life Line / second line touches (is joined to) the Life Line → double life line.**
 > - **A line running parallel to the Life Line but not touching it → supportive line** (also called the **Mars line**).
-> - Speaker 3's attempted answer: supportive line runs alongside and does not run the full length; it may start from a different place. Speaker 4 added: parallel.
-> - Speaker 4 asked whether to call the Rajput line supportive. Teacher: **No — double life line**, not supportive line.
 
 ---
 
