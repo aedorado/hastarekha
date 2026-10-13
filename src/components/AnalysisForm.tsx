@@ -3120,7 +3120,7 @@ export default function AnalysisForm({
         {activeTab === 'age' && (
           <div className="space-y-5">
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 font-medium leading-relaxed">
-              🕒 <strong>Age Calculation — 4 Methods (Lectures 20, 22, 27)</strong><br />
+              🕒 <strong>Age Calculation — 4 Methods</strong><br />
               Four distinct methods. The <strong>30-midpoint</strong> method is currently used in class.
             </div>
 
@@ -3533,11 +3533,10 @@ export default function AnalysisForm({
                             onChangeActiveView(pin.view);
                           }
                         }}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
-                          isSelected
-                            ? 'bg-amber-500/10 border-accent-gold shadow-sm ring-1 ring-accent-gold'
-                            : 'bg-white border-stone-200 hover:border-stone-300 hover:bg-stone-50/50'
-                        }`}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${isSelected
+                          ? 'bg-amber-500/10 border-accent-gold shadow-sm ring-1 ring-accent-gold'
+                          : 'bg-white border-stone-200 hover:border-stone-300 hover:bg-stone-50/50'
+                          }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
                           <div
@@ -4059,7 +4058,7 @@ export default function AnalysisForm({
                 <div className="bg-white border border-stone-200 rounded-2xl p-5 space-y-3 shadow-sm">
                   <h4 className="font-bold text-sm text-stone-900 border-b border-stone-100 pb-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-500" />
-                    6. Chronological Life Timeline &amp; Age Milestones (Lectures 20, 22, 27)
+                    6. Chronological Life Timeline &amp; Age Milestones
                   </h4>
                   <div className="divide-y divide-stone-100">
                     {chronologicalEvents.map((ev, i) => (

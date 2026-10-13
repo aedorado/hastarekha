@@ -204,7 +204,7 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, age-calculation, le
 ![Fig 6. Aging Method](/lecture-notes-images/20/06-aging-method.png)
 
 > [!IMPORTANT] Steps (Life Line)
-> 1. Draw/take the Life Line **from its starting point to where it ends** (it may also turn inward). *Traditional method:* place a **thin strip of paper** along the line; mark the full length on the paper.
+> 1. Draw/take the Life Line **from its starting point to the center of manibaddha rekha**. *Traditional method:* place a **thin strip of paper** along the line; mark the full length on the paper.
 > 2. **Halve** the length: **fold the paper in half**, then lay it back and mark where the half falls on the line.
 > 3. From that half-point, draw a **line to the Mercury line side (toward the Mercury finger)** *(teacher: "from Mercury line I'll bring a line to the half point")* 
 > 4. **Start → half-point = age 30.** This is **fixed**: **age 30 for the Life Line and also for the Fate Line.** *"Whatever the person's actual age, I take 30 up to the mid-point."*
@@ -214,7 +214,7 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, age-calculation, le
 
 > [!EXAMPLE] Applying it – Arvind ji's hand (age 43)
 
-![Fig 7. Triangel Example](/lecture-notes-images/20/07-arvind-ji-example.png)
+![Fig 7. Triangle Example](/lecture-notes-images/20/07-arvind-ji-example.png)
 
 > - **Hand:** *the teacher applied it roughly on his hand picture* **[which hand not stated]**; she said she will download the pictures and do it properly the next day; the paper/standing-line method halves more accurately.
 > - **Observed:** a **triangle** on the Life Line; the half-point (age 30) falls slightly above the triangle.
