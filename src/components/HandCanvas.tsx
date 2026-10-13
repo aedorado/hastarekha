@@ -22,6 +22,7 @@ import {
   Calendar,
   CheckCircle2,
   X,
+  Target,
 } from 'lucide-react';
 import {
   Pin,
@@ -43,6 +44,7 @@ import {
   getNearestPointOnPolyline,
   calculatePolylineLength,
   getAgeForFraction,
+  getManibandhaMidpoint,
   Point2D,
 } from '@/lib/agingCalculator';
 import ConfirmModal from './ConfirmModal';
@@ -164,6 +166,8 @@ export default function HandCanvas({
   const [strokeStyle, setStrokeStyle] = useState<'solid' | 'dashed'>('solid');
   const [imageFilter, setImageFilter] = useState<ImageFilterId>('normal');
   const [showLayers, setShowLayers] = useState(true);
+  const [showDrawings, setShowDrawings] = useState(true);
+  const [showPins, setShowPins] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Drawing state
@@ -969,10 +973,15 @@ export default function HandCanvas({
       onChangeDrawings(updated);
       pushHistory(updated, pins);
       setSelectedDrawingId(newDrawing.id);
-      setSelectedAgingDrawingId(newDrawing.id);
+      if (newDrawing.lineCategory !== 'line_manibandha') {
+        setSelectedAgingDrawingId(newDrawing.id);
+      }
 
       if (returnToAgingAfterTraceRef.current) {
         returnToAgingAfterTraceRef.current = false;
+        if (agingLineCategory === 'line_manibandha') {
+          setAgingLineCategory(activeAgingDrawing?.lineCategory || 'line_life');
+        }
         setMode('aging');
       }
     }
@@ -1144,6 +1153,7 @@ export default function HandCanvas({
       setHoveredAgeData(null);
       return;
     }
+    setShowDrawings(true);
     setMode('aging');
     if (!selectedAgingDrawingId && visibleDrawings.length > 0) {
       setSelectedAgingDrawingId(visibleDrawings[0].id);
@@ -1293,11 +1303,21 @@ export default function HandCanvas({
   };
 
   // Active aging line computations
+  const currentSelectedDrawing = visibleDrawings.find((d) => d.id === selectedAgingDrawingId) || null;
+  const palmDrawings = visibleDrawings.filter((d) => d.lineCategory !== 'line_manibandha');
   const activeAgingDrawing =
-    visibleDrawings.find((d) => d.id === selectedAgingDrawingId) ||
-    visibleDrawings.find((d) => d.lineCategory === agingLineCategory) ||
-    visibleDrawings[0] ||
+    (currentSelectedDrawing && currentSelectedDrawing.lineCategory !== 'line_manibandha' ? currentSelectedDrawing : null) ||
+    visibleDrawings.find((d) => d.lineCategory === agingLineCategory && d.lineCategory !== 'line_manibandha') ||
+    palmDrawings[0] ||
     null;
+  const lineToClassify = (currentSelectedDrawing && currentSelectedDrawing.lineCategory !== 'line_manibandha' ? currentSelectedDrawing : null) || activeAgingDrawing;
+
+  // Maṇibandha Rekhā (Wrist Crease) and Kendra (50% Midpoint) detection
+  const manibandhaDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_manibandha') || null;
+  const manibandhaData = useMemo(() => {
+    if (!manibandhaDrawing || manibandhaDrawing.points.length < 2) return null;
+    return getManibandhaMidpoint(manibandhaDrawing.points);
+  }, [manibandhaDrawing]);
 
   const currentAgingTicks =
     activeAgingDrawing && activeAgingDrawing.points.length > 1
@@ -1428,29 +1448,72 @@ export default function HandCanvas({
           ))}
         </div>
 
-        {/* Fullscreen & Layer Toggle in Header */}
-        <div className="flex items-center gap-1.5 ml-auto">
+        {/* Fullscreen & Granular Layer Visibility Controls */}
+        <div className="flex items-center gap-2 ml-auto">
+          {/* Granular Visibility: Lines & Pins */}
+          <div
+            className={`flex items-center p-1 rounded-xl border gap-1 text-xs shadow-2xs ${isFullscreen
+              ? 'bg-stone-850 border-stone-750'
+              : 'bg-stone-100/90 border-stone-250/80'
+              }`}
+          >
+            {/* Toggle Lines */}
+            <button
+              type="button"
+              onClick={() => setShowDrawings((prev) => !prev)}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${showDrawings
+                ? isFullscreen
+                  ? 'bg-stone-700 text-amber-300 shadow-2xs'
+                  : 'bg-white text-stone-800 shadow-2xs'
+                : 'text-stone-400 hover:text-stone-600 opacity-60 line-through'
+                }`}
+              title={showDrawings ? 'Hide traced lines' : 'Show traced lines'}
+            >
+              {showDrawings ? <Eye className="w-3.5 h-3.5 text-amber-500" /> : <EyeOff className="w-3.5 h-3.5 text-stone-400" />}
+              <span>Lines</span>
+              <span className="text-[10px] text-stone-400 font-mono">({visibleDrawings.length})</span>
+            </button>
+
+            {/* Toggle Pins */}
+            <button
+              type="button"
+              onClick={() => setShowPins((prev) => !prev)}
+              className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${showPins
+                ? isFullscreen
+                  ? 'bg-stone-700 text-amber-300 shadow-2xs'
+                  : 'bg-white text-stone-800 shadow-2xs'
+                : 'text-stone-400 hover:text-stone-600 opacity-60 line-through'
+                }`}
+              title={showPins ? 'Hide markers & pins' : 'Show markers & pins'}
+            >
+              {showPins ? <Eye className="w-3.5 h-3.5 text-amber-500" /> : <EyeOff className="w-3.5 h-3.5 text-stone-400" />}
+              <span>Pins</span>
+              <span className="text-[10px] text-stone-400 font-mono">({visiblePins.length})</span>
+            </button>
+          </div>
+
+          {/* Master Peek (Clean Hand) Button */}
           <button
             type="button"
             onClick={() => setShowLayers((prev) => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition ${!showLayers
-              ? 'bg-amber-500 text-white border-amber-600 shadow-sm font-bold'
+            className={`px-3 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all cursor-pointer ${!showLayers
+              ? 'bg-amber-600 text-white border-amber-700 shadow-xs font-bold'
               : isFullscreen
                 ? 'bg-stone-800 border-stone-700 text-stone-300 hover:bg-stone-700'
-                : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
               }`}
-            title={showLayers ? 'Hide Markings (Peek clean hand • Press H)' : 'Show Markings (Press H)'}
+            title={showLayers ? 'Hide All Markings (Peek clean hand • Press H)' : 'Show Markings (Press H)'}
           >
             {showLayers ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline text-[11px] font-medium">
-              {showLayers ? 'Markings' : 'Peeking'}
+            <span className="hidden sm:inline text-xs font-medium">
+              {showLayers ? 'All Layers' : 'Peeking'}
             </span>
           </button>
 
           <button
             type="button"
             onClick={toggleFullscreen}
-            className={`p-1.5 rounded-lg border text-xs flex items-center justify-center transition ${isFullscreen
+            className={`p-2 rounded-xl border text-xs flex items-center justify-center transition cursor-pointer ${isFullscreen
               ? 'bg-stone-800 border-stone-700 text-amber-400 hover:bg-stone-700'
               : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
               }`}
@@ -1573,6 +1636,7 @@ export default function HandCanvas({
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        setShowPins(true);
                         setMode('pin');
                       }}
                       className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'pin'
@@ -1593,6 +1657,7 @@ export default function HandCanvas({
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        setShowDrawings(true);
                         setMode('draw');
                       }}
                       className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'draw'
@@ -1792,7 +1857,7 @@ export default function HandCanvas({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5 text-xs">
+                  <div className="flex items-center gap-2 text-xs">
                     {/* Line Transparency / Opacity Selector (See-through so palm signs underneath are visible!) */}
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] text-stone-500 font-semibold hidden sm:inline">See-Through:</span>
@@ -1933,7 +1998,8 @@ export default function HandCanvas({
                     onClick={handleSvgClick}
                   >
                     {/* Render already drawn lines */}
-                    {visibleDrawings.map((drawing) => {
+                    {showDrawings &&
+                      visibleDrawings.map((drawing) => {
                       const pointsString = drawing.points
                         .map((p) => `${p.x},${p.y}`)
                         .join(' ');
@@ -2210,9 +2276,109 @@ export default function HandCanvas({
                       </g>
                     )}
 
+                    {/* 0. Maṇibandha Rekhā (Wrist Crease) Kendra & Baseline Overlay - Always visible during aging mode AND when actively tracing another line */}
+                    {manibandhaData && (mode === 'aging' || mode === 'draw') && (
+                      <g className="manibandha-kendra-overlay">
+                        {/* Accent highlight along traced wrist crease */}
+                        {manibandhaDrawing && (
+                          <polyline
+                            points={manibandhaDrawing.points.map((p) => `${p.x},${p.y}`).join(' ')}
+                            fill="none"
+                            stroke="#f59e0b"
+                            strokeWidth="1.2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeDasharray="1.5,1.5"
+                            opacity="0.85"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        )}
+
+                        {/* Upward central guide ray from Kendra toward palm center / Saturn axis */}
+                        <line
+                          x1={manibandhaData.midpoint.x}
+                          y1={manibandhaData.midpoint.y}
+                          x2={manibandhaData.midpoint.x}
+                          y2={Math.max(5, manibandhaData.midpoint.y - 10)}
+                          stroke="#f59e0b"
+                          strokeWidth="1.5"
+                          strokeDasharray="2,2"
+                          opacity="0.75"
+                          vectorEffect="non-scaling-stroke"
+                        />
+
+                        {/* Crosshairs at Kendra (Exact 50% Midpoint) */}
+                        <line
+                          x1={manibandhaData.midpoint.x - 2}
+                          y1={manibandhaData.midpoint.y}
+                          x2={manibandhaData.midpoint.x + 2}
+                          y2={manibandhaData.midpoint.y}
+                          stroke="#fbbf24"
+                          strokeWidth="1.8"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        <line
+                          x1={manibandhaData.midpoint.x}
+                          y1={manibandhaData.midpoint.y - 2}
+                          x2={manibandhaData.midpoint.x}
+                          y2={manibandhaData.midpoint.y + 2}
+                          stroke="#fbbf24"
+                          strokeWidth="1.8"
+                          vectorEffect="non-scaling-stroke"
+                        />
+
+                        {/* Concentric glowing target rings */}
+                        <circle
+                          cx={manibandhaData.midpoint.x}
+                          cy={manibandhaData.midpoint.y}
+                          r="2.2"
+                          fill="none"
+                          stroke="#f59e0b"
+                          strokeWidth="1.2"
+                          strokeDasharray="1.5,1"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        <circle
+                          cx={manibandhaData.midpoint.x}
+                          cy={manibandhaData.midpoint.y}
+                          r="0.8"
+                          fill="#fbbf24"
+                          stroke="#ffffff"
+                          strokeWidth="0.3"
+                        />
+
+                        {/* Clean Kendra Badge */}
+                        <g transform={`translate(${manibandhaData.midpoint.x}, ${Math.min(96, manibandhaData.midpoint.y + 3.6)})`}>
+                          <rect
+                            x="-14"
+                            y="-1.5"
+                            width="28"
+                            height="3"
+                            rx="0.6"
+                            fill="#1c1917"
+                            opacity="0.95"
+                            stroke="#f59e0b"
+                            strokeWidth="0.3"
+                          />
+                          <text
+                            x="0"
+                            y="0.5"
+                            fill="#fef3c7"
+                            fontSize="1.0"
+                            fontWeight="bold"
+                            textAnchor="middle"
+                            style={{ pointerEvents: 'none', userSelect: 'none' }}
+                          >
+                            Maṇibandha Kendra • 50% (Base 0/75)
+                          </text>
+                        </g>
+                      </g>
+                    )}
+
                     {/* Aging Mode Overlays */}
                     {mode === 'aging' && (
                       <g className="aging-overlay">
+
                         {/* 1. Primary Line Aging Ticks (Uniform, collision-free, strictly chronological) */}
                         {agingTickLayouts.map((item, idx) => {
                           const { tick, x1, y1, x2, y2, textX, textY, badgeW, badgeH, showLabel } = item;
@@ -2350,7 +2516,8 @@ export default function HandCanvas({
 
                         {/* 3. Geometric Axial Grid */}
                         {showArvindJiAxialGrid && (() => {
-                          const { wrist, midpoint, saturn, jupiter } = axialGrid;
+                          const { wrist: defaultWrist, midpoint, saturn, jupiter } = axialGrid;
+                          const wrist = manibandhaData ? manibandhaData.midpoint : defaultWrist;
 
                           // Halving calculations along 30->75 (midpoint to wrist)
                           const p52_5 = {
@@ -2713,6 +2880,7 @@ export default function HandCanvas({
 
                 {/* Marker Pins Overlay */}
                 {activeView !== 'd1_chart' &&
+                  showPins &&
                   visiblePins.map((pin) => (
                     <div
                       key={pin.id}
@@ -2766,28 +2934,46 @@ export default function HandCanvas({
                 {/* Grid Handles */}
                 {activeView !== 'd1_chart' && mode === 'aging' && showArvindJiAxialGrid && (
                   <>
-                    {/* Wrist Node (75) */}
-                    <div
-                      className="absolute cursor-move z-30 group"
-                      style={{
-                        left: `${axialGrid.wrist.x}%`,
-                        top: `${axialGrid.wrist.y}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        setDraggingAxialNode('wrist');
-                      }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation();
-                        setDraggingAxialNode('wrist');
-                      }}
-                      title="Wrist Base (Age 75) - Drag to align"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-amber-600 border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform">
-                        <span className="text-[9px] font-bold text-white leading-none">75</span>
-                      </div>
-                    </div>
+                    {/* Wrist Node (75 / Kendra) */}
+                    {(() => {
+                      const wristPos = manibandhaData ? manibandhaData.midpoint : axialGrid.wrist;
+                      return (
+                        <div
+                          className={`absolute ${manibandhaData ? 'cursor-default' : 'cursor-move'} z-30 group`}
+                          style={{
+                            left: `${wristPos.x}%`,
+                            top: `${wristPos.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          onMouseDown={(e) => {
+                            if (manibandhaData) return;
+                            e.stopPropagation();
+                            setDraggingAxialNode('wrist');
+                          }}
+                          onTouchStart={(e) => {
+                            if (manibandhaData) return;
+                            e.stopPropagation();
+                            setDraggingAxialNode('wrist');
+                          }}
+                          title={
+                            manibandhaData
+                              ? 'Maṇibandha Kendra (Wrist Midpoint) - Locked to traced wrist crease'
+                              : 'Wrist Base (Age 75) - Drag to align'
+                          }
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-full ${manibandhaData
+                              ? 'bg-amber-500 ring-2 ring-amber-300'
+                              : 'bg-amber-600'
+                              } border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform`}
+                          >
+                            <span className="text-[9px] font-bold text-white leading-none">
+                              {manibandhaData ? 'MK' : '75'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Midpoint Node (30) */}
                     <div
@@ -2864,7 +3050,7 @@ export default function HandCanvas({
 
             {/* Fixed HUD: Vedic Tattva Ratio HUD Overlay (stays anchored on screen) */}
             {activeView !== 'd1_chart' && mode === 'measure' && measurements && vedicData && (
-              <div className="absolute top-4 left-4 bg-stone-900/95 backdrop-blur border border-stone-800 text-white rounded-xl p-3.5 shadow-2xl z-30 text-xs space-y-2 font-sans w-52 pointer-events-none select-none">
+              <div className="absolute top-4 left-4 bg-stone-900/95 backdrop-blur border border-stone-800 text-white rounded-xl p-3 shadow-2xl z-30 text-xs space-y-2 font-sans w-52 pointer-events-none select-none">
                 <div className="flex items-center gap-1.5 text-accent-gold font-bold">
                   <Sparkles className="w-4 h-4 text-accent-gold" />
                   Vedic Tattva Analysis
@@ -2905,12 +3091,12 @@ export default function HandCanvas({
                   </div>
                 </div>
                 {vedicData.hand_tattva && (
-                  <div className="mt-2 text-[10px] bg-amber-500/15 text-accent-gold font-bold px-2.5 py-1 rounded text-center border border-amber-500/25">
+                  <div className="mt-2 text-[10px] bg-amber-500/15 text-accent-gold font-bold px-3 py-1 rounded text-center border border-amber-500/25">
                     ✨ {vedicData.hand_tattva}
                   </div>
                 )}
                 {vedicData.hand_type && (
-                  <div className="mt-1 text-[10px] bg-purple-500/15 text-purple-300 font-bold px-2.5 py-1 rounded text-center border border-purple-500/25">
+                  <div className="mt-1 text-[10px] bg-purple-500/15 text-purple-300 font-bold px-3 py-1 rounded text-center border border-purple-500/25">
                     ✋ {vedicData.hand_type}
                   </div>
                 )}
@@ -2919,7 +3105,13 @@ export default function HandCanvas({
 
             {/* Fixed HUD: Vedic Aging Calibrator HUD Overlay */}
             {activeView !== 'd1_chart' && mode === 'aging' && (
-              <div className="absolute top-4 left-4 bg-stone-900/95 backdrop-blur-md border border-stone-800 text-white rounded-2xl p-4 shadow-2xl z-30 text-xs space-y-3 font-sans w-72 max-h-[85vh] overflow-y-auto">
+              <div
+                className="absolute top-4 left-4 max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] bg-stone-900/95 backdrop-blur-md border border-stone-800 text-white rounded-2xl p-4 pb-8 shadow-2xl z-30 text-xs space-y-3 font-sans w-80 overflow-y-auto scrollbar-thin [scrollbar-width:thin] overscroll-contain"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center justify-between pb-2 border-b border-stone-800">
                   <div className="flex items-center gap-2 text-accent-gold font-bold">
                     <Clock className="w-4 h-4 text-accent-gold" />
@@ -2936,7 +3128,7 @@ export default function HandCanvas({
                     Classical Method
                   </label>
                   <select
-                    className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
+                    className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
                     value={agingMethod}
                     onChange={(e) => handleSelectAgingMethod(e.target.value as AgingMethod)}
                   >
@@ -2952,7 +3144,7 @@ export default function HandCanvas({
                 </div>
 
                 {/* Line Selection & Tagging */}
-                <div className="space-y-1.5 pt-2 border-t border-stone-800">
+                <div className="space-y-2 pt-3 border-t border-stone-800/80">
                   <div className="flex items-center justify-between">
                     <label className="text-[11px] font-bold text-stone-300">
                       Line to Age
@@ -2964,14 +3156,14 @@ export default function HandCanvas({
                     )}
                   </div>
 
-                  {visibleDrawings.length > 0 ? (
-                    <div className="space-y-1.5">
+                  {palmDrawings.length > 0 ? (
+                    <div className="space-y-2">
                       <select
-                        className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
-                        value={activeAgingDrawing?.id || ''}
+                        className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
+                        value={activeAgingDrawing?.id || palmDrawings[0]?.id || ''}
                         onChange={(e) => setSelectedAgingDrawingId(e.target.value)}
                       >
-                        {visibleDrawings.map((d, i) => (
+                        {palmDrawings.map((d, i) => (
                           <option key={d.id} value={d.id}>
                             Line {i + 1} {d.lineCategory ? `— ${LINE_LABELS[d.lineCategory]}` : ''}
                           </option>
@@ -2983,7 +3175,7 @@ export default function HandCanvas({
                         <div className="flex items-center gap-1.5 pt-0.5">
                           <span className="text-[10px] text-stone-400 shrink-0">Classify:</span>
                           <select
-                            className="w-full bg-stone-800/80 border border-stone-700/80 text-stone-200 rounded px-1.5 py-1 text-[11px] cursor-pointer"
+                            className="w-full bg-stone-800/80 border border-stone-700/80 text-stone-200 rounded px-2 py-1 text-[11px] cursor-pointer"
                             value={activeAgingDrawing.lineCategory || agingLineCategory}
                             onChange={(e) =>
                               handleTagDrawingLineCategory(activeAgingDrawing.id, e.target.value as LineCategory)
@@ -2994,6 +3186,7 @@ export default function HandCanvas({
                             <option value="line_heart">Heart Line (Hṛdaya Rekhā)</option>
                             <option value="line_head">Head Line (Mastiska Rekhā)</option>
                             <option value="line_sun">Sun Line (Sūrya Rekhā)</option>
+                            <option value="line_manibandha">Wrist Crease (Maṇibandha Rekhā)</option>
                             <option value="other">Other Crease</option>
                           </select>
                         </div>
@@ -3006,16 +3199,16 @@ export default function HandCanvas({
                           setAgingLineCategory('line_life');
                           setMode('draw');
                         }}
-                        className="w-full flex items-center justify-center gap-1.5 py-1 px-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded text-[10px] font-semibold transition-all cursor-pointer border border-stone-700/60"
+                        className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer border border-stone-700/60 shadow-xs"
                       >
-                        <Edit3 className="w-3 h-3 text-amber-400" />
+                        <Edit3 className="w-3.5 h-3.5 text-amber-400" />
                         + Trace Another Line on Hand
                       </button>
                     </div>
                   ) : (
-                    <div className="p-3 bg-amber-500/15 border border-amber-500/30 rounded-xl space-y-2.5">
+                    <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-xl space-y-3">
                       <div className="text-[11px] text-amber-200 font-medium leading-relaxed">
-                        Cheiro's method requires a traced line to divide into <strong>14 equal 7-year cycles</strong> (7, 14, 21 ... 98 yrs).
+                        Cheiro's method requires a traced palm line to divide into <strong>14 equal 7-year cycles</strong> (7, 14, 21 ... 98 yrs).
                       </div>
                       <button
                         type="button"
@@ -3024,20 +3217,107 @@ export default function HandCanvas({
                           setAgingLineCategory('line_life');
                           setMode('draw');
                         }}
-                        className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                        className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
-                        Trace Line on Hand Now
+                        Trace Palm Line on Hand Now
                       </button>
                       <div className="text-[10px] text-stone-400 leading-tight">
-                        Click above, drag along the line on the palm, and release. The 14-part Cheiro scale will automatically appear!
+                        Click above, drag along the Life or Fate line on the palm, and release.
                       </div>
                     </div>
                   )}
                 </div>
 
+                {/* Dedicated Maṇibandha Rekhā & Kendra Section */}
+                <div className="space-y-2 pt-3 border-t border-stone-800/80">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Target className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="text-[11px] font-bold text-stone-200 whitespace-nowrap">
+                        Wrist Baseline (Maṇibandha)
+                      </span>
+                    </div>
+                    {manibandhaData ? (
+                      <span className="shrink-0 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        50% Locked
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-[10px] text-stone-400 whitespace-nowrap">Not Traced</span>
+                    )}
+                  </div>
+
+                  {manibandhaData ? (
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-3">
+                      <div className="space-y-2 text-[10px]">
+                        <div className="bg-stone-800/80 p-3 rounded-lg border border-stone-700/60 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-stone-300 font-medium">Kendra Midpoint (50%):</span>
+                            <span className="font-mono text-amber-300 font-bold text-[11px]">
+                              {manibandhaData.midpoint.x.toFixed(1)}%, {manibandhaData.midpoint.y.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between pt-1 border-t border-stone-700/50">
+                            <span className="text-stone-400 font-medium">Wrist Crease Arc Length:</span>
+                            <span className="font-mono text-stone-300">{manibandhaData.length.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-stone-400 leading-normal pt-0.5">
+                          ✨ Anchors Base Age 75 (Life), Age 0 (Fate), and central axis alignment.
+                        </p>
+                        <div className="flex items-center gap-2 my-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              returnToAgingAfterTraceRef.current = true;
+                              setAgingLineCategory('line_manibandha');
+                              setMode('draw');
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-lg text-xs font-semibold border border-stone-700 transition cursor-pointer active:scale-95 shadow-xs"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                            Re-trace Wrist
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!manibandhaDrawing) return;
+                              const updated = drawings.filter((d) => d.id !== manibandhaDrawing.id);
+                              onChangeDrawings(updated);
+                              pushHistory(updated, pins);
+                            }}
+                            className="py-2 px-3 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95 shadow-xs"
+                            title="Clear Wrist Crease"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-stone-800/40 border border-stone-700/60 rounded-xl space-y-3">
+                      <p className="text-[11px] text-stone-300/90 leading-relaxed">
+                        Trace the 1st bracelet across the wrist. The 50% midpoint will be automatically plotted to anchor Age 0 &amp; Age 75.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          returnToAgingAfterTraceRef.current = true;
+                          setAgingLineCategory('line_manibandha');
+                          setMode('draw');
+                        }}
+                        className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-amber-600/25 hover:bg-amber-600/40 text-amber-200 border border-amber-500/35 rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                      >
+                        <Target className="w-3.5 h-3.5 text-amber-400" />
+                        Trace Wrist Crease (Maṇibandha)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Lifespan Scale Setting */}
-                <div className="flex items-center justify-between pt-2 border-t border-stone-800">
+                <div className="flex items-center justify-between pt-3 border-t border-stone-800/80">
                   <span className="text-[11px] text-stone-300">Max Lifespan (deśa-kāla):</span>
                   <div className="flex items-center gap-1">
                     <input
@@ -3053,7 +3333,7 @@ export default function HandCanvas({
                 </div>
 
                 {/* Feature Toggles */}
-                <div className="space-y-1.5 pt-2 border-t border-stone-800">
+                <div className="space-y-2 pt-3 border-t border-stone-800/80">
                   <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
                     <input
                       type="checkbox"
@@ -3110,7 +3390,7 @@ export default function HandCanvas({
                     <div className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                       Calculated Milestones ({currentAgingTicks.length} ticks)
                     </div>
-                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                    <div className="flex flex-wrap gap-1">
                       {currentAgingTicks.map((t, idx) => (
                         <span
                           key={idx}
@@ -3231,8 +3511,12 @@ export default function HandCanvas({
 
             {/* Aging Trace Mode Floating Hint */}
             {mode === 'draw' && returnToAgingAfterTraceRef.current && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md border border-amber-500/50 text-amber-200 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-2.5">
-                <span>✏️ Click &amp; drag on the palm to trace the line — release to plot Cheiro scale</span>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md border border-amber-500/50 text-amber-200 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-2">
+                <span>
+                  {agingLineCategory === 'line_manibandha'
+                    ? '✏️ Trace along the first wrist crease (Maṇibandha) — 50% Kendra midpoint will be automatically plotted'
+                    : '✏️ Click & drag on the palm to trace the line — release to plot aging scale'}
+                </span>
                 <button
                   type="button"
                   onClick={() => {

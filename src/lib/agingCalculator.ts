@@ -23,6 +23,7 @@ export type LineCategory =
   | 'line_heart'
   | 'line_sun'
   | 'line_mercury'
+  | 'line_manibandha'
   | 'other';
 
 export interface Point2D {
@@ -118,6 +119,7 @@ export const LINE_LABELS: Record<LineCategory, string> = {
   line_heart: 'Heart Line (Hṛdaya Rekhā)',
   line_sun: 'Sun Line (Sūrya Rekhā)',
   line_mercury: 'Mercury Line (Budha Rekhā)',
+  line_manibandha: 'Wrist Crease (Maṇibandha Rekhā)',
   other: 'Other Crease',
 };
 
@@ -133,6 +135,28 @@ export function calculatePolylineLength(points: Point2D[]): number {
     total += Math.sqrt(dx * dx + dy * dy);
   }
   return total;
+}
+
+/**
+ * Computes the exact 50% midpoint (Maṇibandha Kendra - मध्यबिन्दु) of a traced wrist crease.
+ * Used as the classical anchor for Age 75 (Life Line) and Age 0 (Fate Line).
+ */
+export function getManibandhaMidpoint(points: Point2D[]): {
+  midpoint: Point2D;
+  normal: Point2D;
+  tangent: Point2D;
+  length: number;
+} | null {
+  if (!points || points.length < 2) return null;
+  const geom = getPointAndNormalAtFraction(points, 0.5);
+  if (!geom) return null;
+  const length = calculatePolylineLength(points);
+  return {
+    midpoint: geom.point,
+    normal: geom.normal,
+    tangent: geom.tangent,
+    length,
+  };
 }
 
 /**

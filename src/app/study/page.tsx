@@ -12,23 +12,26 @@ function StudyPageContent() {
   return (
     <div className="space-y-6">
       {/* Tab Selector */}
-      <div className="flex justify-start gap-4 border-b border-stone-200 pb-px mb-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden whitespace-nowrap">
+      <div className="flex items-center gap-6 border-b border-stone-200 mb-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden whitespace-nowrap">
         <button
+          type="button"
           onClick={() => router.push('/')}
-          className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
+          className="-mb-px pb-3 px-1 font-serif text-xs sm:text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
         >
           Hand Profiles
         </button>
         <button
+          type="button"
           onClick={() => router.push('/all-hands')}
-          className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
+          className="-mb-px pb-3 px-1 font-serif text-xs sm:text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-transparent text-stone-500 hover:text-stone-850 shrink-0"
         >
           All Hands
         </button>
         <button
-          className="pb-2.5 px-1 font-serif text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold shrink-0"
+          type="button"
+          className="-mb-px pb-3 px-1 font-serif text-xs sm:text-sm font-bold tracking-wider uppercase border-b-2 transition-all cursor-pointer border-accent-gold text-accent-gold shrink-0"
         >
-          Study Guide & Lectures
+          Study Guide &amp; Lectures
         </button>
       </div>
 

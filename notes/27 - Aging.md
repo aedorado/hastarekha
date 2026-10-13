@@ -24,39 +24,42 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ---
 
-## 3. Method 2 – Cheiro's method: saptāṁśa paddhati (division by 7)
+## 2. Method 2 – Cheiro's method: saptāṁśa paddhati (division by 7)
+
+![Fig 2.1 Saptamsha Paddhati](/lecture-notes-images/27/02-saptamsha-01.png)
+![Fig 2.2 Saptamsha Paddhati](/lecture-notes-images/27/02-saptamsha.png)
 
 - Cheiro (a western palmist) did much research; some still follow his method.
 - **Total age taken: 98 (about 98–100).** **Division by 7**, i.e., the "table of seven": 98 ÷ 7 = **14 equal parts**. Called **saptāṁśa paddhati** — "the six-based one is the **ṣaḍaṁśa paddhati**."
-- **Procedure:** same centre/origin **zero** at the Life Line's start and the **base line (maṇibandha)**; lay a thread/paper along the line; divide into **14 equal parts**.
-  - **Practical tip from a student:** cut the thread to the measured length, then **fold it in half, then half again**, and so on, to get equal parts; the teacher agreed.
-  - In her demonstration, **35 years** fell at a certain point on the line; she noted this is the pattern **most places teach**.
-- **Teacher's own practice:** *"If you ask me which practice I follow — it is the one taught earlier"* (the 30-midpoint method of §6), because its **results are coming fairly well**; she has never followed Cheiro's pattern, but students may try it.
+- **Procedure:** same /origin **zero** at the Life Line's start and the **centre base line (maṇibandha)**; lay a thread/paper along the line; divide into **14 equal parts**.
+  - This is the pattern **most places teach**.
+- **Teacher's own practice:** *"If you ask me which practice I follow — it is the one taught earlier"* (the 30-midpoint method), because its **results are coming fairly well**; she has never followed Cheiro's pattern, but students may try it.
 - **Cheiro's advice:** when giving a prediction, **do not give more than 7 years ahead — even less**, because **the lines of the hand keep changing**.
 
 ---
 
-## 4. Method 3 – Three-line average (100 years per line)
+## 3. Calculating total age – Three-line average (100 years per line)
 
 > [!IMPORTANT] Steps
 > 1. Take **three lines: Life Line, Mind Line and Heart Line** (the **Fate Line is left out**).
 > 2. For **each** line, take the **full length as 100 years** (the "98 to 100" of Cheiro; "theory").
 > 3. **Estimate where the line ends** within that 100-year scale and write the age:
->    - **Life Line:** measured from its start (thumb side) to its end — e.g., *70*.
->    - **Heart Line:** measured from its start to its **very end** (**some end on Saturn, some elsewhere**; take it to the last point) — e.g., *75*. Divided in the "seven-seven" way as in the Cheiro method.
->    - **Mind Line:** counted from **where it actually starts** — if joined with the Life Line, from the joining point; if it starts **away** from it, **count from there. "No mistake here."** The origin is zero and the full length is 100 — e.g., *60* (anywhere 60–62).
+>    - **Life Line:** measured from its start (thumb side) to its end e.g. if it covers 70% then we can assume *70*.
+>    - **Heart Line:** measured from start (edge of palm) to its **very end** (**some end on Saturn, some elsewhere**; take it to the last point i.e. edge of the palm and assume 100 there) — Now try to estimate where it ends, e.g., *75* (covers 3/4th of the palm). Divided in the "seven-seven" way as in the Cheiro method.
+>    - **Mind Line:** counted from **where it actually starts** — if joined with the Life Line, from the joining point; if it starts **away** from it, **count from edge of the palm.** The origin is zero (edge of palm) and the full length is 100 (at the other edge of the palm) — e.g., Suppose it appears to end at *60*.
 > 4. **Add** the three (example: 70 + 75 + 60 = **205**).
-> 5. **Divide by 3** (three lines) → **about 68** (the class worked it out: 205 ÷ 3 ≈ 68); say **"68 to about 70"**.
+> 5. **Divide by 3** (three lines) → **about 68**; say **"68 to about 70"**.
 
 - **Western origin:** this is how it is done in the West, where **100 years** is taken.
-- A student remarked that Cheiro is Western, hence the long lifespan; **Teacher:** yes — **it changes with deśa-kāla**; in **India the average age is taken as about 70 or 72**, so **we may use 70/72 or 75–80 in this method** instead of 100; or use Cheiro's method. She said one would have to **research current approximate lifespan (newspapers etc.)**.
+- Cheiro is Western, hence the long lifespan; **it changes with deśa-kāla**; in **India the average age is taken as about 70 or 72**, so **we may use 70/72 or 75–80 in this method** instead of 100; or use Cheiro's method. One would have to **research current approximate lifespan.**.
 - **Best way to practise:** use the hands of people **who have already passed away** and calculate their age.
-- **With a live client:** use the client's **actual age** and calibrate — e.g., for a client **aged 85 (Dave ji)**, calculate on **100**; then **ask one or two known events** (e.g., "a triangle on the Life Line — in what age did you buy property?") to see what age that point corresponds to.
-- **Practice needed:** print many hands so that one becomes quick: "here it is 7, here 14, here this."
+- **With a live client:** use the client's **actual age** and calibrate — e.g., for a client **aged 85**, calculate on **100**; then **ask one or two known events** (e.g., "a triangle on the Life Line — in what age did you buy property?") to see what age that point corresponds to.
 
 ---
 
-## 5. What the class is following now – Method 4: the "30 at the midpoint" method
+## 4. What the class is following now – Method 3: the "30 at the midpoint" method
+
+![Fig 3. Fate Line Age 30 Method](/lecture-notes-images/27/03-fate-line-age-30-method.png)
 
 > [!IMPORTANT] Life Line (as taught, now repeated with paper)
 > 1. **Zero** at the Life Line's start (thumb side); lay the thread/paper along the line up to the **maṇibandha rekhā** and join it.
@@ -66,44 +69,44 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 > 5. For the Fate Line it is **done exactly the same way, from the maṇibandha rekhā**: even if the person's Fate Line starts elsewhere (e.g., from Venus or the middle), **age is counted from the maṇibandha rekhā** to the top (**75**), centre = **30**, then halve onward; **30 to 75** is the duration to subdivide.
 >    - If the Fate Line starts higher, the **gap in between** may mean the person did not **focus on career** as much until later; **but the line's age still starts from the maṇibandha rekhā**.
 
-> [!FAQ] Q (Dravin ji): If the Fate Line is **not visible**, how do I calculate its age?
+> [!FAQ] Q: If the Fate Line is **not visible**, how do I calculate its age?
 > **A (Teacher):** Normally you will see it. **If you cannot see it, do not calculate its age; see events on the Life Line and do all the aging there.** Many hands have very faint lines. If it is **joined to the Life Line** and you can see it going up, you can do it; otherwise use the Life Line.
 
 ---
 
-## 6. Heart Line age (two methods)
+## 5. Heart Line age (two methods)
+
+![Fig 4.1 Heart Line Age Method A](/lecture-notes-images/27/04-heart-line-aging-01.png)
 
 > [!IMPORTANT] Method A (preferred)
 > - From where the Heart Line **starts**: **18 years**; then the **gap in the middle = 6 years**; then **18 years**; then **6 years**; then **18**; and so on — **18 + 6 + 18 + 6 + 18 …** — until the point where the Heart Line **stops**.
 > - If the last block is **incomplete** (e.g., it covers only part of an 18), **estimate** — e.g., 15 or 14 — and add: *18 + 6 + 18 + 6 + 18 + 6 + 18 + 6 + 14*.
 
+![Fig 4.2 Heart Line Age Method B](/lecture-notes-images/27/04-heart-line-aging-02.png)
+
 > [!IMPORTANT] Method B
-> - Take the **centre** of the Heart Line as **16** (the side toward the start); then **36** at the next marker; then **50** at the next; and beyond that "**50 and above, any**".
+> - Take the heart line age uptil the mercury finger to be 16; then **36** at the next finger (sun); then **50** at the next (end of Saturn Finger); and beyond that "**50 and above, any**".
 > - **Teacher's view:** **Method A is better**, because you generally find the Heart Line's data only **up to about age 50** — beyond that it is not found.
 
 ## 7. Mind Line age
 
+![Fig 5. Mind Line Age](/lecture-notes-images/27/05-mind-line-age.png)
+
 - The Mind Line's age is **generally not calculated** — "all aging should be done on the **Life Line**; the **best aging** is obtained there."
-- If you still want it: **start at zero where it starts**; do **exactly as for the Heart Line**: **18, then 6, then 18, then 6 …** (e.g., "this is 18, this 6, this 18, this 6 … this 24 here").
+- If you still want it: **start at zero where it starts**; do **exactly as for the Heart Line**: **18, then 6, then 18, then 6 …**.
 
 > [!SUMMARY] Methods taught today (as the teacher counted them: "three methods studied today")
 > Old six-based Life Line (72) → Cheiro's seven-based (98) → three-line average (100 each) → the **current** 30-midpoint method (Life Line, Fate Line), with **18+6** for Heart and Mind Lines.
 
 ---
 
-## 8. Class housekeeping relevant to practice
-
-- A student asked to **compile a PDF of all hands shared in the group**, each with its **age** noted, for later students. Teacher agreed and suggested keeping a **folder**; recommended also making a **plain hand with thick lines** and marking the age methods on it, for teaching. (Several students offered to help.) The teacher asked Arvind ji to prepare age drawings of the three methods on a plain hand.
-
----
-
-## 9. Budha Rekhā (Mercury Line)
+## 8. Budha Rekhā (Mercury Line)
 
 > [!INFO] Definition
 > - **Any line going toward Mercury is the Mercury Line.** It is **simple — not much in it.** Also called the **health line**.
 > - **Not present in every hand** — and "it is good that it is not": **if the line is there it is not good for health**, though it **can be good for business**.
 
-### 9.1 Where it starts
+### 8.1 Where it starts
 
 | Start | Meaning |
 |---|---|

@@ -29,6 +29,7 @@ import {
   getSrsQueue,
   formatDueTime,
 } from '@/lib/flashcards';
+import { formatCleanLectureTitle } from './LectureNotes';
 
 interface Note {
   id: string;
@@ -210,21 +211,19 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setScope('current')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                scope === 'current'
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${scope === 'current'
                   ? 'bg-accent-gold text-white shadow-xs'
                   : 'text-stone-600 hover:bg-stone-100'
-              }`}
+                }`}
             >
-              This Lecture ({activeNote.title.replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*[:(Palmistry)–-]*/i, '').slice(0, 22)})
+              This Lecture ({formatCleanLectureTitle(activeNote.title).slice(0, 24)})
             </button>
             <button
               onClick={() => setScope('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                scope === 'all'
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${scope === 'all'
                   ? 'bg-accent-gold text-white shadow-xs'
                   : 'text-stone-600 hover:bg-stone-100'
-              }`}
+                }`}
             >
               All Lectures ({allNotes.length})
             </button>
@@ -234,7 +233,7 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
             <button
               onClick={handleShuffle}
               disabled={queue.length <= 1}
-              className="btn-outline px-2.5 py-1 text-xs flex items-center gap-1 cursor-pointer disabled:opacity-40"
+              className="btn-outline px-3 py-1 text-xs flex items-center gap-1 cursor-pointer disabled:opacity-40"
               title="Randomize card"
             >
               <Shuffle className="w-3.5 h-3.5" />
@@ -242,14 +241,14 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
             </button>
             <button
               onClick={handleExportSrs}
-              className="btn-outline px-2.5 py-1 text-xs flex items-center gap-1 cursor-pointer"
+              className="btn-outline px-3 py-1 text-xs flex items-center gap-1 cursor-pointer"
               title="Backup SRS progress to JSON"
             >
               <Download className="w-3.5 h-3.5" />
               Backup
             </button>
             <label
-              className="btn-outline px-2.5 py-1 text-xs flex items-center gap-1 cursor-pointer"
+              className="btn-outline px-3 py-1 text-xs flex items-center gap-1 cursor-pointer"
               title="Restore SRS progress from JSON"
             >
               <Upload className="w-3.5 h-3.5" />
@@ -268,64 +267,56 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setMode('due')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              mode === 'due'
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'due'
                 ? 'bg-amber-600 text-white font-bold shadow-xs'
                 : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
+              }`}
           >
             <span>🎯 Due for Review</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-              mode === 'due' ? 'bg-amber-700 text-white' : 'bg-amber-200 text-amber-900'
-            }`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${mode === 'due' ? 'bg-amber-700 text-white' : 'bg-amber-200 text-amber-900'
+              }`}>
               {stats.due}
             </span>
           </button>
 
           <button
             onClick={() => setMode('all')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              mode === 'all'
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'all'
                 ? 'bg-stone-800 text-white font-bold shadow-xs'
                 : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
+              }`}
           >
             <span>📚 Browse All</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-              mode === 'all' ? 'bg-stone-700 text-white' : 'bg-stone-200 text-stone-800'
-            }`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${mode === 'all' ? 'bg-stone-700 text-white' : 'bg-stone-200 text-stone-800'
+              }`}>
               {stats.total}
             </span>
           </button>
 
           <button
             onClick={() => setMode('learning')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              mode === 'learning'
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'learning'
                 ? 'bg-blue-600 text-white font-bold shadow-xs'
                 : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
+              }`}
           >
             <span>⏳ Learning</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-              mode === 'learning' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
-            }`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${mode === 'learning' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
+              }`}>
               {stats.learning}
             </span>
           </button>
 
           <button
             onClick={() => setMode('mastered')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              mode === 'mastered'
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'mastered'
                 ? 'bg-emerald-600 text-white font-bold shadow-xs'
                 : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
+              }`}
           >
             <span>🎓 Mastered</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-              mode === 'mastered' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
-            }`}>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${mode === 'mastered' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+              }`}>
               {stats.mastered}
             </span>
           </button>
@@ -370,7 +361,7 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
           {/* Main Flashcard Container */}
           <div
             onClick={handleFlip}
-            className="cursor-pointer select-none perspective-1000 min-h-[260px] sm:min-h-[340px] flex flex-col justify-between p-3.5 sm:p-6 md:p-8 bg-gradient-to-br from-white to-amber-50/20 border sm:border-2 border-stone-200 rounded-xl sm:rounded-2xl shadow-xs sm:shadow-sm hover:border-accent-gold/60 transition-all duration-300 relative group"
+            className="cursor-pointer select-none perspective-1000 min-h-[260px] sm:min-h-[340px] flex flex-col justify-between p-3 sm:p-6 md:p-8 bg-gradient-to-br from-white to-amber-50/20 border sm:border-2 border-stone-200 rounded-xl sm:rounded-2xl shadow-xs sm:shadow-sm hover:border-accent-gold/60 transition-all duration-300 relative group"
           >
             {/* Top Badges */}
             <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-3">

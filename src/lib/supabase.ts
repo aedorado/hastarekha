@@ -35,7 +35,7 @@ export interface Drawing {
   color: string;
   thickness: number;
   label?: string;
-  lineCategory?: 'line_life' | 'line_fate' | 'line_head' | 'line_heart' | 'line_sun' | 'line_mercury' | 'other';
+  lineCategory?: 'line_life' | 'line_fate' | 'line_head' | 'line_heart' | 'line_sun' | 'line_mercury' | 'line_manibandha' | 'other';
 }
 
 // ─── Mount sign type ───

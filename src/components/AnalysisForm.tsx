@@ -817,7 +817,7 @@ export default function AnalysisForm({
 
         {activeTab === 'samudrika' && (
           <div className="space-y-6">
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 shadow-sm text-xs leading-normal">
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 shadow-sm text-xs leading-normal">
               <span className="font-bold flex items-center gap-1.5 text-accent-gold text-sm mb-1">
                 <Sparkles className="w-4 h-4 text-accent-gold" />
                 Hasta Sāmudrika Śāstra (Vedic Palmistry)
@@ -1005,7 +1005,7 @@ export default function AnalysisForm({
 
               {/* Tattva details display */}
               {vedicData.hand_tattva && (
-                <div className="p-3.5 rounded-xl border space-y-2.5 shadow-sm text-xs transition-all duration-300" style={{
+                <div className="p-3 rounded-xl border space-y-2.5 shadow-sm text-xs transition-all duration-300" style={{
                   backgroundColor:
                     vedicData.hand_tattva.includes('Agni') ? '#fef2f2' :
                       vedicData.hand_tattva.includes('Jala') ? '#eff6ff' :
@@ -2029,7 +2029,7 @@ export default function AnalysisForm({
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'nails' && (
           <div className="space-y-5">
-            <div className="bg-violet-50 border border-violet-200 rounded-xl p-3.5 text-xs leading-relaxed text-violet-800 font-medium">
+            <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 text-xs leading-relaxed text-violet-800 font-medium">
               <span className="font-bold flex items-center gap-1.5 mb-1 text-sm">💅 Nails (Nakh) Analysis — Lectures 11 &amp; 12</span>
               Nails are the primary indicator of <strong>health</strong> in palmistry. Teachers method: combine nail length, width, and thickness — three independent axes — to build a combined reading. Use palm hand-type to modify nail reading.
             </div>
@@ -3119,7 +3119,7 @@ export default function AnalysisForm({
         ═══════════════════════════════════════════════════════ */}
         {activeTab === 'age' && (
           <div className="space-y-5">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 font-medium leading-relaxed">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 font-medium leading-relaxed">
               🕒 <strong>Age Calculation — 4 Methods</strong><br />
               Four distinct methods. The <strong>30-midpoint</strong> method is currently used in class.
             </div>
@@ -3373,7 +3373,7 @@ export default function AnalysisForm({
                 };
                 const events = lineData.age_events || [];
                 return (
-                  <div key={lineKey} className="border border-stone-200/80 rounded-xl p-3.5 space-y-2.5 bg-stone-50/40">
+                  <div key={lineKey} className="border border-stone-200/80 rounded-xl p-3 space-y-2.5 bg-stone-50/40">
                     <div className="flex items-center justify-between pb-1 border-b border-stone-200/60">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-stone-800">{lineLabels[lineKey]}</span>
@@ -3538,7 +3538,7 @@ export default function AnalysisForm({
                           : 'bg-white border-stone-200 hover:border-stone-300 hover:bg-stone-50/50'
                           }`}
                       >
-                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
                           <div
                             className="w-3.5 h-3.5 rounded-full mt-0.5 shrink-0 border border-white shadow-xs"
                             style={{ backgroundColor: pin.color }}
@@ -3831,9 +3831,9 @@ export default function AnalysisForm({
                     <Award className="w-4 h-4 text-amber-600" />
                     Classical Vedic Yogas &amp; Auspicious Formations Detected ({detectedYogas.length})
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {detectedYogas.map((y, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded-xl border border-amber-200/50 shadow-sm flex items-start gap-2.5">
+                      <div key={idx} className="bg-white p-3 rounded-xl border border-amber-200/50 shadow-sm flex items-start gap-2">
                         <span className="text-xl">{y.icon}</span>
                         <div>
                           <span className="font-bold text-xs text-stone-900 block">{y.name}</span>

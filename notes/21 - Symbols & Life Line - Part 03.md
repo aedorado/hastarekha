@@ -3,7 +3,7 @@
 
 ## 1. Signs and Symbols (continuation from "fish")
 
-![Fig 1. Various Symbols](/lecture-notes-images/20/01-various-symbols.png)
+![Fig 1. Various Symbols](/lecture-notes-images/21/01-various-symbols.png)
 
 Teacher recap: she had taught signs up to the **fish**. Today she begins with signs and symbols again.
 
@@ -73,7 +73,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ## 2. Life Line: Double Life Line vs Supportive Line
 
-![Fig 2. Sushant Singh Rajput Example](/lecture-notes-images/20/02-ssr.png)
+![Fig 2. Sushant Singh Rajput Example](/lecture-notes-images/21/02-ssr.png)
 
 > [!EXAMPLE] Case: Sushant Singh Rajput (picture sent to the practice group)
 > - **Who/what:** Sushant Singh Rajput (named by the teacher).
@@ -94,7 +94,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ## 3. Life Line Turning Toward the Thumb (Inward) vs Outward Branches
 
-![Fig 3. Life Line Turning Towards Thumb](/lecture-notes-images/20/03-ll-towards-thumb.png)
+![Fig 3. Life Line Turning Towards Thumb](/lecture-notes-images/21/03-ll-towards-thumb.png)
 
 
 > [!INFO] Life Line curving inward toward the thumb
@@ -164,7 +164,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - A **cross** or a mark at the end of the line: **sudden accident**.
 > - If the Moon is bad: **depression, trouble with sleep, addiction**. "Read the direction where the Life Line is going."
 
-![Fig 4. Many tiny, fine lines on the Moon Mount at the end (or from the Life Line): addiction / bad habits](/lecture-notes-images/20/04-moon-mount.png)
+![Fig 4. Many tiny, fine lines on the Moon Mount at the end (or from the Life Line): addiction / bad habits](/lecture-notes-images/21/04-moon-mount.png)
 
 ---
 
@@ -216,7 +216,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 > - **Reasoning:** Wherever the line goes, the sign/line there shows the matter.
 > - **Outcome:** "At this age my government job was placed" — confirmed in her own life.
 
-![Fig 5. A Branch from the Life Line Toward Other Fingers / Mounts](/lecture-notes-images/20/05.png)
+![Fig 5. A Branch from the Life Line Toward Other Fingers / Mounts](/lecture-notes-images/21/05.png)
 
 | Branch goes toward | Meaning given |
 |---|---|
@@ -249,9 +249,9 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 ## 9. Case Study: A Friend's Hand (sent by a Madhu Ji; the friend has kidney disease)
 
-![Fig 6. Kidney Problem Example (32F)](/lecture-notes-images/20/06-example.png)
+![Fig 6. Kidney Problem Example (32F)](/lecture-notes-images/21/06-example.png)
 
-![Fig 7. Detailed Analysis](/lecture-notes-images/20/07-hand-example.png)
+![Fig 7. Detailed Analysis](/lecture-notes-images/21/07-hand-example.png)
 
 
 
@@ -332,7 +332,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 > [!EXAMPLE] Case: Arvinda ji 
 
-![Fig 8. Age Calculation Example | Prominent Mars Line Also Seen Till Life Line](/lecture-notes-images/20/08-example.png)
+![Fig 8. Age Calculation Example | Prominent Mars Line Also Seen Till Life Line](/lecture-notes-images/21/08-example.png)
 
 > - **Observed:** Life Line slightly crooked; a **Mars line** rises (Arvinda ji: it goes up to the Sun; teacher: she sees it going only to a certain point, not to the Sun; asked him to check once).
 > - **Interpretation / test:** Teacher asked whether he had **stayed at relatives' houses in childhood**.
@@ -348,7 +348,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 > [!EXAMPLE] Case: Anurādhā ji 
 
-![Fig 9. Hand Example](/lecture-notes-images/20/09-anuradha-ji.png)
+![Fig 9. Hand Example](/lecture-notes-images/21/09-anuradha-ji.png)
 
 > - **Observed:** A line going down; a **mole on the Moon Mount**; her **Life Line** merges into the **Fate Line** (her question); a **triangle** and small lines outside; the line goes up to a point then turns inward.
 >   - Moon Mount with a **mole** + this line = **very bad for health**.
@@ -358,7 +358,7 @@ Teacher recap: she had taught signs up to the **fish**. Today she begins with si
 
 > [!EXAMPLE] Case: Jīveśa ji (Speaker 3)
 
-![Fig 10. Hand Example](/lecture-notes-images/20/10-jivesh.png)
+![Fig 10. Hand Example](/lecture-notes-images/21/10-jivesh.png)
 
 
 > "A line coming out of the Life Line shows a change in life, a big change." 

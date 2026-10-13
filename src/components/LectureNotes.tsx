@@ -17,6 +17,15 @@ interface Note {
   content: string;
 }
 
+export const formatCleanLectureTitle = (title: string): string => {
+  return (
+    title
+      .replace(/^Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*(\(Palmistry\))?\s*[:\u2013\u2014\u2212\-\s]*/i, '')
+      .replace(/^[:\u2013\u2014\u2212\-\s]+/, '')
+      .trim() || title
+  );
+};
+
 interface DocSection {
   id: string;
   title: string;
@@ -27,12 +36,12 @@ interface DocSection {
 function parseSections(content: string): DocSection[] {
   const lines = content.split('\n');
   const sections: DocSection[] = [];
-  
+
   let currentTitle = 'Introduction';
   let currentContent: string[] = [];
   let currentId = 'intro';
   let isIntro = true;
-  
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.trim().startsWith('## ')) {
@@ -44,14 +53,14 @@ function parseSections(content: string): DocSection[] {
           isIntro
         });
       }
-      
+
       currentTitle = line.replace('## ', '').trim();
       currentTitle = currentTitle
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
         .replace(/`([^`]+)`/g, '$1')
         .replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, '$1');
-      
+
       currentId = `sec-${sections.length}-${currentTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
       currentContent = [line];
       isIntro = false;
@@ -59,7 +68,7 @@ function parseSections(content: string): DocSection[] {
       currentContent.push(line);
     }
   }
-  
+
   if (currentContent.length > 0) {
     sections.push({
       id: currentId,
@@ -68,7 +77,7 @@ function parseSections(content: string): DocSection[] {
       isIntro
     });
   }
-  
+
   return sections;
 }
 
@@ -515,8 +524,9 @@ export default function LectureNotes() {
   // Render portal for print layout
   const printPortal = mounted && printItems && typeof window !== 'undefined'
     ? createPortal(
-        <div className="print-container">
-          <style dangerouslySetInnerHTML={{ __html: `
+      <div className="print-container">
+        <style dangerouslySetInnerHTML={{
+          __html: `
             @page {
               margin: ${printMargin === 'minimal' ? '0.4cm' : printMargin === 'narrow' ? '0.8cm' : '2cm'} !important;
             }
@@ -549,49 +559,49 @@ export default function LectureNotes() {
               }
             }
           `}} />
-          <div className="prose max-w-none text-stone-900 leading-relaxed p-4">
-            {printItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className={idx > 0 ? "print-page-break mt-8 pt-8 border-t border-stone-200" : ""}
-              >
-                {includeTitleHeader && (
-                  <div className="border-b-2 border-stone-850 pb-4 mb-6">
-                    <h1 className="text-3xl font-serif font-bold text-stone-900">
-                      {item.title}
-                    </h1>
-                    <p className="text-stone-500 text-xs mt-2 font-medium">
-                      Hasta-Sāmudrika Study Session • Printed on {new Date().toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
-                
-                <MarkdownRenderer
-                  content={item.content}
-                  fontSize="base"
-                  fontFamily={fontFamily}
-                  isPrinting={true}
-                />
+        <div className="prose max-w-none text-stone-900 leading-relaxed p-4">
+          {printItems.map((item, idx) => (
+            <div
+              key={item.id}
+              className={idx > 0 ? "print-page-break mt-8 pt-8 border-t border-stone-200" : ""}
+            >
+              {includeTitleHeader && (
+                <div className="border-b-2 border-stone-850 pb-4 mb-6">
+                  <h1 className="text-3xl font-serif font-bold text-stone-900">
+                    {item.title}
+                  </h1>
+                  <p className="text-stone-500 text-xs mt-2 font-medium">
+                    Hasta-Sāmudrika Study Session • Printed on {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              )}
 
-                {includeAnnotations && highlights[item.id]?.length > 0 && (
-                  <div className="mt-8 pt-8 border-t-2 border-stone-300 page-break-inside-avoid">
-                    <h2 className="text-xl font-serif font-bold text-stone-900 mb-4">Highlights & Annotations</h2>
-                    <div className="space-y-3">
-                      {highlights[item.id].map((hl) => (
-                        <div key={hl.id} className="p-3 bg-stone-50 border-l-4 border-stone-400 rounded page-break-inside-avoid">
-                          <p className="text-sm text-stone-850 italic">"{hl.text}"</p>
-                          {hl.note && <p className="text-xs text-stone-600 mt-1">Note: {hl.note}</p>}
-                        </div>
-                      ))}
-                    </div>
+              <MarkdownRenderer
+                content={item.content}
+                fontSize="base"
+                fontFamily={fontFamily}
+                isPrinting={true}
+              />
+
+              {includeAnnotations && highlights[item.id]?.length > 0 && (
+                <div className="mt-8 pt-8 border-t-2 border-stone-300 page-break-inside-avoid">
+                  <h2 className="text-xl font-serif font-bold text-stone-900 mb-4">Highlights & Annotations</h2>
+                  <div className="space-y-3">
+                    {highlights[item.id].map((hl) => (
+                      <div key={hl.id} className="p-3 bg-stone-50 border-l-4 border-stone-400 rounded page-break-inside-avoid">
+                        <p className="text-sm text-stone-850 italic">"{hl.text}"</p>
+                        {hl.note && <p className="text-xs text-stone-600 mt-1">Note: {hl.note}</p>}
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>,
+      document.body
+    )
     : null;
 
   return (
@@ -696,16 +706,13 @@ export default function LectureNotes() {
                       const isCompleted = completedNotes.includes(note.id);
                       const isBookmarked = bookmarkedNotes.includes(note.id);
                       const lecNum = note.fileName.match(/^\d+/)?.[0] || '•';
-                      const shortTitle = note.title
-                        .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*[:(Palmistry)–-]*\s*/i, '')
-                        .replace(/^–\s*/, '')
-                        .trim();
+                      const shortTitle = formatCleanLectureTitle(note.title);
 
                       return (
                         <div
                           key={note.id}
                           onClick={() => setActiveNoteId(note.id)}
-                          className={`group border-b transition-all cursor-pointer flex items-center justify-between px-2.5 py-2 min-h-[2.5rem] ${isActive
+                          className={`group border-b transition-all cursor-pointer flex items-center justify-between px-3 py-2 min-h-10 ${isActive
                             ? 'bg-amber-500/8 border-amber-300 border-l-2 border-l-accent-gold'
                             : 'bg-white border-stone-100 hover:bg-stone-50/80'
                             }`}
@@ -756,195 +763,195 @@ export default function LectureNotes() {
               {/* Reading Content Pane */}
               <div className={`col-span-1 ${showOutline ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-3 sm:space-y-6`}>
                 {activeNote ? (
-                  <div className="bg-stone-50/30 rounded-2xl border border-stone-200/60 p-2.5 sm:p-5 md:p-8 space-y-3.5 sm:space-y-6 max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin prose-p:leading-relaxed prose-p:text-[15px] sm:prose-p:text-[17px]">
+                  <div className="bg-stone-50/30 rounded-2xl border border-stone-200/60 p-3 sm:p-5 md:p-8 space-y-4 sm:space-y-6 max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin prose-p:leading-relaxed prose-p:text-[15px] sm:prose-p:text-[17px]">
                     {/* Note Title & Reading controls toolbar */}
-                    <div className="border-b border-stone-200 pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-                      <div>
+                    <div className="border-b border-stone-200 pb-3 sm:pb-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4">
+                      <div className="min-w-0">
                         <span className="text-[10px] font-bold text-accent-gold uppercase tracking-wider">
                           Lecture Note
                         </span>
                         <h2 className="text-base sm:text-xl md:text-2xl font-serif font-bold text-stone-900 mt-0.5 leading-snug">
-                          {activeNote.title
-                            .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*(\(Palmistry\))?\s*[–\-:]?\s*/i, '')
-                            .replace(/^[–\-]\s*/, '')
-                            .trim()}
+                          {formatCleanLectureTitle(activeNote.title)}
                         </h2>
                       </div>
 
-                      {/* Study Mode Buttons */}
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-stone-100 p-1 rounded-xl shrink-0 self-start sm:self-auto max-w-full">
-                        <button
-                          onClick={() => setStudyMode('read')}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'read'
-                            ? 'bg-white text-stone-900 shadow-xs'
-                            : 'text-stone-600 hover:bg-white/50'
-                          }`}
-                          title="Read Lecture Notes"
-                        >
-                          <span>📖</span>
-                          <span className="hidden sm:inline">Read</span>
-                        </button>
-                        <button
-                          onClick={() => setStudyMode('annotate')}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'annotate'
-                            ? 'bg-white text-stone-900 shadow-xs'
-                            : 'text-stone-600 hover:bg-white/50'
-                          }`}
-                          title="Annotate & Highlight"
-                        >
-                          <span>✍️</span>
-                          <span className="hidden sm:inline">Annotate</span>
-                        </button>
-                        <button
-                          onClick={() => setStudyMode('review')}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'review'
-                            ? 'bg-white text-stone-900 shadow-xs'
-                            : 'text-stone-600 hover:bg-white/50'
-                          }`}
-                          title="Active Recall Flashcards (Spaced Repetition)"
-                        >
-                          <span>🎯</span>
-                          <span className="hidden sm:inline">Flashcards</span>
-                          {curatedDeck?.flashcards && (
-                            <span className="text-[10px] bg-accent-gold/20 text-stone-800 px-1.5 py-0.2 rounded-full font-bold">
-                              {curatedDeck.flashcards.length}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => setStudyMode('quiz')}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'quiz'
-                            ? 'bg-stone-900 text-white shadow-xs'
-                            : 'text-stone-600 hover:bg-white/50'
-                          }`}
-                          title="Untimed Practice Quiz"
-                        >
-                          <span>📝</span>
-                          <span className="hidden sm:inline">Quiz</span>
-                          {curatedDeck?.quizzes && (
-                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                              studyMode === 'quiz' ? 'bg-accent-gold text-stone-900' : 'bg-emerald-100 text-emerald-800'
-                            }`}>
-                              {curatedDeck.quizzes.length}
-                            </span>
-                          )}
-                        </button>
-
-                        <div className="h-4 w-px bg-stone-200 mx-0.5" />
-
-                        <button
-                          onClick={() => toggleBookmark(activeNote.id)}
-                          className={`p-1.5 rounded-lg transition-all cursor-pointer text-xs font-bold ${bookmarkedNotes.includes(activeNote.id)
-                            ? 'bg-accent-gold text-white'
-                            : 'text-stone-600 hover:bg-white'
-                          }`}
-                          title="Bookmark this lecture"
-                        >
-                          📌
-                        </button>
-
-                        {(studyMode === 'read' || studyMode === 'annotate') && (
-                          <>
-                            <div className="h-4 w-px bg-stone-200 mx-0.5" />
-
-                            <button
-                              onClick={() => {
-                                const newFamily = fontFamily === 'sans' ? 'serif' : 'sans';
-                                setFontFamily(newFamily);
-                                localStorage.setItem('study_font_family', newFamily);
-                              }}
-                              className="p-1.5 rounded-lg text-stone-650 hover:bg-white transition-all cursor-pointer text-xs font-bold flex items-center gap-1"
-                              title="Toggle Font Family (Serif / Sans)"
-                            >
-                              <span className={fontFamily === 'serif' ? 'font-serif' : 'font-sans'}>Aa</span>
-                            </button>
-
-                            <div className="h-4 w-px bg-stone-200 mx-0.5" />
-
-                            <button
-                              onClick={() => {
-                                const sizes: ('sm' | 'base' | 'lg' | 'xl')[] = ['sm', 'base', 'lg', 'xl'];
-                                const idx = sizes.indexOf(fontSize);
-                                if (idx > 0) {
-                                  setFontSize(sizes[idx - 1]);
-                                  localStorage.setItem('study_font_size', sizes[idx - 1]);
-                                }
-                              }}
-                              disabled={fontSize === 'sm'}
-                              className="p-1.5 rounded-lg text-stone-650 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer text-xs font-bold"
-                              title="Decrease Font Size"
-                            >
-                              A-
-                            </button>
-
-                            <span className="text-[10px] font-bold text-stone-500 w-8 text-center uppercase">
-                              {fontSize}
-                            </span>
-
-                            <button
-                              onClick={() => {
-                                const sizes: ('sm' | 'base' | 'lg' | 'xl')[] = ['sm', 'base', 'lg', 'xl'];
-                                const idx = sizes.indexOf(fontSize);
-                                if (idx < sizes.length - 1) {
-                                  setFontSize(sizes[idx + 1]);
-                                  localStorage.setItem('study_font_size', sizes[idx + 1]);
-                                }
-                              }}
-                              disabled={fontSize === 'xl'}
-                              className="p-1.5 rounded-lg text-stone-650 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer text-xs font-bold"
-                              title="Increase Font Size"
-                            >
-                              A+
-                            </button>
-
-                            <div className="h-4 w-px bg-stone-200 mx-0.5" />
-
-                            <button
-                              onClick={() => setIsFocusMode(!isFocusMode)}
-                              className={`p-1.5 rounded-lg transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${isFocusMode
-                                ? 'bg-accent-gold text-white shadow-sm hover:bg-amber-600'
-                                : 'text-stone-650 hover:bg-white'
-                                }`}
-                              title="Toggle Focus Mode"
-                            >
-                              <BookOpen className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Focus</span>
-                            </button>
-
-                            <div className="h-4 w-px bg-stone-200 mx-0.5" />
-                            <button
-                              onClick={() => setIsExportModalOpen(true)}
-                              className="p-1.5 rounded-lg text-stone-650 hover:bg-white transition-all cursor-pointer text-xs font-semibold flex items-center gap-1"
-                              title="Export Lecture to PDF"
-                            >
-                              <FileDown className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Export</span>
-                            </button>
-
-                            {toc.length > 0 && (
-                              <>
-                                <div className="h-4 w-px bg-stone-200 mx-0.5" />
-                                <button
-                                  onClick={() => {
-                                    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-                                      setIsOutlineCollapsed(false);
-                                    } else {
-                                      setIsTocOpen(true);
-                                    }
-                                  }}
-                                  className={`p-1.5 rounded-lg transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${showOutline
-                                    ? 'bg-white text-stone-900 shadow-sm'
-                                    : 'text-stone-650 hover:bg-white'
-                                    }`}
-                                  title="Show Outline"
-                                >
-                                  <List className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Outline</span>
-                                </button>
-                              </>
+                      {/* Study Mode & Reading Action Controls */}
+                      <div className="flex flex-wrap items-center gap-2 max-w-full">
+                        {/* Mode Switcher Pill */}
+                        <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl shrink-0">
+                          <button
+                            onClick={() => setStudyMode('read')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'read'
+                              ? 'bg-white text-stone-900 shadow-xs'
+                              : 'text-stone-600 hover:bg-white/50'
+                              }`}
+                            title="Read Lecture Notes"
+                          >
+                            <span>📖</span>
+                            <span>Read</span>
+                          </button>
+                          <button
+                            onClick={() => setStudyMode('annotate')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'annotate'
+                              ? 'bg-white text-stone-900 shadow-xs'
+                              : 'text-stone-600 hover:bg-white/50'
+                              }`}
+                            title="Annotate & Highlight"
+                          >
+                            <span>✍️</span>
+                            <span>Annotate</span>
+                          </button>
+                          <button
+                            onClick={() => setStudyMode('review')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'review'
+                              ? 'bg-white text-stone-900 shadow-xs'
+                              : 'text-stone-600 hover:bg-white/50'
+                              }`}
+                            title="Active Recall Flashcards (Spaced Repetition)"
+                          >
+                            <span>🎯</span>
+                            <span>Flashcards</span>
+                            {curatedDeck?.flashcards && (
+                              <span className="text-[10px] bg-accent-gold/20 text-stone-800 px-2 py-0.5 rounded-full font-bold">
+                                {curatedDeck.flashcards.length}
+                              </span>
                             )}
-                          </>
-                        )}
+                          </button>
+                          <button
+                            onClick={() => setStudyMode('quiz')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'quiz'
+                              ? 'bg-stone-900 text-white shadow-xs'
+                              : 'text-stone-600 hover:bg-white/50'
+                              }`}
+                            title="Untimed Practice Quiz"
+                          >
+                            <span>📝</span>
+                            <span>Quiz</span>
+                            {curatedDeck?.quizzes && (
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${studyMode === 'quiz' ? 'bg-accent-gold text-stone-900' : 'bg-emerald-100 text-emerald-800'
+                                }`}>
+                                {curatedDeck.quizzes.length}
+                              </span>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Reading Tools Pill */}
+                        <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl shrink-0">
+                          <button
+                            onClick={() => toggleBookmark(activeNote.id)}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer text-xs font-bold ${bookmarkedNotes.includes(activeNote.id)
+                              ? 'bg-accent-gold text-white'
+                              : 'text-stone-600 hover:bg-white'
+                              }`}
+                            title="Bookmark this lecture"
+                          >
+                            📌
+                          </button>
+
+                          {(studyMode === 'read' || studyMode === 'annotate') && (
+                            <>
+                              <div className="h-4 w-px bg-stone-200 mx-0.5" />
+
+                              <button
+                                onClick={() => {
+                                  const newFamily = fontFamily === 'sans' ? 'serif' : 'sans';
+                                  setFontFamily(newFamily);
+                                  localStorage.setItem('study_font_family', newFamily);
+                                }}
+                                className="p-1.5 rounded-lg text-stone-650 hover:bg-white transition-all cursor-pointer text-xs font-bold flex items-center gap-1"
+                                title="Toggle Font Family (Serif / Sans)"
+                              >
+                                <span className={fontFamily === 'serif' ? 'font-serif' : 'font-sans'}>Aa</span>
+                              </button>
+
+                              <div className="h-4 w-px bg-stone-200 mx-0.5" />
+
+                              <button
+                                onClick={() => {
+                                  const sizes: ('sm' | 'base' | 'lg' | 'xl')[] = ['sm', 'base', 'lg', 'xl'];
+                                  const idx = sizes.indexOf(fontSize);
+                                  if (idx > 0) {
+                                    setFontSize(sizes[idx - 1]);
+                                    localStorage.setItem('study_font_size', sizes[idx - 1]);
+                                  }
+                                }}
+                                disabled={fontSize === 'sm'}
+                                className="p-1.5 rounded-lg text-stone-650 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer text-xs font-bold"
+                                title="Decrease Font Size"
+                              >
+                                A-
+                              </button>
+
+                              <span className="text-[10px] font-bold text-stone-500 w-8 text-center uppercase">
+                                {fontSize}
+                              </span>
+
+                              <button
+                                onClick={() => {
+                                  const sizes: ('sm' | 'base' | 'lg' | 'xl')[] = ['sm', 'base', 'lg', 'xl'];
+                                  const idx = sizes.indexOf(fontSize);
+                                  if (idx < sizes.length - 1) {
+                                    setFontSize(sizes[idx + 1]);
+                                    localStorage.setItem('study_font_size', sizes[idx + 1]);
+                                  }
+                                }}
+                                disabled={fontSize === 'xl'}
+                                className="p-1.5 rounded-lg text-stone-650 hover:bg-white disabled:opacity-40 disabled:hover:bg-transparent transition-all cursor-pointer text-xs font-bold"
+                                title="Increase Font Size"
+                              >
+                                A+
+                              </button>
+
+                              <div className="h-4 w-px bg-stone-200 mx-0.5" />
+
+                              <button
+                                onClick={() => setIsFocusMode(!isFocusMode)}
+                                className={`px-2 py-1.5 rounded-lg transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${isFocusMode
+                                  ? 'bg-accent-gold text-white shadow-sm hover:bg-amber-600'
+                                  : 'text-stone-650 hover:bg-white'
+                                  }`}
+                                title="Toggle Focus Mode"
+                              >
+                                <BookOpen className="w-3.5 h-3.5" />
+                                <span>Focus</span>
+                              </button>
+
+                              <div className="h-4 w-px bg-stone-200 mx-0.5" />
+                              <button
+                                onClick={() => setIsExportModalOpen(true)}
+                                className="px-2 py-1.5 rounded-lg text-stone-650 hover:bg-white transition-all cursor-pointer text-xs font-semibold flex items-center gap-1"
+                                title="Export Lecture to PDF"
+                              >
+                                <FileDown className="w-3.5 h-3.5" />
+                                <span>Export</span>
+                              </button>
+
+                              {toc.length > 0 && (
+                                <>
+                                  <div className="h-4 w-px bg-stone-200 mx-0.5" />
+                                  <button
+                                    onClick={() => {
+                                      if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                                        setIsOutlineCollapsed(false);
+                                      } else {
+                                        setIsTocOpen(true);
+                                      }
+                                    }}
+                                    className={`px-2 py-1.5 rounded-lg transition-all cursor-pointer text-xs font-semibold flex items-center gap-1 ${showOutline
+                                      ? 'bg-white text-stone-900 shadow-sm'
+                                      : 'text-stone-650 hover:bg-white'
+                                      }`}
+                                    title="Show Outline"
+                                  >
+                                    <List className="w-3.5 h-3.5" />
+                                    <span>Outline</span>
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -1019,11 +1026,10 @@ export default function LectureNotes() {
                             </h3>
                             <div className="space-y-3">
                               {highlights[activeNote.id].map((hl) => (
-                                <div key={hl.id} className={`p-3 rounded-lg border-l-4 ${
-                                  hl.color === 'gold' ? 'bg-yellow-50 border-yellow-400' :
+                                <div key={hl.id} className={`p-3 rounded-lg border-l-4 ${hl.color === 'gold' ? 'bg-yellow-50 border-yellow-400' :
                                   hl.color === 'blue' ? 'bg-blue-50 border-blue-400' :
-                                  'bg-green-50 border-green-400'
-                                }`}>
+                                    'bg-green-50 border-green-400'
+                                  }`}>
                                   <p className="text-sm text-stone-800 italic mb-1">"{hl.text}"</p>
                                   {hl.note && <p className="text-xs text-stone-600 font-semibold">Note: {hl.note}</p>}
                                 </div>
@@ -1236,22 +1242,20 @@ export default function LectureNotes() {
                   <button
                     type="button"
                     onClick={() => setExportScope('current')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      exportScope === 'current'
-                        ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
-                        : 'text-stone-600 hover:bg-white/40'
-                    }`}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${exportScope === 'current'
+                      ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+                      : 'text-stone-600 hover:bg-white/40'
+                      }`}
                   >
                     Current Lecture
                   </button>
                   <button
                     type="button"
                     onClick={() => setExportScope('multiple')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      exportScope === 'multiple'
-                        ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
-                        : 'text-stone-600 hover:bg-white/40'
-                    }`}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${exportScope === 'multiple'
+                      ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+                      : 'text-stone-600 hover:bg-white/40'
+                      }`}
                   >
                     Multiple Lectures
                   </button>
@@ -1351,15 +1355,12 @@ export default function LectureNotes() {
                   <div className="border border-stone-100 rounded-xl overflow-hidden divide-y divide-stone-50 max-h-48 overflow-y-auto scrollbar-thin">
                     {notes.map((note) => {
                       const lecNum = note.fileName.match(/^\d+/)?.[0] || '•';
-                      const shortTitle = note.title
-                        .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*[:(Palmistry)–-]*\s*/i, '')
-                        .replace(/^–\s*/, '')
-                        .trim();
+                      const shortTitle = formatCleanLectureTitle(note.title);
 
                       return (
                         <label
                           key={note.id}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50/50 transition-colors cursor-pointer text-xs font-semibold text-stone-700"
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-stone-50/50 transition-colors cursor-pointer text-xs font-semibold text-stone-700"
                         >
                           <input
                             type="checkbox"
@@ -1398,11 +1399,10 @@ export default function LectureNotes() {
                       key={item.value}
                       type="button"
                       onClick={() => setPrintMargin(item.value as any)}
-                      className={`py-2 px-1 text-center rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        printMargin === item.value
-                          ? 'bg-amber-500/8 border-accent-gold text-accent-gold'
-                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
-                      }`}
+                      className={`py-2 px-1 text-center rounded-lg text-xs font-bold border transition-all cursor-pointer ${printMargin === item.value
+                        ? 'bg-amber-500/8 border-accent-gold text-accent-gold'
+                        : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                        }`}
                     >
                       {item.label}
                     </button>
