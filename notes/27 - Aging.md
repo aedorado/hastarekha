@@ -6,26 +6,13 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 # Aging (Age Calculation) and Budha Rekhā (Mercury Line)
 
-> [!NOTE] Conventions used in these notes
-> - Notes follow the lecture in the exact order taught. Only what the teacher or students said is recorded. Builds on the first age lesson in [[20 - Symbols & Life Line - Part 02]].
-> - **This transcript has no speaker labels.** Student remarks are attributed only where the sense or a name makes it clear; otherwise marked *[speaker unclear]*.
-> - The teacher draws on a screen; positions pointed at ("here, this") are mostly unrecoverable and are marked **[unclear in transcript]** where they matter.
-> - Removed as filler: greetings, Zoom/connection/audio trouble, pen and screen trouble, who-sent-which-photo chatter, joking, and closing thanks.
-
 ---
 
-## 1. Why aging first
-
-- Before starting any new topic, the class learns to **see age on the lines**. The teacher had prepared a hand picture (anyone's) and asked students to **follow along with copy and pencil**.
-- She will give **several methods**: the old ones (so students know them) and the one now followed. **She has not practised the older method herself**, so it needs practice. Students are asked to **test every method on their own hands**, since they know their own events.
-
----
-
-## 2. Method 1 – Old Indian method: ṣaḍaṁśa paddhati (division by 6)
+## 1. Method 1 – Old Indian method: ṣaḍaṁśa paddhati (division by 6)
 
 > [!INFO] What it was
-> - Old method; **no longer used**, but students should know it so that they recognise it when they read/hear of it.
-> - The **Life Line is measured** from the thumb-side origin (**zero**) **to the maṇibandha rekhā** (Wrist line). The total age taken is **70 to 72**.
+> - Old method; **no longer used**.
+> - The **Life Line is measured** from the thumb-side origin (**zero**) **to the middle of maṇibandha rekhā** (Wrist line). The total age taken is **70 to 72**.
 > - **Procedure:** take a **thread (or paper)** and lay it **along the line, following its curve** (not as a straight line). Mark the length. Divide it into **parts of 6 years each** — "like the table of six" — **0, 6, 12, 18, 24, 30, 36, 42, 48 … up to 72** (12 equal parts).
 > - Teacher's demonstration with a straight line showed the parts coming out too wide or too small; she said she must even them out and put a proper version on a hand in the group for the notes.
 > - **Note on 30:** in the method she uses now, 30 is exactly the midpoint; in the old six-based method **age 30 falls at roughly 24 on the line** *(teacher: "this thirty in the old one comes around the 24 place")*. **[exact wording garbled in transcript]**

@@ -85,11 +85,11 @@ addCard(
 
 addCard(
   'symbol',
-  'PALM GREAT TRIANGLE',
+  'PALM MONEY TRIANGLE',
   'Triangles & Assets',
-  'How is the "Second Triangle" (Great Triangle in the middle of the palm) formed, and what does it signify?',
-  'Formed jointly by the Life Line, Fate Line, Head Line (Mind Line), and Mercury Line.\n\nIt sits in the area of RĀHU in the palm center. It is a powerful wealth/money reservoir indicator when clean and well-enclosed.',
-  'Life + Fate + Mind + Mercury lines in Rāhu center = Money Triangle'
+  'Which three lines form the Money Triangle (Dhana Trikoṇa / Dhana kī Koṭhī) in the center of the palm, and what does it signify?',
+  'Formed by three lines: the Head Line (Mind Line), Fate Line, and Mercury Line in the central Rāhu area.\n\nWhen clean, unbroken, and well-enclosed, it acts as a treasury vault indicating accumulation of wealth, savings, and financial retention capacity.',
+  'Head Line + Fate Line + Mercury Line in Rāhu plain = Money Triangle (Dhana kī Koṭhī)'
 );
 
 addCard(
@@ -629,19 +629,7 @@ const topicFillers = [
   ['Live Case Studies', 'Jīvesh ji faint Life line', 'Why did the teacher advise Jīvesh ji to take health care?', 'Because his early chained line transitioned into a pale, faint trace, indicating delicate physical stamina requiring conscious lifestyle care.', 'Faint post-chain line = Fragile vitality needing care']
 ];
 
-let fillerIdx = 0;
-while (flashcards.length < 135) {
-  const item = topicFillers[fillerIdx % topicFillers.length];
-  addCard(
-    'principle',
-    `HIGH-YIELD RECALL #${flashcards.length + 1}`,
-    item[0],
-    `${item[1]} (Card ${flashcards.length + 1})`,
-    item[2],
-    item[3]
-  );
-  fillerIdx++;
-}
+
 
 // ==========================================
 // QUIZ SECTION: 135 MULTI-FORMAT QUESTIONS
@@ -717,17 +705,17 @@ addQuiz(
   'multiple',
   'Triangles & Assets',
   'medium',
-  'Which lines jointly form the "Great Triangle" in the middle of the palm (Rāhu area)? (Select all that apply)',
+  'Which THREE lines specifically enclose the famous "Money Triangle" (Dhana Trikoṇa / Dhana kī Koṭhī) in the central palm? (Select all three)',
   [
-    'Life Line (Jīvana Rekhā)',
-    'Fate Line (Bhāgya Rekhā)',
     'Head Line (Mind Line / Mastiṣka Rekhā)',
+    'Fate Line (Bhāgya Rekhā)',
     'Mercury Line (Budha Rekhā / Health Line)',
+    'Life Line (Jīvana Rekhā)',
     'Girdle of Venus'
   ],
-  [0, 1, 2, 3],
-  'The Great Triangle in the center of the palm is formed jointly by the Life Line, Fate Line, Mind Line, and Mercury Line. The Girdle of Venus does not participate.',
-  'Life + Fate + Mind + Mercury lines in Rāhu plain form the Great Money Triangle.'
+  [0, 1, 2],
+  'The true Money Triangle (Dhana kī Koṭhī) in the central palm is bounded by exactly three lines: the Head Line, Fate Line, and Mercury Line. While the Life Line borders the outer Rāhu area, the enclosed money room is bounded by Mind + Fate + Mercury lines.',
+  'Money Triangle = Head Line + Fate Line + Mercury Line (closed vault in Rāhu center).'
 );
 
 addQuiz(
@@ -1410,21 +1398,7 @@ const quizFillers = [
   ['single', 'Fish Sign', 'medium', 'What does the Fish sign make the native excel at, according to the lecture?', ['High-speed professional car racing', 'Profound research, scholarship, and spiritual exploration', 'Corporate accounting frauds', 'Professional boxing'], 1, 'The lecture highlights that the Fish sign makes the native a deep researcher and spiritual investigator.', 'Fish sign produces profound scholars and researchers.']
 ];
 
-let qFillerIdx = 0;
-while (quizzes.length < 135) {
-  const item = quizFillers[qFillerIdx % quizFillers.length];
-  addQuiz(
-    item[0],
-    item[1],
-    item[2],
-    `${item[3]} (Q #${quizzes.length + 1})`,
-    item[4],
-    item[5],
-    item[6],
-    item[7]
-  );
-  qFillerIdx++;
-}
+
 
 console.log(`Successfully compiled for Note 20:`);
 console.log(`- ${flashcards.length} High-Yield Flashcards`);

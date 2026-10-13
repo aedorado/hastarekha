@@ -370,7 +370,7 @@ export default function ReviewDeck({ activeNote, allNotes }: ReviewDeckProps) {
           {/* Main Flashcard Container */}
           <div
             onClick={handleFlip}
-            className="cursor-pointer select-none perspective-1000 min-h-[300px] sm:min-h-[340px] flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-br from-white to-amber-50/20 border-2 border-stone-200 rounded-2xl shadow-sm hover:border-accent-gold/60 transition-all duration-300 relative group"
+            className="cursor-pointer select-none perspective-1000 min-h-[260px] sm:min-h-[340px] flex flex-col justify-between p-3.5 sm:p-6 md:p-8 bg-gradient-to-br from-white to-amber-50/20 border sm:border-2 border-stone-200 rounded-xl sm:rounded-2xl shadow-xs sm:shadow-sm hover:border-accent-gold/60 transition-all duration-300 relative group"
           >
             {/* Top Badges */}
             <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-3">

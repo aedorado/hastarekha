@@ -546,16 +546,7 @@ for (const [title, front, back] of extraConcepts19) {
   addCard('principle', title.toUpperCase(), 'Deep Samudrika Principles', front, back, 'Comprehensive mastery drill');
 }
 
-for (let i = flashcards.length; i < 135; i++) {
-  addCard(
-    'rule',
-    'ACTIVE RECALL DRILL',
-    'Core Synthesis Drill',
-    `Quick Diagnostic Recall #${i - 60}: Key rule in Note 19 — Why does an open split at the end of the Life Line differ fundamentally from a closed loop?`,
-    'An open split is a FORK (signifying travel, family trips, or dual life after 50), whereas a closed loop is an ISLAND (signifying struggle, disease, and prolonged hardship).',
-    'Synthesis test for rapid palm diagnosis'
-  );
-}
+
 
 // ==========================================
 // QUIZ QUESTIONS GENERATION (135+ QUESTIONS)
@@ -1237,24 +1228,7 @@ for (const [type, subtopic, diff, q, opts, ans, exp, take] of extraQuestions19) 
   addQuiz(type, subtopic, diff, q, opts, ans, exp, take);
 }
 
-// Add targeted case study and drill questions up to 135+
-for (let i = quizzes.length; i < 135; i++) {
-  addQuiz(
-    'single',
-    'Practical Case Scenarios',
-    'medium',
-    `Consultation Case Drill #${i - 45}: A client presents with a Life Line that has an overlapping parallel line on the outer side between ages 32 and 36, with a protective square at age 33. How do you advise this client?`,
-    [
-      'Warn them that they will lose all property and become destitute at 33',
-      'Explain that age 32–36 is a preparatory phase moving into a new era or modern city; a challenge arises around 33 but protection/help ensures a successful breakthrough',
-      'Tell them to avoid leaving their house for four years',
-      'Inform them that overlapping lines mean double marriages'
-    ],
-    1,
-    'Outer overlapping lines denote preparatory transitions into a new era or growth location; a square on the transition guarantees protection and solutions to any accompanying hurdles.',
-    'Outer overlap + Square = Protected, successful modern transition.'
-  );
-}
+
 
 console.log(`Successfully compiled for Note 19:`);
 console.log(`- ${flashcards.length} High-Yield Flashcards`);

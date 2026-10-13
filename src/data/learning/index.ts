@@ -2,6 +2,7 @@ import { CuratedDeck } from '@/lib/learningTypes';
 import { lecture13Deck } from './13-ju-mount';
 import { lecture19Deck } from './19-symbols-life-line-01';
 import { lecture20Deck } from './20-symbols-life-line-02';
+import { lecture21Deck } from './21-symbols-life-line-03';
 
 const decksRegistry: Record<string, CuratedDeck> = {
   '13 - JU Mount.md': lecture13Deck,
@@ -13,6 +14,9 @@ const decksRegistry: Record<string, CuratedDeck> = {
   '20 - Symbols & Life Line - Part 02.md': lecture20Deck,
   '20 - Symbols & Life Line - Part 02': lecture20Deck,
   '20': lecture20Deck,
+  '21 - Symbols & Life Line - Part 03.md': lecture21Deck,
+  '21 - Symbols & Life Line - Part 03': lecture21Deck,
+  '21': lecture21Deck,
 };
 
 export function getCuratedDeckForNote(noteId: string): CuratedDeck | null {
@@ -30,6 +34,6 @@ export function hasCuratedDeck(noteId: string): boolean {
   return !!getCuratedDeckForNote(noteId);
 }
 
-export { lecture13Deck, lecture19Deck, lecture20Deck };
+export { lecture13Deck, lecture19Deck, lecture20Deck, lecture21Deck };
 
 

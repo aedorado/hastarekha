@@ -752,18 +752,18 @@ export default function LectureNotes() {
             )}
 
             {/* Right Column: Reading Pane & Sticky TOC outline */}
-            <div className={`${isFocusMode ? 'lg:col-span-4 max-w-none mx-auto w-full' : 'lg:col-span-3'} grid max-lg:grid-cols-1 lg:grid-cols-3 gap-6`}>
+            <div className={`${isFocusMode ? 'lg:col-span-4 max-w-none mx-auto w-full' : 'lg:col-span-3'} grid max-lg:grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6`}>
               {/* Reading Content Pane */}
-              <div className={`col-span-1 ${showOutline ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
+              <div className={`col-span-1 ${showOutline ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-3 sm:space-y-6`}>
                 {activeNote ? (
-                  <div className="bg-stone-50/30 rounded-2xl border border-stone-200/60 p-6 md:p-8 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin prose-p:leading-relaxed prose-p:text-[17px]">
+                  <div className="bg-stone-50/30 rounded-2xl border border-stone-200/60 p-2.5 sm:p-5 md:p-8 space-y-3.5 sm:space-y-6 max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-thin prose-p:leading-relaxed prose-p:text-[15px] sm:prose-p:text-[17px]">
                     {/* Note Title & Reading controls toolbar */}
-                    <div className="border-b border-stone-200 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="border-b border-stone-200 pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
                       <div>
                         <span className="text-[10px] font-bold text-accent-gold uppercase tracking-wider">
                           Lecture Note
                         </span>
-                        <h2 className="text-xl md:text-2xl font-serif font-bold text-stone-900 mt-0.5 leading-snug">
+                        <h2 className="text-base sm:text-xl md:text-2xl font-serif font-bold text-stone-900 mt-0.5 leading-snug">
                           {activeNote.title
                             .replace(/Hasta\s+S[aā]mudrik[aā]\s+Ś[aā]stra\s*(\(Palmistry\))?\s*[–\-:]?\s*/i, '')
                             .replace(/^[–\-]\s*/, '')
@@ -772,7 +772,7 @@ export default function LectureNotes() {
                       </div>
 
                       {/* Study Mode Buttons */}
-                      <div className="flex flex-wrap items-center gap-1.5 bg-stone-100 p-1 rounded-xl shrink-0 self-start sm:self-auto max-w-full">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-stone-100 p-1 rounded-xl shrink-0 self-start sm:self-auto max-w-full">
                         <button
                           onClick={() => setStudyMode('read')}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${studyMode === 'read'
@@ -1036,7 +1036,7 @@ export default function LectureNotes() {
 
                     {/* Quiz Mode - Interactive Multi-Format Chapter Quiz */}
                     {studyMode === 'quiz' && (
-                      <div className="space-y-8 animate-fade-in">
+                      <div className="space-y-3 sm:space-y-6 animate-fade-in">
                         <ErrorBoundary title="Could not load interactive quiz module">
                           <QuizEngine noteId={activeNote.id} noteTitle={activeNote.title} />
                         </ErrorBoundary>

@@ -298,20 +298,20 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
   const currentRecord = currentQ ? answerMap[currentQ.id] : undefined;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5 sm:space-y-4">
       {/* Sleek Unified Mastery & Filter Bar */}
-      <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="bg-white border border-stone-200 rounded-xl p-2 sm:p-3 shadow-xs flex flex-wrap items-center justify-between gap-2 sm:gap-3 text-xs">
         {/* Left: Progress & Metrics Badges */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="flex items-center gap-1.5 font-bold text-stone-800 bg-stone-100/80 px-2.5 py-1.5 rounded-lg border border-stone-200/80">
-            <Award className="w-3.5 h-3.5 text-accent-gold" />
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+          <div className="flex items-center gap-1 font-bold text-stone-800 bg-stone-100/80 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border border-stone-200/80 text-[11px] sm:text-xs">
+            <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-accent-gold" />
             <span>Answered:</span>
             <span className="text-accent-gold font-bold">{stats.answeredCount}</span>
             <span className="text-stone-400">/</span>
             <span>{stats.total}</span>
           </div>
 
-          <div className="flex items-center gap-1 font-semibold text-stone-700 bg-stone-50 px-2.5 py-1.5 rounded-lg border border-stone-200">
+          <div className="flex items-center gap-1 font-semibold text-stone-700 bg-stone-50 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg border border-stone-200 text-[11px] sm:text-xs">
             <span>Accuracy:</span>
             <span className={`font-bold ${stats.accuracy >= 70 ? 'text-emerald-600' : stats.accuracy > 0 ? 'text-amber-600' : 'text-stone-600'}`}>
               {stats.accuracy}%
@@ -339,12 +339,12 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
         </div>
 
         {/* Right: Quick Topic & Type Filters */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {/* Subtopic Filter */}
           <select
             value={selectedSubtopic}
             onChange={(e) => setSelectedSubtopic(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-xs max-w-[160px] truncate"
+            className="bg-stone-50 border border-stone-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-[11px] sm:text-xs max-w-[130px] sm:max-w-[160px] truncate"
           >
             <option value="all">All Topics ({allQuestions.length})</option>
             {subtopics.map((t) => (
@@ -358,7 +358,7 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-xs"
+            className="bg-stone-50 border border-stone-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-[11px] sm:text-xs"
           >
             <option value="all">All Types</option>
             <option value="single">Single Choice</option>
@@ -371,7 +371,7 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           <select
             value={selectedDifficulty}
             onChange={(e) => setSelectedDifficulty(e.target.value)}
-            className="bg-stone-50 border border-stone-200 rounded-lg px-2.5 py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-xs"
+            className="bg-stone-50 border border-stone-200 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 text-stone-800 font-medium focus:outline-hidden focus:ring-1 focus:ring-accent-gold text-[11px] sm:text-xs"
           >
             <option value="all">All Levels</option>
             <option value="easy">Easy</option>
@@ -382,14 +382,14 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           {/* Missed Only Toggle */}
           <button
             onClick={() => setShowOnlyMissed((prev) => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 text-xs ${
+            className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 text-[11px] sm:text-xs ${
               showOnlyMissed
                 ? 'bg-rose-100 text-rose-800 border border-rose-300'
                 : 'bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
             title="Filter by missed questions only"
           >
-            <XCircle className="w-3.5 h-3.5 text-rose-600" />
+            <XCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-600" />
             <span className="hidden sm:inline">Missed</span>
             <span>({stats.incorrectCount})</span>
           </button>
@@ -397,14 +397,14 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           {/* Flagged Toggle */}
           <button
             onClick={() => setShowOnlyFlagged((prev) => !prev)}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 text-xs ${
+            className={`px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg font-semibold transition-all cursor-pointer flex items-center gap-1 text-[11px] sm:text-xs ${
               showOnlyFlagged
                 ? 'bg-amber-100 text-amber-800 border border-amber-300'
                 : 'bg-stone-50 text-stone-600 border border-stone-200 hover:bg-stone-100'
             }`}
             title="Filter by flagged questions"
           >
-            <Bookmark className="w-3.5 h-3.5 text-amber-600" />
+            <Bookmark className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-600" />
             <span className="hidden sm:inline">Flagged</span>
             <span>({flaggedIds.length})</span>
           </button>
@@ -413,18 +413,18 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           <button
             onClick={handleResetAll}
             title="Reset Quiz Progress"
-            className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1 sm:p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </button>
         </div>
       </div>
 
       {/* Main Question Arena */}
       {filteredQuestions.length === 0 ? (
-        <div className="bg-white border border-stone-200 rounded-2xl p-12 text-center">
-          <AlertCircle className="w-10 h-10 text-stone-400 mx-auto mb-3" />
-          <h4 className="font-serif text-lg font-bold text-stone-800 mb-1">No Questions Match Filter</h4>
+        <div className="bg-white border border-stone-200 rounded-xl sm:rounded-2xl p-8 sm:p-12 text-center">
+          <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 text-stone-400 mx-auto mb-2 sm:mb-3" />
+          <h4 className="font-serif text-base sm:text-lg font-bold text-stone-800 mb-1">No Questions Match Filter</h4>
           <p className="text-xs text-stone-500 mb-4">Try clearing active filters to see all available questions.</p>
           <button
             onClick={() => {
@@ -434,24 +434,24 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
               setShowOnlyMissed(false);
               setShowOnlyFlagged(false);
             }}
-            className="btn-gold text-xs px-4 py-2 font-bold cursor-pointer"
+            className="btn-gold text-xs px-3 sm:px-4 py-1.5 sm:py-2 font-bold cursor-pointer"
           >
             Reset Filters
           </button>
         </div>
       ) : currentQ ? (
-        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-stone-200 rounded-xl sm:rounded-2xl shadow-xs overflow-hidden">
           {/* Card Top Header */}
-          <div className="bg-stone-50/80 border-b border-stone-200 px-6 py-4 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-stone-700 bg-stone-200/80 px-2.5 py-1 rounded-md">
-                Question {currentIndex + 1} of {filteredQuestions.length}
+          <div className="bg-stone-50/80 border-b border-stone-200 px-3 sm:px-6 py-2 sm:py-3.5 flex items-center justify-between flex-wrap gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="text-[11px] sm:text-xs font-bold text-stone-700 bg-stone-200/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md">
+                Q {currentIndex + 1} of {filteredQuestions.length}
               </span>
-              <span className="text-xs font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] sm:text-xs font-medium text-stone-600 bg-stone-100 border border-stone-200 px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[140px] sm:max-w-none">
                 {currentQ.subtopic}
               </span>
               <span
-                className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded-md border ${
                   currentQ.difficulty === 'easy'
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : currentQ.difficulty === 'medium'
@@ -461,21 +461,21 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
               >
                 {currentQ.difficulty}
               </span>
-              <span className="text-[11px] text-stone-400 uppercase tracking-wider font-semibold">
+              <span className="text-[10px] sm:text-[11px] text-stone-400 uppercase tracking-wider font-semibold">
                 {currentQ.type === 'multiple'
                   ? 'Multi-Select'
                   : currentQ.type === 'true_false'
-                  ? 'True / False'
+                  ? 'True/False'
                   : currentQ.type === 'scenario'
                   ? 'Case Scenario'
                   : 'Single Choice'}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => toggleFlag(currentQ.id)}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold ${
+                className={`p-1 sm:p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[11px] sm:text-xs font-semibold ${
                   isCurrentFlagged
                     ? 'bg-amber-100 text-amber-800'
                     : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
@@ -484,12 +484,12 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
               >
                 {isCurrentFlagged ? (
                   <>
-                    <BookmarkCheck className="w-4 h-4 text-amber-700" />
+                    <BookmarkCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />
                     <span>Flagged</span>
                   </>
                 ) : (
                   <>
-                    <Bookmark className="w-4 h-4" />
+                    <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span>Flag</span>
                   </>
                 )}
@@ -497,14 +497,14 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-3 sm:p-5 md:p-7 space-y-3 sm:space-y-5">
             {/* Practical Scenario Vignette (If applicable) */}
             {currentQ.scenario && (
-              <div className="bg-amber-50/60 border-l-4 border-accent-gold p-4 rounded-r-xl space-y-1">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 uppercase tracking-wider">
-                  <BookOpen className="w-3.5 h-3.5 text-accent-gold" /> Practical Client Vignette
+              <div className="bg-amber-50/60 border-l-3 sm:border-l-4 border-accent-gold p-2.5 sm:p-4 rounded-r-xl space-y-1">
+                <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-amber-900 uppercase tracking-wider">
+                  <BookOpen className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-accent-gold" /> Practical Client Vignette
                 </div>
-                <p className="text-sm sm:text-base text-stone-850 italic font-serif leading-relaxed">
+                <p className="text-xs sm:text-sm md:text-base text-stone-850 italic font-serif leading-relaxed">
                   "{currentQ.scenario}"
                 </p>
               </div>
@@ -512,18 +512,18 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
 
             {/* Question Text */}
             <div className="space-y-1">
-              <h3 className="font-serif text-lg sm:text-xl font-bold text-stone-900 leading-snug">
+              <h3 className="font-serif text-base sm:text-lg md:text-xl font-bold text-stone-900 leading-snug">
                 {currentQ.question}
               </h3>
               {currentQ.type === 'multiple' && (
-                <p className="text-xs text-stone-500 font-medium">
+                <p className="text-[11px] sm:text-xs text-stone-500 font-medium">
                   💡 Select all options that apply, then click "Submit Answer".
                 </p>
               )}
             </div>
 
             {/* Options List */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 sm:space-y-2.5 pt-0.5 sm:pt-1">
               {currentQ.options.map((option, idx) => {
                 const isSelected =
                   currentQ.type === 'multiple'
@@ -559,42 +559,42 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
                     type="button"
                     disabled={isAnswerChecked}
                     onClick={() => handleSelectOption(idx)}
-                    className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 cursor-pointer disabled:cursor-default ${optionClass}`}
+                    className={`w-full text-left py-2.5 px-3 sm:py-3.5 sm:px-4 rounded-lg sm:rounded-xl border sm:border-2 transition-all flex items-start gap-2.5 sm:gap-3.5 cursor-pointer disabled:cursor-default ${optionClass}`}
                   >
                     <div className="shrink-0 mt-0.5">
                       {currentQ.type === 'multiple' ? (
                         <div
-                          className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                          className={`w-4.5 h-4.5 sm:w-5 sm:h-5 rounded sm:rounded-md border flex items-center justify-center transition-colors ${
                             isSelected
                               ? 'bg-accent-gold border-accent-gold text-white'
                               : 'border-stone-300 bg-white'
                           }`}
                         >
-                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          {isSelected && <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 stroke-[3]" />}
                         </div>
                       ) : (
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                          className={`w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full border sm:border-2 flex items-center justify-center transition-colors ${
                             isSelected
                               ? 'border-accent-gold'
                               : 'border-stone-300 bg-white'
                           }`}
                         >
-                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-accent-gold" />}
+                          {isSelected && <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-accent-gold" />}
                         </div>
                       )}
                     </div>
 
-                    <div className="flex-1 text-sm sm:text-base leading-relaxed">
+                    <div className="flex-1 text-xs sm:text-sm md:text-base leading-snug sm:leading-relaxed">
                       {option}
                     </div>
 
                     {isAnswerChecked && (
-                      <div className="shrink-0">
+                      <div className="shrink-0 mt-0.5">
                         {isCorrectOption ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                         ) : isSelected && !isCorrectOption ? (
-                          <XCircle className="w-5 h-5 text-rose-500" />
+                          <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500" />
                         ) : null}
                       </div>
                     )}
@@ -605,7 +605,7 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
 
             {/* Answer Check / Submit Button Bar */}
             {!isAnswerChecked && (
-              <div className="pt-4 flex items-center justify-between">
+              <div className="pt-2 sm:pt-4 flex items-center justify-between">
                 <span className="text-xs text-stone-400 hidden sm:inline">
                   Select your choice and click Submit (or press Enter)
                 </span>
@@ -616,35 +616,35 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
                       ? selectedMultiple.length === 0
                       : selectedOption === null
                   }
-                  className="btn-gold px-6 py-2.5 text-sm font-bold shadow-xs cursor-pointer disabled:opacity-40 ml-auto flex items-center gap-2"
+                  className="btn-gold w-full sm:w-auto px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xs cursor-pointer disabled:opacity-40 ml-auto flex items-center justify-center gap-2"
                 >
                   <span>Submit Answer</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             )}
 
             {/* Detailed Explanation & Practical Takeaway Banner (Revealed after answer) */}
             {isAnswerChecked && currentRecord && (
-              <div className="space-y-4 pt-4 border-t border-stone-200 animate-fade-in">
+              <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t border-stone-200 animate-fade-in">
                 {/* Result Status Banner */}
                 <div
-                  className={`p-4 rounded-xl flex items-center gap-3 border ${
+                  className={`p-3 sm:p-4 rounded-xl flex items-center gap-2.5 sm:gap-3 border ${
                     currentRecord.isCorrect
                       ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                       : 'bg-rose-50 border-rose-200 text-rose-900'
                   }`}
                 >
                   {currentRecord.isCorrect ? (
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 shrink-0" />
                   ) : (
-                    <XCircle className="w-6 h-6 text-rose-600 shrink-0" />
+                    <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600 shrink-0" />
                   )}
                   <div>
-                    <div className="font-bold text-sm">
+                    <div className="font-bold text-xs sm:text-sm">
                       {currentRecord.isCorrect ? 'Correct! Well reasoned.' : 'Not quite right. Let’s review the classical rule:'}
                     </div>
-                    <div className="text-xs opacity-90">
+                    <div className="text-[11px] sm:text-xs opacity-90">
                       {currentRecord.isCorrect
                         ? 'Your mental model aligns precisely with the śāstric parameters of this lecture.'
                         : 'Review the detailed rationale below to strengthen this concept.'}
@@ -653,20 +653,20 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
                 </div>
 
                 {/* Pedagogical Explanation */}
-                <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-stone-700 uppercase tracking-wider">
-                    <Lightbulb className="w-4 h-4 text-accent-gold" /> Classical Rationale & Nuance
+                <div className="bg-stone-50 border border-stone-200 rounded-xl p-3.5 sm:p-5 space-y-1.5 sm:space-y-2">
+                  <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-stone-700 uppercase tracking-wider">
+                    <Lightbulb className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent-gold" /> Classical Rationale & Nuance
                   </div>
-                  <p className="text-sm text-stone-800 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-stone-800 leading-relaxed">
                     {currentQ.explanation}
                   </p>
                 </div>
 
                 {/* Practical Takeaway Diagnostic Note */}
                 {currentQ.practicalTakeaway && (
-                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 flex items-start gap-3">
-                    <Sparkles className="w-4 h-4 text-accent-gold shrink-0 mt-0.5" />
-                    <div className="text-xs text-stone-850">
+                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent-gold shrink-0 mt-0.5" />
+                    <div className="text-[11px] sm:text-xs text-stone-850">
                       <strong className="text-amber-900 font-bold block mb-0.5">Practical Diagnostic Rule:</strong>
                       {currentQ.practicalTakeaway}
                     </div>
@@ -677,9 +677,9 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
                 <div className="flex justify-end pt-1">
                   <button
                     onClick={handleRetryQuestion}
-                    className="text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer transition-colors"
+                    className="text-[11px] sm:text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer transition-colors"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" /> Try this question again
+                    <RefreshCw className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Try this question again
                   </button>
                 </div>
               </div>
@@ -687,25 +687,25 @@ export default function QuizEngine({ noteId, noteTitle }: QuizEngineProps) {
           </div>
 
           {/* Bottom Navigation Toolbar */}
-          <div className="bg-stone-50 border-t border-stone-200 px-6 py-4 flex items-center justify-between">
+          <div className="bg-stone-50 border-t border-stone-200 px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
-              className="px-4 py-2 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:hover:bg-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:hover:bg-white text-xs font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" /> Previous
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Previous
             </button>
 
-            <span className="text-xs text-stone-400 font-medium">
+            <span className="text-xs text-stone-400 font-medium hidden sm:inline">
               Use number keys (1–4) & Enter for speedy learning
             </span>
 
             <button
               onClick={handleNext}
               disabled={currentIndex >= filteredQuestions.length - 1}
-              className="px-4 py-2 rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-30 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-30 text-xs font-bold flex items-center gap-1 sm:gap-1.5 cursor-pointer"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              Next <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
