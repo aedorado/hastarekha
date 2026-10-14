@@ -123,15 +123,27 @@ export const LINE_LABELS: Record<LineCategory, string> = {
   other: 'Other Crease',
 };
 
+export interface ScreenDimensions {
+  width: number;
+  height: number;
+}
+
 /**
- * Calculates total arc length along a 2D polyline in % coordinate space.
+ * Calculates total arc length along a 2D polyline in true isometric physical screen space.
+ * When dimensions are provided (or fallback 600x600), converts percentage deltas to screen pixels,
+ * preventing widescreen aspect-ratio distortions.
  */
-export function calculatePolylineLength(points: Point2D[]): number {
+export function calculatePolylineLength(
+  points: Point2D[],
+  dimensions?: ScreenDimensions | DOMRect | null
+): number {
   if (points.length < 2) return 0;
+  const W = dimensions?.width && dimensions.width > 0 ? dimensions.width : 600;
+  const H = dimensions?.height && dimensions.height > 0 ? dimensions.height : 600;
   let total = 0;
   for (let i = 1; i < points.length; i++) {
-    const dx = points[i].x - points[i - 1].x;
-    const dy = points[i].y - points[i - 1].y;
+    const dx = ((points[i].x - points[i - 1].x) * W) / 100;
+    const dy = ((points[i].y - points[i - 1].y) * H) / 100;
     total += Math.sqrt(dx * dx + dy * dy);
   }
   return total;
@@ -141,16 +153,19 @@ export function calculatePolylineLength(points: Point2D[]): number {
  * Computes the exact 50% midpoint (Maṇibandha Kendra - मध्यबिन्दु) of a traced wrist crease.
  * Used as the classical anchor for Age 75 (Life Line) and Age 0 (Fate Line).
  */
-export function getManibandhaMidpoint(points: Point2D[]): {
+export function getManibandhaMidpoint(
+  points: Point2D[],
+  dimensions?: ScreenDimensions | DOMRect | null
+): {
   midpoint: Point2D;
   normal: Point2D;
   tangent: Point2D;
   length: number;
 } | null {
   if (!points || points.length < 2) return null;
-  const geom = getPointAndNormalAtFraction(points, 0.5);
+  const geom = getPointAndNormalAtFraction(points, 0.5, dimensions);
   if (!geom) return null;
-  const length = calculatePolylineLength(points);
+  const length = calculatePolylineLength(points, dimensions);
   return {
     midpoint: geom.point,
     normal: geom.normal,
@@ -161,14 +176,20 @@ export function getManibandhaMidpoint(points: Point2D[]): {
 
 /**
  * Finds the coordinates, unit normal, and unit tangent at a given fraction t (0..1) along a polyline.
+ * Uses true physical isometric space so ticks are strictly 90° perpendicular on screen
+ * and fractions represent strictly equal physical divisions along the hand.
  */
 export function getPointAndNormalAtFraction(
   points: Point2D[],
-  fraction: number
+  fraction: number,
+  dimensions?: ScreenDimensions | DOMRect | null
 ): { point: Point2D; normal: Point2D; tangent: Point2D } | null {
   if (points.length < 2) return null;
   const clampedFraction = Math.max(0, Math.min(1, fraction));
-  const totalLength = calculatePolylineLength(points);
+  const W = dimensions?.width && dimensions.width > 0 ? dimensions.width : 600;
+  const H = dimensions?.height && dimensions.height > 0 ? dimensions.height : 600;
+
+  const totalLength = calculatePolylineLength(points, dimensions);
   if (totalLength <= 0) return null;
 
   const targetDist = clampedFraction * totalLength;
@@ -177,8 +198,8 @@ export function getPointAndNormalAtFraction(
   for (let i = 1; i < points.length; i++) {
     const p1 = points[i - 1];
     const p2 = points[i];
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
+    const dx = ((p2.x - p1.x) * W) / 100;
+    const dy = ((p2.y - p1.y) * H) / 100;
     const segLen = Math.sqrt(dx * dx + dy * dy);
 
     if (segLen === 0) continue;
@@ -188,19 +209,31 @@ export function getPointAndNormalAtFraction(
       const clampedSegT = Math.max(0, Math.min(1, segT));
 
       const point: Point2D = {
-        x: p1.x + dx * clampedSegT,
-        y: p1.y + dy * clampedSegT,
+        x: p1.x + (p2.x - p1.x) * clampedSegT,
+        y: p1.y + (p2.y - p1.y) * clampedSegT,
       };
 
-      const tangent: Point2D = {
+      // Physical screen tangent (unit vector in pixels)
+      const tangentPx = {
         x: dx / segLen,
         y: dy / segLen,
       };
 
-      // Perpendicular normal: (-dy, dx)
+      // Physical screen normal (strictly perpendicular: -dy, dx)
+      const normalPx = {
+        x: -tangentPx.y,
+        y: tangentPx.x,
+      };
+
+      // Map normal back to SVG % space so rendered stroke has uniform length & true 90° angle
       const normal: Point2D = {
-        x: -tangent.y,
-        y: tangent.x,
+        x: (normalPx.x / W) * 600,
+        y: (normalPx.y / H) * 600,
+      };
+
+      const tangent: Point2D = {
+        x: (tangentPx.x / W) * 600,
+        y: (tangentPx.y / H) * 600,
       };
 
       return { point, normal, tangent };
@@ -212,13 +245,16 @@ export function getPointAndNormalAtFraction(
   // Fallback to end
   const last = points[points.length - 1];
   const secondLast = points[points.length - 2];
-  const dx = last.x - secondLast.x;
-  const dy = last.y - secondLast.y;
+  const dx = ((last.x - secondLast.x) * W) / 100;
+  const dy = ((last.y - secondLast.y) * H) / 100;
   const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  const tangentPx = { x: dx / len, y: dy / len };
+  const normalPx = { x: -tangentPx.y, y: tangentPx.x };
+
   return {
     point: { ...last },
-    tangent: { x: dx / len, y: dy / len },
-    normal: { x: -dy / len, y: dx / len },
+    tangent: { x: (tangentPx.x / W) * 600, y: (tangentPx.y / H) * 600 },
+    normal: { x: (normalPx.x / W) * 600, y: (normalPx.y / H) * 600 },
   };
 }
 
@@ -322,7 +358,8 @@ export function computeAgeTicks(
   points: Point2D[],
   method: AgingMethod,
   lineCategory: LineCategory = 'line_life',
-  maxAge = 75
+  maxAge = 75,
+  dimensions?: ScreenDimensions | DOMRect | null
 ): AgeTick[] {
   if (points.length < 2) return [];
 
@@ -377,7 +414,7 @@ export function computeAgeTicks(
       }
 
       for (const m of milestones) {
-        const geom = getPointAndNormalAtFraction(points, m.fraction);
+        const geom = getPointAndNormalAtFraction(points, m.fraction, dimensions);
         if (geom) {
           ticks.push({
             age: m.age,
@@ -400,7 +437,7 @@ export function computeAgeTicks(
       for (let i = 1; i <= 14; i++) {
         const age = i * 7;
         const fraction = i / 14;
-        const geom = getPointAndNormalAtFraction(points, fraction);
+        const geom = getPointAndNormalAtFraction(points, fraction, dimensions);
         if (geom) {
           ticks.push({
             age,
@@ -423,7 +460,7 @@ export function computeAgeTicks(
       for (let i = 1; i <= 12; i++) {
         const age = i * 6;
         const fraction = i / 12;
-        const geom = getPointAndNormalAtFraction(points, fraction);
+        const geom = getPointAndNormalAtFraction(points, fraction, dimensions);
         if (geom) {
           ticks.push({
             age,
@@ -445,7 +482,7 @@ export function computeAgeTicks(
       // 10-year major intervals across 100 years
       for (let age = 10; age <= 100; age += 10) {
         const fraction = age / 100;
-        const geom = getPointAndNormalAtFraction(points, fraction);
+        const geom = getPointAndNormalAtFraction(points, fraction, dimensions);
         if (geom) {
           ticks.push({
             age,
@@ -479,7 +516,7 @@ export function computeAgeTicks(
       for (const cm of cadenceMilestones) {
         const fraction = cm.age / maxCadence;
         if (fraction <= 1.0) {
-          const geom = getPointAndNormalAtFraction(points, fraction);
+          const geom = getPointAndNormalAtFraction(points, fraction, dimensions);
           if (geom) {
             ticks.push({
               age: cm.age,
@@ -508,11 +545,15 @@ export function computeAgeTicks(
  */
 export function getNearestPointOnPolyline(
   points: Point2D[],
-  target: Point2D
+  target: Point2D,
+  dimensions?: ScreenDimensions | DOMRect | null
 ): { point: Point2D; fraction: number; distance: number } | null {
   if (points.length < 2) return null;
 
-  const totalLength = calculatePolylineLength(points);
+  const W = dimensions?.width && dimensions.width > 0 ? dimensions.width : 600;
+  const H = dimensions?.height && dimensions.height > 0 ? dimensions.height : 600;
+
+  const totalLength = calculatePolylineLength(points, dimensions);
   if (totalLength <= 0) return null;
 
   let minDistance = Infinity;
@@ -523,21 +564,26 @@ export function getNearestPointOnPolyline(
   for (let i = 1; i < points.length; i++) {
     const p1 = points[i - 1];
     const p2 = points[i];
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    const segLenSq = dx * dx + dy * dy;
+    const dxPx = ((p2.x - p1.x) * W) / 100;
+    const dyPx = ((p2.y - p1.y) * H) / 100;
+    const targetDxPx = ((target.x - p1.x) * W) / 100;
+    const targetDyPx = ((target.y - p1.y) * H) / 100;
+
+    const segLenSq = dxPx * dxPx + dyPx * dyPx;
     const segLen = Math.sqrt(segLenSq);
 
     if (segLen === 0) continue;
 
-    // Project target onto segment p1->p2
-    const u = ((target.x - p1.x) * dx + (target.y - p1.y) * dy) / segLenSq;
+    // Project target onto segment p1->p2 in isometric pixel coordinates
+    const u = (targetDxPx * dxPx + targetDyPx * dyPx) / segLenSq;
     const clampedU = Math.max(0, Math.min(1, u));
 
-    const projX = p1.x + clampedU * dx;
-    const projY = p1.y + clampedU * dy;
+    const projX = p1.x + clampedU * (p2.x - p1.x);
+    const projY = p1.y + clampedU * (p2.y - p1.y);
+
     const distToTarget = Math.sqrt(
-      Math.pow(target.x - projX, 2) + Math.pow(target.y - projY, 2)
+      Math.pow(((target.x - projX) * W) / 100, 2) +
+      Math.pow(((target.y - projY) * H) / 100, 2)
     );
 
     if (distToTarget < minDistance) {

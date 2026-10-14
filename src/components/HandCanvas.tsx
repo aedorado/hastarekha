@@ -447,25 +447,105 @@ export default function HandCanvas({
     if (mode === 'measure') setMode('pan');
   };
 
-  // Pixel distance calculation
-  const pxDist = (ax: number, ay: number, bx: number, by: number): number => {
-    const W = 500;
-    const H = 600;
-    return Math.sqrt(Math.pow(((bx - ax) * W) / 100, 2) + Math.pow(((by - ay) * H) / 100, 2));
-  };
+  // ─── Isometric Screen Distance & Vedic Measurement Unit Calculation ───
+  // All measurements use the exact same Euclidean distance on screen, normalized to a standard 600px viewport baseline.
+  // This guarantees that visual line lengths on screen are 100% proportional to their reported numerical units,
+  // completely eliminating widescreen aspect-ratio distortions.
+  const calcIsometricDistance = useCallback(
+    (ax: number, ay: number, bx: number, by: number, overrideRect?: DOMRect | null): number => {
+      const rect = overrideRect || containerRef.current?.getBoundingClientRect();
+      const W = rect?.width && rect.width > 0 ? rect.width : 600;
+      const H = rect?.height && rect.height > 0 ? rect.height : 600;
+      // Convert percentage delta to actual physical screen pixels
+      const dxScreen = ((bx - ax) * W) / 100;
+      const dyScreen = ((by - ay) * H) / 100;
+      const screenDist = Math.sqrt(dxScreen * dxScreen + dyScreen * dyScreen);
+      // Normalize to 600px viewport reference height so units remain stable and invariant
+      const normScale = H > 0 ? 600 / H : 1;
+      return parseFloat((screenDist * normScale * 0.04).toFixed(1));
+    },
+    []
+  );
 
-  const displayPalmLength = measurements
-    ? parseFloat(
-      (
-        pxDist(
-          measurements.palm_start.x,
-          measurements.palm_start.y,
-          measurements.palm_end.x,
-          measurements.palm_end.y
-        ) * 0.04
-      ).toFixed(1)
-    )
-    : 10.0;
+  const computeMeasurements = useCallback(
+    (m: typeof DEFAULT_MEASUREMENTS | null | undefined, overrideRect?: DOMRect | null) => {
+      if (!m) return null;
+      const palmLength = calcIsometricDistance(
+        m.palm_start.x,
+        m.palm_start.y,
+        m.palm_end.x,
+        m.palm_end.y,
+        overrideRect
+      );
+      const fingerLength = calcIsometricDistance(
+        m.finger_start.x,
+        m.finger_start.y,
+        m.finger_end.x,
+        m.finger_end.y,
+        overrideRect
+      );
+      const widthStartX = m.width_start?.x ?? DEFAULT_MEASUREMENTS.width_start.x;
+      const widthStartY = m.width_start?.y ?? DEFAULT_MEASUREMENTS.width_start.y;
+      const widthEndX = m.width_end?.x ?? DEFAULT_MEASUREMENTS.width_end.x;
+      const widthEndY = m.width_end?.y ?? DEFAULT_MEASUREMENTS.width_end.y;
+      const palmWidth = calcIsometricDistance(
+        widthStartX,
+        widthStartY,
+        widthEndX,
+        widthEndY,
+        overrideRect
+      );
+
+      const shapeRatio = palmWidth / Math.max(0.1, palmLength);
+      const palmShape: 'Square' | 'Rectangular' = shapeRatio >= 0.9 ? 'Square' : 'Rectangular';
+
+      const ratio = fingerLength / Math.max(0.1, palmLength);
+      let handTattva = '';
+      if (palmShape === 'Rectangular') {
+        if (ratio < 0.85) handTattva = 'Agni Tattva (Fiery Hand)';
+        else if (ratio >= 0.9) handTattva = 'Jala Tattva (Watery Hand)';
+        else handTattva = 'Mixed Hand (Agni-Jala Blend)';
+      } else {
+        if (ratio < 0.85) handTattva = 'Pṛthvī Tattva (Earthy Hand)';
+        else if (ratio >= 0.9) handTattva = 'Vāyu Tattva (Airy Hand)';
+        else handTattva = 'Mixed Hand (Air-Earth Blend)';
+      }
+
+      return {
+        palmLength,
+        palmWidth,
+        fingerLength,
+        palmShape,
+        handTattva,
+        shapeRatio,
+        ratio,
+      };
+    },
+    [calcIsometricDistance]
+  );
+
+  const liveMeasurements = useMemo(() => {
+    return computeMeasurements(measurements);
+  }, [computeMeasurements, measurements]);
+
+  const livePalmLength =
+    liveMeasurements?.palmLength ??
+    (vedicData?.palm_length ? Number(vedicData.palm_length) : 10.0);
+  const livePalmWidth =
+    liveMeasurements?.palmWidth ??
+    (vedicData?.palm_width ? Number(vedicData.palm_width) : 0.0);
+  const liveFingerLength =
+    liveMeasurements?.fingerLength ??
+    (vedicData?.finger_length ? Number(vedicData.finger_length) : 0.0);
+  const livePalmShape =
+    liveMeasurements?.palmShape ?? vedicData?.palm_shape ?? 'Calculating...';
+  const liveHandTattva =
+    liveMeasurements?.handTattva ?? vedicData?.hand_tattva ?? '';
+  const liveTattvaRatio = liveMeasurements
+    ? (liveMeasurements.fingerLength / Math.max(0.1, liveMeasurements.palmLength)).toFixed(2)
+    : vedicData?.finger_length && vedicData?.palm_length
+      ? (Number(vedicData.finger_length) / Number(vedicData.palm_length)).toFixed(2)
+      : '0.00';
 
   // Local filter for selected hand view
   const visiblePins = pins.filter((p) => p.view === activeView);
@@ -872,65 +952,19 @@ export default function HandCanvas({
         updatedMeasurements.width_end = { ...DEFAULT_MEASUREMENTS.width_end };
       }
 
-      const rect = containerRef.current!.getBoundingClientRect();
-      const W = rect.width;
-      const H = rect.height;
-      const px = (ax: number, ay: number, bx: number, by: number) =>
-        Math.sqrt(Math.pow(((bx - ax) * W) / 100, 2) + Math.pow(((by - ay) * H) / 100, 2));
+      const rect = containerRef.current?.getBoundingClientRect();
+      const computed = computeMeasurements(updatedMeasurements, rect);
 
       const currentVedic = parseVedicData(profile.general_notes);
       currentVedic.measurements = updatedMeasurements;
 
-      const calculatedPalmLength = parseFloat(
-        (
-          px(
-            updatedMeasurements.palm_start.x,
-            updatedMeasurements.palm_start.y,
-            updatedMeasurements.palm_end.x,
-            updatedMeasurements.palm_end.y
-          ) * 0.04
-        ).toFixed(1)
-      );
-      const calculatedFingerLength = parseFloat(
-        (
-          px(
-            updatedMeasurements.finger_start.x,
-            updatedMeasurements.finger_start.y,
-            updatedMeasurements.finger_end.x,
-            updatedMeasurements.finger_end.y
-          ) * 0.04
-        ).toFixed(1)
-      );
-      const calculatedPalmWidth = parseFloat(
-        (
-          px(
-            updatedMeasurements.width_start.x,
-            updatedMeasurements.width_start.y,
-            updatedMeasurements.width_end.x,
-            updatedMeasurements.width_end.y
-          ) * 0.04
-        ).toFixed(1)
-      );
-
-      currentVedic.palm_length = calculatedPalmLength;
-      currentVedic.finger_length = calculatedFingerLength;
-      currentVedic.palm_width = calculatedPalmWidth;
-
-      const shapeRatio = calculatedPalmWidth / Math.max(0.1, calculatedPalmLength);
-      currentVedic.palm_shape = shapeRatio >= 0.9 ? 'Square' : 'Rectangular';
-
-      const ratio = calculatedFingerLength / Math.max(0.1, calculatedPalmLength);
-      let computedType = '';
-      if (currentVedic.palm_shape === 'Rectangular') {
-        if (ratio < 0.85) computedType = 'Agni Tattva (Fiery Hand)';
-        else if (ratio >= 0.9) computedType = 'Jala Tattva (Watery Hand)';
-        else computedType = 'Mixed Hand (Agni-Jala Blend)';
-      } else {
-        if (ratio < 0.85) computedType = 'Pṛthvī Tattva (Earthy Hand)';
-        else if (ratio >= 0.9) computedType = 'Vāyu Tattva (Airy Hand)';
-        else computedType = 'Mixed Hand (Air-Earth Blend)';
+      if (computed) {
+        currentVedic.palm_length = computed.palmLength;
+        currentVedic.finger_length = computed.fingerLength;
+        currentVedic.palm_width = computed.palmWidth;
+        currentVedic.palm_shape = computed.palmShape;
+        currentVedic.hand_tattva = computed.handTattva;
       }
-      currentVedic.hand_tattva = computedType;
 
       onChangeProfile({
         ...profile,
@@ -1098,44 +1132,15 @@ export default function HandCanvas({
         currentVedic.measurements = { ...DEFAULT_MEASUREMENTS };
 
         const initRect = containerRef.current?.getBoundingClientRect();
-        const W = initRect?.width ?? 500;
-        const H = initRect?.height ?? 600;
-        const initPx = (ax: number, ay: number, bx: number, by: number) =>
-          Math.sqrt(Math.pow(((bx - ax) * W) / 100, 2) + Math.pow(((by - ay) * H) / 100, 2));
+        const computed = computeMeasurements(DEFAULT_MEASUREMENTS, initRect);
 
-        currentVedic.palm_length = parseFloat(
-          (
-            initPx(
-              DEFAULT_MEASUREMENTS.palm_start.x,
-              DEFAULT_MEASUREMENTS.palm_start.y,
-              DEFAULT_MEASUREMENTS.palm_end.x,
-              DEFAULT_MEASUREMENTS.palm_end.y
-            ) * 0.04
-          ).toFixed(1)
-        );
-        currentVedic.finger_length = parseFloat(
-          (
-            initPx(
-              DEFAULT_MEASUREMENTS.finger_start.x,
-              DEFAULT_MEASUREMENTS.finger_start.y,
-              DEFAULT_MEASUREMENTS.finger_end.x,
-              DEFAULT_MEASUREMENTS.finger_end.y
-            ) * 0.04
-          ).toFixed(1)
-        );
-        currentVedic.palm_width = parseFloat(
-          (
-            initPx(
-              DEFAULT_MEASUREMENTS.width_start.x,
-              DEFAULT_MEASUREMENTS.width_start.y,
-              DEFAULT_MEASUREMENTS.width_end.x,
-              DEFAULT_MEASUREMENTS.width_end.y
-            ) * 0.04
-          ).toFixed(1)
-        );
-
-        const shapeRatio = currentVedic.palm_width / Math.max(0.1, currentVedic.palm_length);
-        currentVedic.palm_shape = shapeRatio >= 0.9 ? 'Square' : 'Rectangular';
+        if (computed) {
+          currentVedic.palm_length = computed.palmLength;
+          currentVedic.finger_length = computed.fingerLength;
+          currentVedic.palm_width = computed.palmWidth;
+          currentVedic.palm_shape = computed.palmShape;
+          currentVedic.hand_tattva = computed.handTattva;
+        }
 
         onChangeProfile({
           ...profile,
@@ -1316,7 +1321,10 @@ export default function HandCanvas({
   const manibandhaDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_manibandha') || null;
   const manibandhaData = useMemo(() => {
     if (!manibandhaDrawing || manibandhaDrawing.points.length < 2) return null;
-    return getManibandhaMidpoint(manibandhaDrawing.points);
+    return getManibandhaMidpoint(
+      manibandhaDrawing.points,
+      containerRef.current?.getBoundingClientRect()
+    );
   }, [manibandhaDrawing]);
 
   const currentAgingTicks =
@@ -1325,7 +1333,8 @@ export default function HandCanvas({
         activeAgingDrawing.points,
         agingMethod,
         activeAgingDrawing.lineCategory || agingLineCategory,
-        vedicData?.max_age ?? 75
+        vedicData?.max_age ?? 75,
+        containerRef.current?.getBoundingClientRect()
       )
       : [];
 
@@ -1335,7 +1344,8 @@ export default function HandCanvas({
         activeAgingDrawing.points,
         'cheiro-98',
         activeAgingDrawing.lineCategory || agingLineCategory,
-        98
+        98,
+        containerRef.current?.getBoundingClientRect()
       )
       : [];
 
@@ -1345,7 +1355,8 @@ export default function HandCanvas({
         activeAgingDrawing.points,
         'shadamsha-72',
         activeAgingDrawing.lineCategory || agingLineCategory,
-        72
+        72,
+        containerRef.current?.getBoundingClientRect()
       )
       : [];
 
@@ -2210,7 +2221,7 @@ export default function HandCanvas({
                           textAnchor="middle"
                           style={{ pointerEvents: 'none', userSelect: 'none' }}
                         >
-                          Palm: {displayPalmLength}u
+                          Palm: {livePalmLength}u
                         </text>
 
                         <rect
@@ -2231,7 +2242,7 @@ export default function HandCanvas({
                           textAnchor="middle"
                           style={{ pointerEvents: 'none', userSelect: 'none' }}
                         >
-                          Finger: {vedicData?.finger_length || '0.0'}u
+                          Finger: {liveFingerLength}u
                         </text>
 
                         <rect
@@ -2271,7 +2282,7 @@ export default function HandCanvas({
                           textAnchor="middle"
                           style={{ pointerEvents: 'none', userSelect: 'none' }}
                         >
-                          Width: {vedicData?.palm_width || '0.0'}u
+                          Width: {livePalmWidth}u
                         </text>
                       </g>
                     )}
@@ -3061,43 +3072,36 @@ export default function HandCanvas({
                 <div className="space-y-1.5 pt-1 border-t border-stone-800">
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-stone-400">Palm Height:</span>
-                    <span className="font-mono font-bold text-blue-400">{displayPalmLength} units</span>
+                    <span className="font-mono font-bold text-blue-400">{livePalmLength} units</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-stone-400">Palm Width:</span>
                     <span className="font-mono font-bold text-amber-500">
-                      {vedicData.palm_width || '0.0'} units
+                      {livePalmWidth} units
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-stone-400">Finger Length:</span>
                     <span className="font-mono font-bold text-emerald-400">
-                      {vedicData.finger_length || '0.0'} units
+                      {liveFingerLength} units
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] pt-1 border-t border-stone-800/50">
                     <span className="text-stone-400">Palm Shape:</span>
                     <span className="font-mono font-bold text-purple-400">
-                      {vedicData.palm_shape || 'Calculating...'}
+                      {livePalmShape}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-[11px] pt-0.5">
                     <span className="font-bold text-stone-300 font-serif">Tattva Ratio:</span>
                     <span className="font-mono font-bold text-accent-gold">
-                      {vedicData.finger_length
-                        ? (Number(vedicData.finger_length) / displayPalmLength).toFixed(2)
-                        : '0.00'}
+                      {liveTattvaRatio}
                     </span>
                   </div>
                 </div>
-                {vedicData.hand_tattva && (
+                {liveHandTattva && (
                   <div className="mt-2 text-[10px] bg-amber-500/15 text-accent-gold font-bold px-3 py-1 rounded text-center border border-amber-500/25">
-                    ✨ {vedicData.hand_tattva}
-                  </div>
-                )}
-                {vedicData.hand_type && (
-                  <div className="mt-1 text-[10px] bg-purple-500/15 text-purple-300 font-bold px-3 py-1 rounded text-center border border-purple-500/25">
-                    ✋ {vedicData.hand_type}
+                    ✨ {liveHandTattva}
                   </div>
                 )}
               </div>
