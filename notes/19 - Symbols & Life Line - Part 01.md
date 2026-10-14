@@ -46,6 +46,8 @@ tags: [palmistry, hasta-samudrika, signs-symbols, life-line, lecture-notes]
 
 ![Dot vs. Circle - Dot is Negative, Circle is Positive](/lecture-notes-images/19/01-dot-vs-circle.png)
 
+![Dot Example](/lecture-notes-images/19/01-dot-example.png)
+
 
 > [!INFO] Dot vs Circle
 > - A **dot** is filled/solid. If it is entirely filled in, it could be a **mole (til), or a deep mark**, which are treated as a dot → **negative**.
