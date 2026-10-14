@@ -39,7 +39,7 @@ export default function PageLayout({ children }: PageLayoutProps) {
       {/* Main Content + Drawer Shifting Wrapper */}
       <div className="flex flex-1 relative overflow-hidden">
         {/* Main Body */}
-        <main className={`flex-1 px-4 sm:px-6 md:px-12 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto w-full transition-all duration-300 pb-12 sm:pb-16 ${isReferenceOpen ? 'lg:pr-[384px]' : ''
+        <main className={`flex-1 px-4 sm:px-6 md:px-12 py-4 sm:py-6 md:py-8 max-w-7xl mx-auto w-full transition-all duration-300 pb-8 sm:pb-10 ${isReferenceOpen ? 'lg:pr-[384px]' : ''
           }`}>
           {children}
         </main>
