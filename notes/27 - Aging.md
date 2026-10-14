@@ -108,6 +108,8 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ### 8.1 Where it starts
 
+![Fig 6. ME Line](/lecture-notes-images/27/06-me-line.png)
+
 | Start | Meaning |
 |---|---|
 | **Starts from below the Heart Line** (and goes on) | More **health problems**. |
@@ -121,32 +123,29 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 - It can also form another way: **the Mercury line is already running, and another line from the Moon side joins it** → it **develops intuition**.
 - **If it is not there, do not conclude you have no intuition** — "many more combinations of intuition will come in later chapters; all will be revised."
 - **Meaning:** you get **foreboding (pūrvābhāsa)** — you know beforehand something is going to happen.
-- **Q (student, whose hand has a line from the Moon side joining the Mercury line, making a "7" shape):** confirmed that **a line from the Moon joining the Mercury line indicates intuition** ("yes, absolutely, if from the Moon"; the teacher also asked whether it came from Mars).
-- **Q (Harishchandra ji):** What is an intuition line? **A:** you get a **premonition**; "you see".
 
 ### 9.3 Many Mercury lines; liver line
 
 - **Having a Mercury line gives health problems.** It is also called the **liver line**. Anyone who has it should **take care of food and health**; where it is absent, don't call the person healthy — see the other combinations — but **those who have it have more health problems**.
-- *(A student said she has many Mercury lines — "you will have many, many".)*
 
 ### 9.4 Signs on the Mercury Mount
 
 | Sign | Meaning |
 |---|---|
-| **Star** (elsewhere bad; **on Mercury Mount some regard it as good**) | The person is **very clever in speaking**; can be a **researcher**; good speaker. (Teacher recalled a star seen on a hand the day before.) |
+| **Star** (elsewhere bad; **on Mercury Mount some regard it as good**) | The person is **very clever in speaking**; can be a **researcher**; good speaker. |
 | **Square** | Good. |
 | **Triangle** | Good. |
-| **Cross** | **Not good**: trouble in **partnerships** (business partnership) — **and also the marriage line** (it lies here). |
+| **Cross** | **Not good**: trouble in **partnerships** (business partnership) — **and also the marriage line**. |
 | **Island** | Not good. |
 | **Mole (til)** | Not at all good; **very bad for honour (mān-samman)**. |
 | **Jālī (grille)** | Not good — see conditions below. |
 
-- **Marriage line (vivāha rekhā):** not long — it is short; **generally it extends only up to a limited place**. **A line that goes beyond that and cuts the Sun Line** (taught the day before) **shows trouble because of a woman**: in a male's hand it may be the **wife or another woman of the house**, through whom **insult** must be borne.
-- **Jālī on Mercury:** possible, because **horizontal lines are there on a healer's hand**. **Conditions (repeated):**
+- **Marriage line (vivāha rekhā):** not long — it is short; **generally it extends only up to a limited place (under ME Figer only)**. **A line that goes beyond that and cuts the Sun Line** (taught the day before) **shows trouble because of a woman**: in a male's hand it may be the **wife or another woman of the house**, through whom **insult** must be borne.
+- **Jālī on Mercury:** possible, because **horizontal lines are there on a healer's hand**. **Conditions:**
   - **At least three vertical and three horizontal** lines.
   - If the vertical is dark and horizontal light, **not counted** — "the jālī is not fully formed", a "light jālī" (common on Venus).
   - **More than three** is still a jālī; **less than three** is not.
-- **Jālī under the Sun finger** (a student's hand) → **not good**, both for **health** and for **Sun-related events**.
+- **Jālī under the Sun finger** → **not good**, both for **health** and for **Sun-related events**.
 
 ### 9.5 Wealth indications (Mercury)
 
@@ -167,56 +166,62 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ## 10. Questions & Answers
 
-> [!FAQ] Q4 (student): Can't "Mercury lines coming and cutting" mean interrupted studies? *(from the previous class)* — see [[26 - ]]: **No**; use the Life Line.
-
-> [!FAQ] Q5 (Dravin ji): A line **from the Heart Line to the Mind Line** vs a line **from the Mind Line to the Heart Line** — are the predictions different?
+> [!FAQ] Q1: A line **from the Heart Line to the Mind Line** vs a line **from the Mind Line to the Heart Line** — are the predictions different?
 > **A (Teacher):** **First see the distance between the two lines.**
 > - **If they run very close and a line connects them** (from either side): **treat it as a semi-simian line.** (Generally the connecting line comes from the Heart Line; **from the Mind Line it is rarely seen**.)
 > - **If the distance is greater**, it is **not** a semi-simian line.
 >   - **A line from the Heart Line to the Mind Line** → **heartbreak, family disturbance, emotional issues.**
 >   - **A line from the Mind Line up toward the Heart Line** → the mind turns **toward the heart**: someone who says "I think practically; emotions don't dominate me," but still **keeps an emotional touch in speech**, looking at how the other will feel. **This is seen rarely.**
-> - **Usually** such lines are **those coming from Lower Mars**: they may be faint and become **dark further on**; **treat them as an enemy line — not good, they give disturbance.**
+> - **Usually** such lines are **those coming from Lower Mars (near thumb)**: they may be faint and become **dark further on**; **treat them as an enemy line — not good, they give disturbance.**
 
 ---
 
 ## 11. Case Studies
 
+![Fig 7.1 Example Hand](/lecture-notes-images/27/07-example.png)
+![Fig 7.2 Example Hand](/lecture-notes-images/27/07-example-01.png)
+![Fig 7.2 Example Hand](/lecture-notes-images/27/07-example-02.png)
+
 > [!EXAMPLE] Case 1 – Arvind ji's uncle (tāūjī), male, b. 1956 (age ≈ 70)
 > - **Who:** Arvind ji's paternal uncle (tāūjī); sits in the **shop** with him; ring removed for the photograph. **Heart history:** **bypass surgery in 2017**; later heart trouble and **pacemaker in 2024**.
 > - **Observed – hand type:** students first said "wiry", "soft hand", "not fiery"; palm **looks rectangular/squarish**, **fingers short**. **Teacher's rule:** square palm (rough estimate) **+ short fingers = earthy hand**. Hand quality soft; thumb has a clean area.
 > - **Interpretation (hand type):** earthy → **stubborn**; keeps emotions to himself, **does not share**.
-> - **Moon Mount:** **extremely swollen** ("no one's seen like this") → **active Moon**; the teacher said possibly a **Moon daśā** running (if a chart exists), asked about Moon-related events in the last 5–6 months; Arvind ji: nothing, "he has very little emotion; if any, he won't tell."
-> - **Mars and Moon strong; Mind Line straight to Mars** → **straight-spoken** person ("a Punjabi who slaps while speaking" — the teacher's phrase, and Arvind ji agreed).
-> - **Fate Line:** has a **cross at the top**; the Fate Line **starts from the Life Line** (and from the maṇibandha area) → **family business** (Life Line and career line together), or he played a **father's role** in the family. **Arvind ji: yes, family business.**
+> - **Moon Mount:** **extremely swollen** → **active Moon**; Possibly a **Moon daśā** running. Any Moon-related events in the last 5–6 months; Arvind ji: nothing, "he has very little emotion; if any, he won't tell due to earthy hand."
+> - **Mars and Moon strong; Mind Line straight to Mars** → **straight-spoken** person.
+> - **Fate Line:** has a **cross at the top**; the Fate Line **starts from the Life Line** → **family business** (Life Line and career line together), or he played a **father's role** in the family. **Arvind ji: yes, family business.**
 > - **Life Line:** **not of good quality, a little spread (broad)** → life not smooth. A patch of the Life Line is **very dark** near the age of his illness; the Heart Line is **broken further on**, **not in good condition**; a few faint **lines go down from the Heart Line** — "very light, but they can become dark".
-> - **Age calculation (class task):** the teacher asked students to calculate his age at the heart events using the methods learnt (**second formula**); the PDF/age drawing is to be posted to the group. **Outcome:** deferred — *(no ages were stated in the transcript).*
-> - **Fingers:** **Jupiter finger short; Sun finger long** (longer than Jupiter) → "a person who runs things (**his own way**)"; **Mercury finger set apart and long** — a bit over the first phalanx → **bold steps in life ("he has taken them all his life")**; **business sense** — people around ask his advice on investing; **healer line** present (speech influence) → he advises even competitors (Arvind ji: "I tell him the competitor will harm you; he says let him").
+> - **Fingers:** **Jupiter finger short; Sun finger long** (longer than Jupiter) → "a person who runs things (**his own way**)"; **Mercury finger set apart and long** — a bit over the first phalanx → **bold steps in life ("he has taken them all his life")**; **business sense** — people around ask his advice on investing → **healer line** present (speech influence) → he advises even competitors (Arvind ji: "I tell him the competitor will harm you; he says let him").
 > - **Two Sun Lines:** one clear, another a faint impression, joined at one place; so fame is not only after 40–50: **known from teenage in the sector** — school/college or home; **Teacher:** one can say "people around knew him early."
-> - **Mars lines / enemy lines** — many: **family disturbance**; but a faint **supportive line** shows the disturbances **did not affect** him, or he **kept distance**.
-> - **Family ring** (to be taught next class) is **straight**; he is **angry/aggressive with children** if opposed (Arvind ji: "yes"); **three children**.
-> - **Brain Line** very good; **Ambition lines** — several ("this one, this one, this one") → **big dreams even now**; wants to do something new.
-> - **Jupiter finger's last phalanx is short** → **Jupiter is not good**: gains from Jupiter not good; **Jupiter-related health problems**: **kidney**, some **liver**, **sugar**; for the kidney see **Venus** (to be seen).
-> - **Many vertical lines** → **anxiety**.
-> - **Outcome:** the teacher said maṇibandha rekhā will be taught next class; age of the heart issue to be worked out.
+> - **Mars lines / enemy lines** / many lines on Venus mount: **family disturbance**; a faint **supportive line** at the end of life line is seen. The venus mount disturbances did not reach the life line shows the disturbances **did not affect** him, or he **kept distance**.
+> - **Family ring** is **straight**; he is **angry/aggressive with children** if opposed; **three children**.
+> - **Brain Line** very good; **Ambition lines** — several → **big dreams even now**; wants to do something new.
+> - **Jupiter finger's last phalange is short** → **Jupiter finger & JU is not good**: gains from Jupiter not good; **Jupiter-related health problems**: **kidney**, some **liver**, **sugar**; for the kidney see **Venus**.
+> - **Many vertical lines on finger phalanges** → **anxiety**.
 
 > [!EXAMPLE] Case 2 – Harishchandra ji's father, male, 57 (a pharmacy owner)
+
+![Fig 8. Example Hand](/lecture-notes-images/27/08-example.png)
+
 > - **Who:** Harishchandra ji's father (the teacher: "not my father — his"). **Hand:** **fiery**; he wears many **crystals**.
 > - **Observed (students/teacher):**
->   - **Triangle** between the **Fate Line and Life Line** (property sign) — students found it; the **"money room" triangle (Mercury/Fate/Mind)** also visible; the **Sun Line is high and strong**.
+>   - **Triangle** between the **Fate Line and Life Line** (property sign) — the **"money room" triangle (Mercury/Fate/Mind)** also visible; the **Sun Line is high and strong**.
 >   - **Heart Line dark** and lines coming **downward** → **emotionally/relationship-wise much trouble**; "we will not call his a simple life".
->   - **Life Line:** comes, **stops in the middle**, then **another line goes on together from the same place**. This second line is **not a supportive line** (teacher stopped the student: "wait") — it is **the Life Line continuing** (*extension*, outward). The **dark patch** near it; **fish-like formation** in the hand (also a **spiritual** indication — Harishchandra: "very spiritual").
->   - **Enemy lines cut it.** *Teacher's own observation (not from texts):* when enemy lines cut like this, **trouble from a younger brother / partnership with him** — "I have seen it in practice; since it comes from the Mars side"; she is not linking it with astrology.
+>   - **Life Line:** comes, **stops in the middle**, then **another line goes on together from the same place**. This second line is **not a supportive line** — it is **the Life Line continuing** (*extension*, outward). The **dark patch** near it; **fish-like formation** in the hand (also a **spiritual** indication — Harishchandra: "very spiritual").
+>   - **Enemy lines cut it.** *Teacher's own observation (not from texts):* when enemy lines cut like this, **trouble from a younger brother / partner** — "I have seen it in practice; since it comes from the Mars side"; she is not linking it with astrology.
 >   - **Mercury line:** faint → **liver problem first**; advise him to look after food and health.
->   - **Fate Line:** runs on and does not stop; **island in the middle**; **two lines**; one joins the **Sun** → "may do something related to **government**" too.
->   - **Brain Line straight** → **head-strong**; will-power; a slight cut near the will-power area → **slight lack of confidence**; **a very thinking person** — **mentally very troubled** but does not show it.
+>   - **Fate Line:** runs on and does not stop; **island in the middle**; **two lines**;  line joins the Bhagya Rekha from the **Sun** also → "may do something related to **government**" too.
+>   - **Heart Line has many small lines going downwards** → **many mental troubles, thinks too much, does not stay that happy, overthinking** Heart Line bending downwards.
+>   - **a very thinking person** — **mentally very troubled** but does not show it.
+>   - **Brain Line straight** → **head-strong**; does not show his mental troubles; will-power; 
+>   - A slight cut near the will-power area (thumb upper phalange) → **slight lack of confidence**; 
 >   - **Mercury Mount**: the **most raised**, clean; **Venus not good**; **Mercury finger good, Sun finger longer than Jupiter**; lower phalanges all full ("gains well"); only the Sun finger's middle phalanx a bit pressed by the ring.
->   - **Thumb (lower part):** a student said **creative**; **Teacher: yes**, also artistic.
+>   - **Thumb (lower part):** puffed so **creative**; **Teacher: yes**, also artistic.
 > - **Interpretation (age points):**
->   - The teacher asked what he does now: **a medicine shop for 10–15 years**; **about 7–8 years ago (age ~50)** he started **another work** — **property work** (also said "40 around → 45 or 50"). The teacher pointed at **a line starting alongside the Fate Line and later joining it** — "calculate its age"; she concluded he **did many different kinds of work** and **may do more**.
+>   - The teacher asked what he does now: **a medicine shop for 10–15 years**; **about 7–8 years ago (age ~50)** he started **another work** — **property work** (around 50). The teacher pointed at **a line starting alongside the Fate Line and later joining it** — "calculate its age"; she concluded he **did many different kinds of work** and **may do more**.
 > - **Second Life Line stretch (Dravin ji's question):** the line beside the break — does it count as the Life Line or a Fate Line's supportive line? **Teacher: it counts as the Life Line.** At that point (**around 30**), **either he did some expansion or shifted from one place to another, or increased comforts** ("expansion by deśa-kāla"). Age is **near 30, well before** 57.
->   - Harishchandra ji said **he himself had done this** — he asked his father; the father had opened **other businesses** at about that age ("yes ma'am, different businesses"); the teacher: "understood".
-> - **Q (Harishchandra ji):** The **cross at the start of the Life Line**? **A (Teacher):** **childhood problems of the family**; the first **8–10 years** struggle ("everyone's hand has it").
-> - **Outcome:** the teacher asked if he is **very possessive** about some particular thing — "I'm not sure" (Harishchandra: he is serious about **religious things**; and wants everything **settled and arranged**); the teacher said the **line for that will be taught next class**.
+>   - Harishchandra ji said **he himself had done this** — he asked his father; the father had opened **other businesses** at about that age ("yes ma'am, different businesses").
+> - **Q:** The **cross at the start of the Life Line**? **A (Teacher):** **childhood problems of the family**; the first **8–10 years** struggle ("everyone's hand has it").
+> - **Outcome:** the teacher asked if he is **very possessive** about some particular thing — "I'm not sure" (Harishchandra: he is serious about **religious things**; and wants everything **nice and arranged**); the teacher said the **line for that will be taught next class**.
 
 ---
 
@@ -230,13 +235,3 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 > - **Heart/Mind Line ages:** **18 + 6 + 18 + 6 …** (Method A) — or 16/36/50 (Method B, less useful).
 > - **Mercury Line:** health/liver line; **below Heart Line = health problems; only above = business/healer**; **Moon→Mercury = intuition**; **single line on Mercury Mount = sudden money gain**; **star on Mercury Mount = clever speaker/researcher**; **cross = partnership/marriage trouble**; **jālī ≥3×3 equal = bad**.
 > - **Money triangle (Mercury/Fate/Mind lines):** clean = money possible; crooked lines = expenses exceed money.
-
----
-
-## 13. Open items
-
-2. The **"another name" for the healer line** ("medical-related name") — teacher could not recall; she said she would check.
-5. **Case 2:** the age mentioned for the second work ("7–8 years ago") is given as **40 → 45 or 50**; the teacher's exact figure is not fixed.
-6. **Heart Line Method B markers** (16, 36, 50) — where each marker sits is not stated.
-7. **Q4 cross-reference:** the earlier "Mercury lines cut = interrupted studies" question belongs to the previous class (see [[26 - ]]).
-9. **Teacher's observation** on enemy lines → trouble from a **younger brother/partner** is her own practice-based remark, not from a text.
