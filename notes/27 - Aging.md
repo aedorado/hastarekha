@@ -167,14 +167,6 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ## 10. Questions & Answers
 
-> [!FAQ] Q1 (student): You said 75; the other method says 100?
-> **A (Teacher):** Many methods exist; she is telling methods in use. **Change the lifespan by deśa-kāla** — India's average is **about 70 or 72**.
-
-> [!FAQ] Q2 (Dravin ji): If the Fate Line is not visible, how to age it?
-> **A:** Do not; use the Life Line (see §5).
-
-> [!FAQ] Q3 (Harishchandra ji): What is the intuition line? **A:** premonition (see §9.2).
-
 > [!FAQ] Q4 (student): Can't "Mercury lines coming and cutting" mean interrupted studies? *(from the previous class)* — see [[26 - ]]: **No**; use the Life Line.
 
 > [!FAQ] Q5 (Dravin ji): A line **from the Heart Line to the Mind Line** vs a line **from the Mind Line to the Heart Line** — are the predictions different?
@@ -190,7 +182,7 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 ## 11. Case Studies
 
 > [!EXAMPLE] Case 1 – Arvind ji's uncle (tāūjī), male, b. 1956 (age ≈ 70)
-> - **Who:** Arvind ji's paternal uncle (tāūjī); sits in the **shop** with him; ring removed for the photograph (the hand shown, side **[unclear in transcript]**). **Heart history:** **bypass surgery in 2017**; later heart trouble and **pacemaker in 2024**.
+> - **Who:** Arvind ji's paternal uncle (tāūjī); sits in the **shop** with him; ring removed for the photograph. **Heart history:** **bypass surgery in 2017**; later heart trouble and **pacemaker in 2024**.
 > - **Observed – hand type:** students first said "wiry", "soft hand", "not fiery"; palm **looks rectangular/squarish**, **fingers short**. **Teacher's rule:** square palm (rough estimate) **+ short fingers = earthy hand**. Hand quality soft; thumb has a clean area.
 > - **Interpretation (hand type):** earthy → **stubborn**; keeps emotions to himself, **does not share**.
 > - **Moon Mount:** **extremely swollen** ("no one's seen like this") → **active Moon**; the teacher said possibly a **Moon daśā** running (if a chart exists), asked about Moon-related events in the last 5–6 months; Arvind ji: nothing, "he has very little emotion; if any, he won't tell."
@@ -243,12 +235,8 @@ source: lecture transcript (Hindi–English), 2026-10-08 – "Aging of line and 
 
 ## 13. Open items
 
-1. **Old six-method 30 vs 24:** the teacher's remark that 30 falls near 24 in the old method is garbled; recorded as understood.
 2. The **"another name" for the healer line** ("medical-related name") — teacher could not recall; she said she would check.
-3. **Which hand** is shown in Cases 1 and 2 — not stated.
-4. **Exact ages** for Case 1's heart events (2017 bypass, 2024 pacemaker) were **not worked out** on the line in this class (homework).
 5. **Case 2:** the age mentioned for the second work ("7–8 years ago") is given as **40 → 45 or 50**; the teacher's exact figure is not fixed.
 6. **Heart Line Method B markers** (16, 36, 50) — where each marker sits is not stated.
 7. **Q4 cross-reference:** the earlier "Mercury lines cut = interrupted studies" question belongs to the previous class (see [[26 - ]]).
-8. **Case 1 – "Tāūjī" vs. "father" and "shop" details** were given in student remarks; no further verification possible.
 9. **Teacher's observation** on enemy lines → trouble from a **younger brother/partner** is her own practice-based remark, not from a text.
