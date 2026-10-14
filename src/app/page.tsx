@@ -12,9 +12,11 @@ import {
 } from '@/lib/profilesCache';
 import Dashboard from '@/components/Dashboard';
 import PageLayout from '@/components/PageLayout';
+import { useAdmin } from '@/context/AdminContext';
 
 export default function Home() {
   const router = useRouter();
+  const { adminPassword, isAdmin, openLoginModal } = useAdmin();
   const [profiles, setProfiles] = useState<HandProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
@@ -56,6 +58,11 @@ export default function Home() {
   };
 
   const handleDeleteProfile = async (id: string) => {
+    if (!isAdmin) {
+      openLoginModal();
+      return;
+    }
+
     // Keep snapshot for rollback if deletion fails
     const previousProfiles = [...profiles];
     removeProfileFromCache(id);
@@ -65,6 +72,9 @@ export default function Home() {
       if (isSupabaseConnected) {
         const res = await fetch(`/api/hands?id=${id}`, {
           method: 'DELETE',
+          headers: {
+            'x-admin-password': adminPassword || '',
+          },
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));

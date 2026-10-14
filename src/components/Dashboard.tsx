@@ -5,6 +5,7 @@ import { HandProfile, parseVedicData, getVedicInterpretations } from '@/lib/supa
 import { Search, Plus, Calendar, Download, Upload, Trash2, Eye, HelpCircle, ImageIcon, SlidersHorizontal, ChevronDown, ChevronUp, X, Sparkles, RotateCcw } from 'lucide-react';
 import OptimizedHandImage from '@/components/OptimizedHandImage';
 import ConfirmModal from '@/components/ConfirmModal';
+import { useAdmin } from '@/context/AdminContext';
 
 // ─── Canonical lecture categories (Notes 01–27) ───
 const CANONICAL_TATTVAS = [
@@ -113,8 +114,10 @@ export default function Dashboard({
   const [selectedDominant, setSelectedDominant] = useState('');
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'name'>('updated');
   const [expandedReadings, setExpandedReadings] = useState<Record<string, boolean>>({});
+  const { isAdmin } = useAdmin();
   const [profileToDelete, setProfileToDelete] = useState<HandProfile | null>(null);
   const [pendingImport, setPendingImport] = useState<{ profiles: HandProfile[]; srs: Record<string, any> | null } | null>(null);
+  const [isDumpingDb, setIsDumpingDb] = useState(false);
 
   // Sāstra Dimensions state (Notes 01–27)
   const [showSastraPanel, setShowSastraPanel] = useState(false);
@@ -362,9 +365,25 @@ export default function Dashboard({
     filterLunula,
   ]);
 
-  // JSON export backup (bundles profiles + SRS flashcard study history)
-  const handleExport = () => {
+  // Live DB dump for Admins (freshly pulls from Supabase if connected)
+  const handleDbDump = async () => {
+    setIsDumpingDb(true);
     try {
+      let exportProfiles = profiles;
+      if (isSupabaseConnected) {
+        try {
+          const res = await fetch('/api/hands', { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              exportProfiles = data;
+            }
+          }
+        } catch {
+          // fallback to loaded profiles
+        }
+      }
+
       let srsProgress = {};
       if (typeof window !== 'undefined') {
         try {
@@ -376,21 +395,23 @@ export default function Dashboard({
       const backupBundle = {
         version: 2,
         exported_at: new Date().toISOString(),
-        profiles_count: profiles.length,
-        profiles,
+        profiles_count: exportProfiles.length,
+        profiles: exportProfiles,
         srs_progress: srsProgress,
       };
 
       const dataStr = JSON.stringify(backupBundle, null, 2);
       const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      const exportFileDefaultName = `hastarekha-databank-backup-${new Date().toISOString().split('T')[0]}.json`;
+      const exportFileDefaultName = `hastarekha-full-db-dump-${new Date().toISOString().split('T')[0]}.json`;
 
       const linkElement = document.createElement('a');
       linkElement.setAttribute('href', dataUri);
       linkElement.setAttribute('download', exportFileDefaultName);
       linkElement.click();
     } catch (e) {
-      alert('Failed to export data');
+      alert('Failed to generate DB dump');
+    } finally {
+      setIsDumpingDb(false);
     }
   };
 
@@ -473,28 +494,35 @@ export default function Dashboard({
             Analyze New Hand
           </button>
 
-          <button
-            onClick={handleExport}
-            className="btn-outline text-xs px-3 py-2"
-            title="Download DB Backup"
-          >
-            <Download className="w-4 h-4" />
-            Backup DB
-          </button>
+          {/* Admin Database Tools: Full Live Dump & Import */}
+          {isAdmin && (
+            <div className="flex items-center gap-1.5 bg-amber-50/80 p-1 rounded-xl border border-amber-200 shadow-xs">
+              <button
+                type="button"
+                onClick={handleDbDump}
+                disabled={isDumpingDb}
+                className="btn-outline text-xs px-2.5 sm:px-3 py-1.5 border-amber-300 text-amber-900 hover:bg-amber-100 flex items-center gap-1.5 font-semibold transition cursor-pointer"
+                title="Download full live database dump (JSON)"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-700" />
+                {isDumpingDb ? 'Dumping DB...' : 'DB Dump'}
+              </button>
 
-          <label
-            className="btn-outline text-xs px-3 py-2 cursor-pointer"
-            title="Restore DB Backup"
-          >
-            <Upload className="w-4 h-4" />
-            Import DB
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-          </label>
+              <label
+                className="btn-outline text-xs px-2.5 sm:px-3 py-1.5 border-amber-300 text-amber-900 hover:bg-amber-100 flex items-center gap-1.5 font-semibold cursor-pointer transition"
+                title="Restore DB from backup JSON"
+              >
+                <Upload className="w-3.5 h-3.5 text-amber-700" />
+                Import DB
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImport}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1058,16 +1086,19 @@ export default function Dashboard({
                       View & Edit
                     </button>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setProfileToDelete(p);
-                      }}
-                      className="text-stone-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
-                      title="Delete profile"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {/* Admin Delete Action */}
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProfileToDelete(p);
+                        }}
+                        className="text-stone-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
+                        title="Delete profile (Admin Only)"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

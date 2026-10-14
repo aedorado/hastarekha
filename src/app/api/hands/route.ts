@@ -139,6 +139,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Invalid UUID format for id parameter' }, { status: 400 });
     }
 
+    const adminPassword = request.headers.get('x-admin-password');
+    const expectedPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
+    if (adminPassword !== expectedPassword) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Valid Admin passcode required to delete profiles.' },
+        { status: 401 }
+      );
+    }
+
     const supabase = await createClient();
     const { error } = await supabase
       .from('hands')

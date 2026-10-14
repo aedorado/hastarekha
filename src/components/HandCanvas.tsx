@@ -24,6 +24,7 @@ import {
   X,
   Target,
 } from 'lucide-react';
+import { useAdmin } from '@/context/AdminContext';
 import {
   Pin,
   Drawing,
@@ -155,6 +156,7 @@ export default function HandCanvas({
   profile,
   onChangeProfile,
 }: HandCanvasProps) {
+  const { isAdmin } = useAdmin();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -1539,43 +1541,45 @@ export default function HandCanvas({
         <>
           {/* Main Action Toolbars */}
           {activeView === 'd1_chart' ? (
-            <div className="flex items-center justify-end p-2 bg-stone-50 rounded-xl border border-stone-200 shadow-sm m-2">
-              {confirmRemovePhoto ? (
-                <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg p-1 animate-pulse">
-                  <span className="text-[10px] text-rose-700 font-bold px-1">Remove D-1 Chart?</span>
+            isAdmin ? (
+              <div className="flex items-center justify-end p-2 bg-stone-50 rounded-xl border border-stone-200 shadow-sm m-2">
+                {confirmRemovePhoto ? (
+                  <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 rounded-lg p-1 animate-pulse">
+                    <span className="text-[10px] text-rose-700 font-bold px-1">Remove D-1 Chart?</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onRemoveImageForView(activeView);
+                        setConfirmRemovePhoto(false);
+                      }}
+                      className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 text-[10px] font-bold rounded shadow-sm"
+                    >
+                      Yes, Remove
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmRemovePhoto(false)}
+                      className="text-stone-500 hover:text-stone-700 px-2 py-1 text-[10px] font-bold rounded"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onRemoveImageForView(activeView);
-                      setConfirmRemovePhoto(false);
+                    onClick={() => {
+                      setConfirmRemovePhoto(true);
+                      setTimeout(() => setConfirmRemovePhoto(false), 5000);
                     }}
-                    className="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 text-[10px] font-bold rounded shadow-sm"
+                    className="btn-outline border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-2 text-xs flex items-center gap-1 cursor-pointer"
                   >
-                    Yes, Remove
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove D-1 Chart
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmRemovePhoto(false)}
-                    className="text-stone-500 hover:text-stone-700 px-2 py-1 text-[10px] font-bold rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setConfirmRemovePhoto(true);
-                    setTimeout(() => setConfirmRemovePhoto(false), 5000);
-                  }}
-                  className="btn-outline border-rose-200 text-rose-600 hover:bg-rose-50 px-3 py-2 text-xs flex items-center gap-1 cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Remove D-1 Chart
-                </button>
-              )}
-            </div>
+                )}
+              </div>
+            ) : null
           ) : (
             <div
               className={`flex flex-col gap-2 p-2 rounded-xl border shadow-sm mx-2 transition ${isFullscreen
@@ -1833,6 +1837,45 @@ export default function HandCanvas({
                       <Trash2 className="w-3.5 h-3.5" />
                       Clear Pins
                     </button>
+                  )}
+
+                  {/* Admin Photo Removal for Active View */}
+                  {isAdmin && imageUrl && (
+                    confirmRemovePhoto ? (
+                      <div className="flex items-center gap-1 bg-rose-50 border border-rose-200 rounded-lg p-0.5 animate-pulse">
+                        <span className="text-[10px] text-rose-700 font-bold px-1">Remove photo?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onRemoveImageForView(activeView);
+                            setConfirmRemovePhoto(false);
+                          }}
+                          className="bg-rose-600 text-white px-2 py-0.5 text-[10px] font-bold rounded shadow-xs cursor-pointer"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmRemovePhoto(false)}
+                          className="text-stone-500 px-1.5 py-0.5 text-[10px] cursor-pointer"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmRemovePhoto(true);
+                          setTimeout(() => setConfirmRemovePhoto(false), 5000);
+                        }}
+                        className="btn-outline border-rose-200 text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 text-xs flex items-center gap-1 cursor-pointer"
+                        title="Remove uploaded photo for this view (Admin Only)"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Remove Photo
+                      </button>
+                    )
                   )}
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { HandProfile, Pin, HandView, HAND_VIEW_LABELS, parseVedicData, serialize
 import { Trash2, Check, UploadCloud, Timer, CheckSquare, Info, Sparkles, Smile, HelpCircle, Activity, FileText, Eye, Heart, Clock, Copy, Printer, Share2, BookOpen, CheckCircle2, Award, User, Mountain, Compass, MapPin, Tag } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import PrintReportModal from './PrintReportModal';
+import { useAdmin } from '@/context/AdminContext';
 
 interface AnalysisFormProps {
   profile: HandProfile;
@@ -248,6 +249,7 @@ export default function AnalysisForm({
   const [activeTab, setActiveTab] = useState<'profile' | 'samudrika' | 'nails' | 'mounts' | 'lines' | 'age' | 'pins' | 'tags' | 'report'>('profile');
   const [newTag, setNewTag] = useState('');
   const [copiedReport, setCopiedReport] = useState(false);
+  const { isAdmin } = useAdmin();
   const [photoToRemove, setPhotoToRemove] = useState<HandView | null>(null);
   const [showPrintModal, setShowPrintModal] = useState(false);
 
@@ -701,14 +703,16 @@ export default function AnalysisForm({
                         <div className="flex-1 relative flex items-center justify-center overflow-hidden rounded bg-stone-100 border border-stone-200">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={url} alt={view} className="max-h-full max-w-full object-contain" />
-                          <button
-                            type="button"
-                            onClick={() => setPhotoToRemove(view)}
-                            className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow cursor-pointer"
-                            title="Delete photo"
-                          >
-                            ×
-                          </button>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => setPhotoToRemove(view)}
+                              className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow cursor-pointer"
+                              title="Delete photo (Admin Only)"
+                            >
+                              ×
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <label className="flex-1 border border-dashed border-stone-300 rounded cursor-pointer flex flex-col items-center justify-center hover:bg-stone-100 hover:border-accent-gold/40 transition-colors">

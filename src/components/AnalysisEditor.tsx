@@ -18,7 +18,15 @@ interface AnalysisEditorProps {
 export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) {
   const router = useRouter();
   const [activeProfile, setActiveProfile] = useState<HandProfile>(initialProfile);
-  const [activeView, setActiveView] = useState<HandView>('right_palm');
+  const [activeView, setActiveView] = useState<HandView>(() => {
+    if (typeof window !== 'undefined') {
+      const param = new URLSearchParams(window.location.search).get('view');
+      if (param && ['right_palm', 'right_back', 'left_palm', 'left_back', 'd1_chart'].includes(param)) {
+        return param as HandView;
+      }
+    }
+    return 'right_palm';
+  });
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAutosaving, setIsAutosaving] = useState(false);
