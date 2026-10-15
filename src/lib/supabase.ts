@@ -216,6 +216,20 @@ export interface Point2D {
   y: number;
 }
 
+export interface ThreeLineAvgAnchor {
+  full_path?: Point2D[] | null;       // Full theoretical path (0 to 100 years)
+  end_fraction?: number | null;      // 0..1 fraction along full_path where actual line terminates
+  end_point?: Point2D | null;        // Point on path where it ends
+  age?: number | null;               // Estimated age (e.g. 70, 75, 60)
+}
+
+export interface ThreeLineAvgData {
+  life?: ThreeLineAvgAnchor | null;
+  heart?: ThreeLineAvgAnchor | null;
+  head?: ThreeLineAvgAnchor | null;
+  final_age?: number | null;
+}
+
 export interface AgingCalibrationAnchors {
   manibandha_start?: Point2D | null; // Tap 1: left of wrist bracelet
   manibandha_end?: Point2D | null;   // Tap 2: right of wrist bracelet
@@ -225,6 +239,7 @@ export interface AgingCalibrationAnchors {
   cadence_points?: Point2D[] | null;  // 8 points for 18+6 cadence method: [0, 18, 24, 42, 48, 66, 72, 90]
   mercury_heart_level?: Point2D | null; // Tap 1: Heart Line level on outer percussion (Age 0)
   mercury_base?: Point2D | null;        // Tap 2: Root crease under Mercury finger (Age 56)
+  three_line_avg?: ThreeLineAvgData | null; // Three-Line Average Method (Notes 27 §3)
 }
 
 export const parseVedicData = (notesField: string): VedicData => {

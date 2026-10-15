@@ -36,6 +36,8 @@ import {
   VedicData,
   LineAnalysisData,
   AgingCalibrationAnchors,
+  ThreeLineAvgData,
+  ThreeLineAvgAnchor,
 } from '@/lib/supabase';
 import {
   AgingMethod,
@@ -47,9 +49,14 @@ import {
   calculatePolylineLength,
   getAgeForFraction,
   getManibandhaMidpoint,
+  getPointAndNormalAtFraction,
   Point2D,
   CADENCE_AGES,
   getDefaultCadencePoints,
+  getDefault30MidpointAnchors,
+  getDefaultMercury56Anchors,
+  getDefaultThreeLineAvgPaths,
+  calculateThreeLineAverage,
 } from '@/lib/agingCalculator';
 import ConfirmModal from './ConfirmModal';
 
@@ -225,7 +232,7 @@ export default function HandCanvas({
 
   // ─── 30-Midpoint Master & Cadence Calibration State ───
   const [activeCalibration, setActiveCalibration] = useState<{
-    type: 'manibandha' | 'life' | 'fate' | 'cadence' | 'mercury';
+    type: 'manibandha' | 'life' | 'fate' | 'cadence' | 'mercury_56';
     step: number;
     tempPoint?: Point2D | null;
     points?: Point2D[];
@@ -234,17 +241,24 @@ export default function HandCanvas({
   const [draggingCalibNode, setDraggingCalibNode] = useState<
     'manibandha_start' | 'manibandha_end' | 'life_start' | 'mercury_sandhi' | 'saturn_root' | 'mercury_heart_level' | 'mercury_base' | string | null
   >(null);
+  const [threeLineTracing, setThreeLineTracing] = useState<'life' | 'heart' | 'head' | null>(null);
+  const [draggingThreeLineNode, setDraggingThreeLineNode] = useState<'life' | 'heart' | 'head' | null>(null);
   const [showLifeCalibrationGrid, setShowLifeCalibrationGrid] = useState(true);
   const [showFateCalibrationGrid, setShowFateCalibrationGrid] = useState(true);
-  const [showMercuryCalibrationScale, setShowMercuryCalibrationScale] = useState(true);
   const [isolateActiveAgingLine, setIsolateActiveAgingLine] = useState(true);
   const [showCadenceRays, setShowCadenceRays] = useState(true);
   const [showCadenceIntersections, setShowCadenceIntersections] = useState(true);
+  const [mercuryScaleMax, setMercuryScaleMax] = useState<50 | 56>(56);
+  const [showMercuryAgeLabels, setShowMercuryAgeLabels] = useState<boolean>(false);
+  const [hiddenDrawingIds, setHiddenDrawingIds] = useState<string[]>([]);
   const [hoveredAgeData, setHoveredAgeData] = useState<{
     age: number;
     point: Point2D;
     fraction: number;
     label: string;
+    lineCategory?: LineCategory;
+    note?: string;
+    projectionLine?: { p1: Point2D; p2: Point2D; strokeColor: string };
   } | null>(null);
   const [ageEventModal, setAgeEventModal] = useState<{
     isOpen: boolean;
@@ -453,7 +467,7 @@ export default function HandCanvas({
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
-  const handleEndInteractionRef = useRef<() => void>(() => {});
+  const handleEndInteractionRef = useRef<() => void>(() => { });
   useEffect(() => {
     handleEndInteractionRef.current = handleEndInteraction;
   });
@@ -808,6 +822,25 @@ export default function HandCanvas({
       return;
     }
 
+    if (draggingThreeLineNode && threeLineAvgGeometry) {
+      const coords = getPointCoords(e.clientX, e.clientY);
+      const lineKey = draggingThreeLineNode;
+      const path = threeLineAvgGeometry[lineKey].path;
+      if (path && path.length > 1) {
+        const nearest = getNearestPointOnPolyline(path, coords);
+        if (nearest) {
+          const frac = Math.max(0, Math.min(1, nearest.fraction));
+          const age = Math.round(frac * 100);
+          updateThreeLineAvg(lineKey, {
+            end_fraction: frac,
+            end_point: nearest.point,
+            age,
+          });
+        }
+      }
+      return;
+    }
+
     if (mode === 'measure') {
       const coords = getPointCoords(e.clientX, e.clientY);
       handleMeasurementDrag(coords);
@@ -820,22 +853,212 @@ export default function HandCanvas({
         setAxialGrid((prev) => ({ ...prev, [draggingAxialNode]: coords }));
         return;
       }
-      if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
-        const p0 = calibAnchors.mercury_heart_level;
-        const p56 = calibAnchors.mercury_base;
-        const nearest = getNearestPointOnPolyline([p0, p56], coords);
+
+      // 30-Midpoint Method: Hover ONLY on 2 lines: L0 -> MK (Life Chord) and S-Upper Limit -> MK (Saturn Axis)
+      if (agingMethod === '30-midpoint' && calibrationGeometry.mk) {
         const hoverThreshold = Math.max(5.5, 9.0 / zoom);
-        if (nearest && nearest.distance < hoverThreshold) {
-          const age = parseFloat((nearest.fraction * 56).toFixed(1));
+        const maxAge = vedicData?.max_age ?? 75;
+        let bestCandidate: {
+          dist: number;
+          age: number;
+          point: Point2D;
+          fraction: number;
+          label: string;
+          lineCategory: LineCategory;
+          note: string;
+          projectionLine: { p1: Point2D; p2: Point2D; strokeColor: string };
+        } | null = null;
+
+        // Line 1: L0 (lifeStart) to MK (manibaddha center)
+        if (calibrationGeometry.lifeStart) {
+          const pA = calibrationGeometry.lifeStart;
+          const pB = calibrationGeometry.mk;
+          const vx = pB.x - pA.x;
+          const vy = pB.y - pA.y;
+          const lenSq = vx * vx + vy * vy;
+          if (lenSq > 0.001) {
+            const len = Math.sqrt(lenSq);
+            const tRaw = ((coords.x - pA.x) * vx + (coords.y - pA.y) * vy) / lenSq;
+            const t = Math.max(0, Math.min(1, tRaw));
+            const nearX = pA.x + t * vx;
+            const nearY = pA.y + t * vy;
+            const dist = Math.hypot(coords.x - nearX, coords.y - nearY);
+
+            if (dist < hoverThreshold) {
+              const age = Math.round(
+                t <= 0.5
+                  ? (t / 0.5) * 30
+                  : 30 + ((t - 0.5) / 0.5) * (maxAge - 30)
+              );
+
+              // Direction matching the projection arrows from Life Line chord
+              const isThumbOnRight = pA.x > pB.x;
+              const fallbackDir = isThumbOnRight ? 1 : -1;
+              let ux = fallbackDir;
+              let uy = 0;
+
+              if (calibrationGeometry.mercurySandhi && calibrationGeometry.life30) {
+                const ms = calibrationGeometry.mercurySandhi;
+                const l30 = calibrationGeometry.life30;
+                const arrowVx = l30.x - ms.x;
+                const arrowVy = l30.y - ms.y;
+                const arrowLen = Math.hypot(arrowVx, arrowVy);
+                if (arrowLen > 0.001) {
+                  ux = arrowVx / arrowLen;
+                  uy = arrowVy / arrowLen;
+                  if (ux * fallbackDir < 0) {
+                    ux = -ux;
+                    uy = -uy;
+                  }
+                }
+              } else {
+                const len = Math.sqrt(lenSq);
+                let nx = -vy / len;
+                let ny = vx / len;
+                if (nx * fallbackDir < 0) {
+                  nx = -nx;
+                  ny = -ny;
+                }
+                ux = nx;
+                uy = ny;
+              }
+
+              const projHalfLen = 15.0;
+
+              bestCandidate = {
+                dist,
+                age,
+                point: { x: nearX, y: nearY },
+                fraction: t,
+                label: `${age} yrs`,
+                lineCategory: 'line_life',
+                note: `30-Midpoint: Life Chord Age ~${age}`,
+                projectionLine: {
+                  p1: { x: nearX - ux * projHalfLen, y: nearY - uy * projHalfLen },
+                  p2: { x: nearX + ux * projHalfLen, y: nearY + uy * projHalfLen },
+                  strokeColor: '#0369a1',
+                },
+              };
+            }
+          }
+        }
+
+        // Line 2: S-Upper Limit (saturnRoot) to MK (manibaddha center)
+        if (calibrationGeometry.saturnRoot) {
+          const pMK = calibrationGeometry.mk;
+          const pSat = calibrationGeometry.saturnRoot;
+          const vx = pSat.x - pMK.x;
+          const vy = pSat.y - pMK.y;
+          const lenSq = vx * vx + vy * vy;
+          if (lenSq > 0.001) {
+            const len = Math.sqrt(lenSq);
+            const uRaw = ((coords.x - pMK.x) * vx + (coords.y - pMK.y) * vy) / lenSq;
+            const u = Math.max(0, Math.min(1, uRaw));
+            const nearX = pMK.x + u * vx;
+            const nearY = pMK.y + u * vy;
+            const dist = Math.hypot(coords.x - nearX, coords.y - nearY);
+
+            if (dist < hoverThreshold && (!bestCandidate || dist < bestCandidate.dist)) {
+              const age = Math.round(
+                u <= 0.5
+                  ? (u / 0.5) * 30
+                  : 30 + ((u - 0.5) / 0.5) * (maxAge - 30)
+              );
+              const nx = -vy / len;
+              const ny = vx / len;
+              const projHalfLen = 10.0;
+              bestCandidate = {
+                dist,
+                age,
+                point: { x: nearX, y: nearY },
+                fraction: u,
+                label: `${age} yrs`,
+                lineCategory: 'line_fate',
+                note: `30-Midpoint: Fate Axis Age ~${age}`,
+                projectionLine: {
+                  p1: { x: nearX - nx * projHalfLen, y: nearY - ny * projHalfLen },
+                  p2: { x: nearX + nx * projHalfLen, y: nearY + ny * projHalfLen },
+                  strokeColor: '#b45309',
+                },
+              };
+            }
+          }
+        }
+
+        if (bestCandidate) {
+          setHoveredAgeData({
+            age: bestCandidate.age,
+            point: bestCandidate.point,
+            fraction: bestCandidate.fraction,
+            label: bestCandidate.label,
+            lineCategory: bestCandidate.lineCategory,
+            note: bestCandidate.note,
+            projectionLine: bestCandidate.projectionLine,
+          });
+          return;
+        } else {
+          if (hoveredAgeData) setHoveredAgeData(null);
+          return;
+        }
+      }
+
+      // Three-Line Average Method (Notes 27 §3) Hover Detection
+      if (agingMethod === 'three-line-avg' && threeLineAvgGeometry) {
+        const hoverThreshold = Math.max(5.5, 9.0 / zoom);
+        const linesToCheck: Array<{ key: 'life' | 'heart' | 'head'; label: string; path?: Point2D[] }> = [
+          { key: 'life', label: 'Life Line', path: threeLineAvgGeometry.life.path },
+          { key: 'heart', label: 'Heart Line', path: threeLineAvgGeometry.heart.path },
+          { key: 'head', label: 'Head Line', path: threeLineAvgGeometry.head.path },
+        ];
+
+        for (const item of linesToCheck) {
+          if (item.path && item.path.length > 1) {
+            const nearest = getNearestPointOnPolyline(item.path, coords);
+            if (nearest && nearest.distance < hoverThreshold) {
+              const age = Math.round(nearest.fraction * 100);
+              setHoveredAgeData({
+                age,
+                point: nearest.point,
+                fraction: nearest.fraction,
+                label: `${item.label}: ~${age} yrs (${Math.round(nearest.fraction * 100)}% of 100y)`,
+              });
+              return;
+            }
+          }
+        }
+        if (hoveredAgeData) setHoveredAgeData(null);
+        return;
+      }
+
+      // Live trace on Mercury Mount Scale line (50 / 56 Year Scale)
+      if (agingMethod === 'mercury-56' && mercury56Geometry) {
+        const { p0, dx, dy, len, maxScale } = mercury56Geometry;
+        const vx = coords.x - p0.x;
+        const vy = coords.y - p0.y;
+        const uX = dx / len;
+        const uY = dy / len;
+        const proj = vx * uX + vy * uY;
+        const t = Math.max(0, Math.min(1, proj / len));
+        const nearestPt = {
+          x: p0.x + uX * (t * len),
+          y: p0.y + uY * (t * len),
+        };
+        const dist = Math.hypot(coords.x - nearestPt.x, coords.y - nearestPt.y);
+        const hoverThreshold = Math.max(5.5, 9.0 / zoom);
+        if (dist < hoverThreshold) {
+          const age = Math.round(t * maxScale);
           setHoveredAgeData({
             age,
-            point: nearest.point,
-            fraction: nearest.fraction,
-            label: age === 28 ? 'Age 28 (Marriage Midpoint)' : `Age ~${age} yrs`,
+            point: nearestPt,
+            fraction: t,
+            label: `${age} yrs`,
+            lineCategory: 'line_marriage',
+            note: `Mercury ${maxScale}-Year Timing: Age ${age}`,
           });
           return;
         }
       }
+
       if (activeAgingDrawing && activeAgingDrawing.points.length > 1) {
         const nearest = getNearestPointOnPolyline(activeAgingDrawing.points, coords);
         const hoverThreshold = Math.max(4.5, 7.0 / zoom);
@@ -871,6 +1094,10 @@ export default function HandCanvas({
     if (isPanning) {
       setIsPanning(false);
       return;
+    }
+
+    if (draggingThreeLineNode) {
+      setDraggingThreeLineNode(null);
     }
 
     handleEndInteraction();
@@ -997,6 +1224,25 @@ export default function HandCanvas({
         return;
       }
 
+      if (draggingThreeLineNode && threeLineAvgGeometry) {
+        const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
+        const lineKey = draggingThreeLineNode;
+        const path = threeLineAvgGeometry[lineKey].path;
+        if (path && path.length > 1) {
+          const nearest = getNearestPointOnPolyline(path, coords);
+          if (nearest) {
+            const frac = Math.max(0, Math.min(1, nearest.fraction));
+            const age = Math.round(frac * 100);
+            updateThreeLineAvg(lineKey, {
+              end_fraction: frac,
+              end_point: nearest.point,
+              age,
+            });
+          }
+        }
+        return;
+      }
+
       const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
 
       if (mode === 'measure') {
@@ -1009,22 +1255,212 @@ export default function HandCanvas({
           setAxialGrid((prev) => ({ ...prev, [draggingAxialNode]: coords }));
           return;
         }
-        if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
-          const p0 = calibAnchors.mercury_heart_level;
-          const p56 = calibAnchors.mercury_base;
-          const nearest = getNearestPointOnPolyline([p0, p56], coords);
+
+        // 30-Midpoint Method: Hover ONLY on 2 lines: L0 -> MK (Life Chord) and S-Upper Limit -> MK (Saturn Axis)
+        if (agingMethod === '30-midpoint' && calibrationGeometry.mk) {
           const hoverThreshold = Math.max(6.0, 9.5 / zoom);
-          if (nearest && nearest.distance < hoverThreshold) {
-            const age = parseFloat((nearest.fraction * 56).toFixed(1));
+          const maxAge = vedicData?.max_age ?? 75;
+          let bestCandidate: {
+            dist: number;
+            age: number;
+            point: Point2D;
+            fraction: number;
+            label: string;
+            lineCategory: LineCategory;
+            note: string;
+            projectionLine: { p1: Point2D; p2: Point2D; strokeColor: string };
+          } | null = null;
+
+          // Line 1: L0 (lifeStart) to MK (manibaddha center)
+          if (calibrationGeometry.lifeStart) {
+            const pA = calibrationGeometry.lifeStart;
+            const pB = calibrationGeometry.mk;
+            const vx = pB.x - pA.x;
+            const vy = pB.y - pA.y;
+            const lenSq = vx * vx + vy * vy;
+            if (lenSq > 0.001) {
+              const len = Math.sqrt(lenSq);
+              const tRaw = ((coords.x - pA.x) * vx + (coords.y - pA.y) * vy) / lenSq;
+              const t = Math.max(0, Math.min(1, tRaw));
+              const nearX = pA.x + t * vx;
+              const nearY = pA.y + t * vy;
+              const dist = Math.hypot(coords.x - nearX, coords.y - nearY);
+
+              if (dist < hoverThreshold) {
+                const age = Math.round(
+                  t <= 0.5
+                    ? (t / 0.5) * 30
+                    : 30 + ((t - 0.5) / 0.5) * (maxAge - 30)
+                );
+
+                // Direction matching the projection arrows from Life Line chord
+                const isThumbOnRight = pA.x > pB.x;
+                const fallbackDir = isThumbOnRight ? 1 : -1;
+                let ux = fallbackDir;
+                let uy = 0;
+
+                if (calibrationGeometry.mercurySandhi && calibrationGeometry.life30) {
+                  const ms = calibrationGeometry.mercurySandhi;
+                  const l30 = calibrationGeometry.life30;
+                  const arrowVx = l30.x - ms.x;
+                  const arrowVy = l30.y - ms.y;
+                  const arrowLen = Math.hypot(arrowVx, arrowVy);
+                  if (arrowLen > 0.001) {
+                    ux = arrowVx / arrowLen;
+                    uy = arrowVy / arrowLen;
+                    if (ux * fallbackDir < 0) {
+                      ux = -ux;
+                      uy = -uy;
+                    }
+                  }
+                } else {
+                  const len = Math.sqrt(lenSq);
+                  let nx = -vy / len;
+                  let ny = vx / len;
+                  if (nx * fallbackDir < 0) {
+                    nx = -nx;
+                    ny = -ny;
+                  }
+                  ux = nx;
+                  uy = ny;
+                }
+
+                const projHalfLen = 15.0;
+
+                bestCandidate = {
+                  dist,
+                  age,
+                  point: { x: nearX, y: nearY },
+                  fraction: t,
+                  label: `${age} yrs`,
+                  lineCategory: 'line_life',
+                  note: `30-Midpoint: Life Chord Age ~${age}`,
+                  projectionLine: {
+                    p1: { x: nearX - ux * projHalfLen, y: nearY - uy * projHalfLen },
+                    p2: { x: nearX + ux * projHalfLen, y: nearY + uy * projHalfLen },
+                    strokeColor: '#0369a1',
+                  },
+                };
+              }
+            }
+          }
+
+          // Line 2: S-Upper Limit (saturnRoot) to MK (manibaddha center)
+          if (calibrationGeometry.saturnRoot) {
+            const pMK = calibrationGeometry.mk;
+            const pSat = calibrationGeometry.saturnRoot;
+            const vx = pSat.x - pMK.x;
+            const vy = pSat.y - pMK.y;
+            const lenSq = vx * vx + vy * vy;
+            if (lenSq > 0.001) {
+              const len = Math.sqrt(lenSq);
+              const uRaw = ((coords.x - pMK.x) * vx + (coords.y - pMK.y) * vy) / lenSq;
+              const u = Math.max(0, Math.min(1, uRaw));
+              const nearX = pMK.x + u * vx;
+              const nearY = pMK.y + u * vy;
+              const dist = Math.hypot(coords.x - nearX, coords.y - nearY);
+
+              if (dist < hoverThreshold && (!bestCandidate || dist < bestCandidate.dist)) {
+                const age = Math.round(
+                  u <= 0.5
+                    ? (u / 0.5) * 30
+                    : 30 + ((u - 0.5) / 0.5) * (maxAge - 30)
+                );
+                const nx = -vy / len;
+                const ny = vx / len;
+                const projHalfLen = 10.0;
+                bestCandidate = {
+                  dist,
+                  age,
+                  point: { x: nearX, y: nearY },
+                  fraction: u,
+                  label: `${age} yrs`,
+                  lineCategory: 'line_fate',
+                  note: `30-Midpoint: Fate Axis Age ~${age}`,
+                  projectionLine: {
+                    p1: { x: nearX - nx * projHalfLen, y: nearY - ny * projHalfLen },
+                    p2: { x: nearX + nx * projHalfLen, y: nearY + ny * projHalfLen },
+                    strokeColor: '#b45309',
+                  },
+                };
+              }
+            }
+          }
+
+          if (bestCandidate) {
+            setHoveredAgeData({
+              age: bestCandidate.age,
+              point: bestCandidate.point,
+              fraction: bestCandidate.fraction,
+              label: bestCandidate.label,
+              lineCategory: bestCandidate.lineCategory,
+              note: bestCandidate.note,
+              projectionLine: bestCandidate.projectionLine,
+            });
+            return;
+          } else {
+            if (hoveredAgeData) setHoveredAgeData(null);
+            return;
+          }
+        }
+
+        // Three-Line Average Method (Notes 27 §3) Hover Detection
+        if (agingMethod === 'three-line-avg' && threeLineAvgGeometry) {
+          const hoverThreshold = Math.max(6.0, 9.5 / zoom);
+          const linesToCheck: Array<{ key: 'life' | 'heart' | 'head'; label: string; path?: Point2D[] }> = [
+            { key: 'life', label: 'Life Line', path: threeLineAvgGeometry.life.path },
+            { key: 'heart', label: 'Heart Line', path: threeLineAvgGeometry.heart.path },
+            { key: 'head', label: 'Head Line', path: threeLineAvgGeometry.head.path },
+          ];
+
+          for (const item of linesToCheck) {
+            if (item.path && item.path.length > 1) {
+              const nearest = getNearestPointOnPolyline(item.path, coords);
+              if (nearest && nearest.distance < hoverThreshold) {
+                const age = Math.round(nearest.fraction * 100);
+                setHoveredAgeData({
+                  age,
+                  point: nearest.point,
+                  fraction: nearest.fraction,
+                  label: `${item.label}: ~${age} yrs (${Math.round(nearest.fraction * 100)}% of 100y)`,
+                });
+                return;
+              }
+            }
+          }
+          if (hoveredAgeData) setHoveredAgeData(null);
+          return;
+        }
+
+        // Live trace on Mercury Mount Scale line (50 / 56 Year Scale)
+        if (agingMethod === 'mercury-56' && mercury56Geometry) {
+          const { p0, dx, dy, len, maxScale } = mercury56Geometry;
+          const vx = coords.x - p0.x;
+          const vy = coords.y - p0.y;
+          const uX = dx / len;
+          const uY = dy / len;
+          const proj = vx * uX + vy * uY;
+          const t = Math.max(0, Math.min(1, proj / len));
+          const nearestPt = {
+            x: p0.x + uX * (t * len),
+            y: p0.y + uY * (t * len),
+          };
+          const dist = Math.hypot(coords.x - nearestPt.x, coords.y - nearestPt.y);
+          const hoverThreshold = Math.max(6.0, 9.5 / zoom);
+          if (dist < hoverThreshold) {
+            const age = Math.round(t * maxScale);
             setHoveredAgeData({
               age,
-              point: nearest.point,
-              fraction: nearest.fraction,
-              label: age === 28 ? 'Age 28 (Marriage Midpoint)' : `Age ~${age} yrs`,
+              point: nearestPt,
+              fraction: t,
+              label: `${age} yrs`,
+              lineCategory: 'line_marriage',
+              note: `Mercury ${maxScale}-Year Timing: Age ${age}`,
             });
             return;
           }
         }
+
         if (activeAgingDrawing && activeAgingDrawing.points.length > 1) {
           const nearest = getNearestPointOnPolyline(activeAgingDrawing.points, coords);
           const hoverThreshold = Math.max(5.0, 7.5 / zoom);
@@ -1192,12 +1628,39 @@ export default function HandCanvas({
       if (draggingAxialNode) {
         setDraggingAxialNode(null);
       }
+      if (draggingThreeLineNode) {
+        setDraggingThreeLineNode(null);
+      }
       return;
     }
 
     const wasDrawing = isDrawing || isDrawingRef.current;
     isDrawingRef.current = false;
     setIsDrawing(false);
+
+    // If tracing a 100-year theoretical arc for 3-Line Average Method (Life, Heart, Mind)
+    if (threeLineTracing) {
+      const finalPoints = currentPointsRef.current.length >= 2 ? currentPointsRef.current : currentPoints;
+      if (finalPoints.length >= 2) {
+        const lineKey = threeLineTracing;
+        const curData = calibAnchors?.three_line_avg?.[lineKey];
+        const frac = curData?.end_fraction ?? 0.75;
+        const pt = getPointAndNormalAtFraction(finalPoints, frac)?.point || finalPoints[0];
+        updateThreeLineAvg(lineKey, {
+          full_path: [...finalPoints],
+          end_fraction: frac,
+          end_point: pt,
+          age: Math.round(frac * 100),
+        });
+      }
+      setThreeLineTracing(null);
+      setAgingLineCategory(activeAgingDrawing?.lineCategory || 'line_life');
+      setShowDrawings(true);
+      setMode('aging');
+      currentPointsRef.current = [];
+      setCurrentPoints([]);
+      return;
+    }
 
     if (mode === 'draw' && wasDrawing) {
       const finalPoints = currentPointsRef.current.length >= 2 ? currentPointsRef.current : currentPoints;
@@ -1252,33 +1715,75 @@ export default function HandCanvas({
     }
     if (mode === 'measure') return;
     if (mode === 'aging') {
+      if (agingMethod === 'three-line-avg' && threeLineAvgGeometry) {
+        const coords = getPointCoords(e.clientX, e.clientY);
+        const clickThreshold = Math.max(7.0, 12.0 / zoom);
+        const linesToCheck: Array<{ key: 'life' | 'heart' | 'head'; path?: Point2D[] }> = [
+          { key: 'life', path: threeLineAvgGeometry.lifePath },
+          { key: 'heart', path: threeLineAvgGeometry.heartPath },
+          { key: 'head', path: threeLineAvgGeometry.headPath },
+        ];
+        for (const item of linesToCheck) {
+          if (item.path && item.path.length > 1) {
+            const nearest = getNearestPointOnPolyline(item.path, coords);
+            if (nearest && nearest.distance < clickThreshold) {
+              const clampedFraction = Math.max(0.01, Math.min(1.0, nearest.fraction));
+              const age = Math.round(clampedFraction * 100);
+              updateThreeLineAvg(item.key, {
+                end_fraction: clampedFraction,
+                end_point: nearest.point,
+                age,
+              });
+              return;
+            }
+          }
+        }
+        return;
+      }
+
       const lineToUse = activeAgingDrawing;
       if (hoveredAgeData) {
+        const isMercury = agingMethod === 'mercury-56' || hoveredAgeData.lineCategory === 'line_marriage';
         setAgeEventModal({
           isOpen: true,
           age: hoveredAgeData.age,
           point: hoveredAgeData.point,
-          lineCategory: agingMethod === 'mercury-56' ? 'line_marriage' : (lineToUse?.lineCategory || agingLineCategory),
-          sign: agingMethod === 'mercury-56' ? 'Marriage Event / Union (Vivāha)' : 'Triangle △ (Property / Shield)',
-          note: agingMethod === 'mercury-56' ? `Marriage / Vivāha timing at age ${hoveredAgeData.age}` : '',
+          lineCategory: isMercury
+            ? 'line_marriage'
+            : (hoveredAgeData.lineCategory || lineToUse?.lineCategory || agingLineCategory || 'line_life'),
+          sign: isMercury
+            ? 'Marriage / Vivāha Rekhā (विवाह रेखा)'
+            : 'Triangle △ (Property / Shield)',
+          note: isMercury
+            ? (hoveredAgeData.note || `Marriage / Vivāha Rekhā at age ${hoveredAgeData.age}`)
+            : (hoveredAgeData.note || ''),
         });
         setHoveredAgeData(null);
         return;
       }
-      if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
+      if (agingMethod === 'mercury-56' && mercury56Geometry) {
         const coords = getPointCoords(e.clientX, e.clientY);
-        const p0 = calibAnchors.mercury_heart_level;
-        const p56 = calibAnchors.mercury_base;
-        const nearest = getNearestPointOnPolyline([p0, p56], coords);
-        if (nearest && nearest.distance < 6.5) {
-          const age = parseFloat((nearest.fraction * 56).toFixed(1));
+        const { p0, dx, dy, len, maxScale } = mercury56Geometry;
+        const vx = coords.x - p0.x;
+        const vy = coords.y - p0.y;
+        const uX = dx / len;
+        const uY = dy / len;
+        const proj = vx * uX + vy * uY;
+        const t = Math.max(0, Math.min(1, proj / len));
+        const nearestPt = {
+          x: p0.x + uX * (t * len),
+          y: p0.y + uY * (t * len),
+        };
+        const dist = Math.hypot(coords.x - nearestPt.x, coords.y - nearestPt.y);
+        if (dist < 8.0) {
+          const age = Math.round(t * maxScale);
           setAgeEventModal({
             isOpen: true,
             age,
-            point: nearest.point,
+            point: nearestPt,
             lineCategory: 'line_marriage',
-            sign: 'Marriage Event / Union (Vivāha)',
-            note: `Vivāha Rekhā mark at age ${age}`,
+            sign: 'Marriage / Vivāha Rekhā (विवाह रेखा)',
+            note: `Marriage / Vivāha Rekhā at age ${age}`,
           });
           return;
         }
@@ -1428,13 +1933,9 @@ export default function HandCanvas({
         setAgingLineCategory(lifeOrFate.lineCategory || 'line_life');
       }
     } else if (method === 'mercury-56') {
-      const marriageD = visibleDrawings.find(
-        (d) => d.lineCategory === 'line_marriage' || d.lineCategory === 'line_mercury'
-      );
+      const marriageD = visibleDrawings.find((d) => d.lineCategory === 'line_marriage');
       if (marriageD) {
         setSelectedAgingDrawingId(marriageD.id);
-        setAgingLineCategory(marriageD.lineCategory || 'line_marriage');
-      } else {
         setAgingLineCategory('line_marriage');
       }
     }
@@ -1467,6 +1968,33 @@ export default function HandCanvas({
     onChangeDrawings(updated);
     pushHistory(updated, pins);
     setAgingLineCategory(category);
+  };
+
+  const handleToggleDrawingVisibility = (id: string) => {
+    setHiddenDrawingIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleDeleteDrawing = (id: string) => {
+    const next = drawings.filter((d) => d.id !== id);
+    onChangeDrawings(next);
+    pushHistory(next, pins);
+    if (hiddenDrawingIds.includes(id)) {
+      setHiddenDrawingIds((prev) => prev.filter((x) => x !== id));
+    }
+    if (selectedAgingDrawingId === id) {
+      const remainingPalm = next.filter(
+        (d) => d.view === activeView && d.lineCategory !== 'line_manibandha' && d.id !== id
+      );
+      setSelectedAgingDrawingId(remainingPalm[0]?.id || null);
+      if (remainingPalm[0]?.lineCategory) {
+        setAgingLineCategory(remainingPalm[0].lineCategory);
+      }
+    }
+    if (selectedDrawingId === id) {
+      setSelectedDrawingId(null);
+    }
   };
 
   const handleSaveAgeEvent = () => {
@@ -1616,11 +2144,19 @@ export default function HandCanvas({
   // ─── 30-Midpoint Master Calibration (Vedic Aging) Handlers ───
   const calibAnchors: AgingCalibrationAnchors | null = useMemo(() => {
     if (vedicData?.aging_calibrations?.[activeView]) {
-      return vedicData.aging_calibrations[activeView] || null;
+      const viewCalib = vedicData.aging_calibrations[activeView];
+      if (viewCalib && Object.keys(viewCalib).length > 0) {
+        return viewCalib;
+      }
+      if (viewCalib && Object.keys(viewCalib).length === 0) {
+        return null;
+      }
     }
     // Backward compatibility: if activeView is right_palm and legacy aging_calibration exists
     if (activeView === 'right_palm' && vedicData?.aging_calibration) {
-      return vedicData.aging_calibration;
+      if (Object.keys(vedicData.aging_calibration).length > 0) {
+        return vedicData.aging_calibration;
+      }
     }
     return null;
   }, [vedicData?.aging_calibrations, vedicData?.aging_calibration, activeView]);
@@ -1656,20 +2192,36 @@ export default function HandCanvas({
       if (!profile || !onChangeProfile) return;
       const currentVedic = parseVedicData(profile.general_notes);
       const currentCalibs = { ...(currentVedic.aging_calibrations || {}) };
+
       if (!keys) {
         delete currentCalibs[activeView];
-        if (activeView === 'right_palm') {
+        if (activeView === 'right_palm' || !currentVedic.aging_calibrations) {
           currentVedic.aging_calibration = null;
         }
-      } else if (currentCalibs[activeView]) {
-        const updated = { ...currentCalibs[activeView] };
-        keys.forEach((k) => delete updated[k]);
-        currentCalibs[activeView] = updated;
-        if (activeView === 'right_palm') {
-          currentVedic.aging_calibration = updated;
+      } else {
+        const currentViewCalib = {
+          ...(currentCalibs[activeView] || {}),
+          ...(currentVedic.aging_calibration ? currentVedic.aging_calibration : {}),
+        };
+        keys.forEach((k) => {
+          delete currentViewCalib[k];
+        });
+        if (Object.keys(currentViewCalib).length === 0) {
+          delete currentCalibs[activeView];
+        } else {
+          currentCalibs[activeView] = currentViewCalib;
+        }
+
+        if (currentVedic.aging_calibration) {
+          const updatedLegacy = { ...currentVedic.aging_calibration };
+          keys.forEach((k) => {
+            delete updatedLegacy[k];
+          });
+          currentVedic.aging_calibration = Object.keys(updatedLegacy).length > 0 ? updatedLegacy : null;
         }
       }
-      currentVedic.aging_calibrations = currentCalibs;
+
+      currentVedic.aging_calibrations = Object.keys(currentCalibs).length > 0 ? currentCalibs : undefined;
       onChangeProfile({
         ...profile,
         general_notes: serializeVedicData(currentVedic),
@@ -1737,28 +2289,6 @@ export default function HandCanvas({
         return;
       }
 
-      if (type === 'mercury') {
-        if (step === 1) {
-          setActiveCalibration({ type: 'mercury', step: 2, tempPoint: coords });
-        } else {
-          const p1 = tempPoint!;
-          const p2 = coords;
-          // In screen coords, Y=0 is top (fingers) and Y=100 is bottom (wrist).
-          // Heart line level on percussion is lower on palm (larger Y) = Age 0
-          // Mercury finger root crease is higher on palm (smaller Y) = Age 56
-          const heartLevel = p1.y >= p2.y ? p1 : p2;
-          const fingerBase = p1.y >= p2.y ? p2 : p1;
-
-          updateAgingCalibration({
-            mercury_heart_level: heartLevel,
-            mercury_base: fingerBase,
-          });
-          setActiveCalibration(null);
-          setCalibCursorPos(null);
-        }
-        return;
-      }
-
       if (type === 'cadence') {
         const prevPoints = activeCalibration.points || [];
         const nextPoints = [...prevPoints, coords];
@@ -1777,6 +2307,22 @@ export default function HandCanvas({
         }
         return;
       }
+
+      if (type === 'mercury_56') {
+        if (step === 1) {
+          setActiveCalibration({ type: 'mercury_56', step: 2, tempPoint: coords });
+        } else {
+          const p1 = tempPoint!;
+          const p2 = coords;
+          updateAgingCalibration({
+            mercury_heart_level: p1,
+            mercury_base: p2,
+          });
+          setActiveCalibration(null);
+          setCalibCursorPos(null);
+        }
+        return;
+      }
     },
     [activeCalibration, drawings, activeView, pins, onChangeDrawings, pushHistory, updateAgingCalibration]
   );
@@ -1784,35 +2330,30 @@ export default function HandCanvas({
   const getCalibrationPrompt = () => {
     if (!activeCalibration) return '';
     const { type, step } = activeCalibration;
-    if (type === 'mercury') {
-      return step === 1
-        ? '📍 Tap 1 of 2: Tap Heart Line level on outer palm percussion (Age 0)'
-        : '📍 Tap 2 of 2: Tap root crease of Mercury (little) finger (Age 56)';
-    }
     if (type === 'cadence') {
       const stepIdx = (step as number) - 1;
       const age = CADENCE_AGES[stepIdx] ?? 0;
       const fingerNames = activeView === 'right_palm'
         ? [
-            'Mercury outer edge / percussion (Age 0)',
-            'Mercury / Sun cleft (Age 18)',
-            'Sun finger base (Age 24)',
-            'Sun / Saturn cleft (Age 42)',
-            'Saturn finger base (Age 48)',
-            'Saturn / Jupiter cleft (Age 66)',
-            'Jupiter finger base (Age 72)',
-            'Jupiter radial edge (Age 90)',
-          ]
+          'Mercury outer edge / percussion (Age 0)',
+          'Mercury / Sun cleft (Age 18)',
+          'Sun finger base (Age 24)',
+          'Sun / Saturn cleft (Age 42)',
+          'Saturn finger base (Age 48)',
+          'Saturn / Jupiter cleft (Age 66)',
+          'Jupiter finger base (Age 72)',
+          'Jupiter radial edge (Age 90)',
+        ]
         : [
-            'Mercury outer edge / percussion (Age 0)',
-            'Mercury / Sun cleft (Age 18)',
-            'Sun finger base (Age 24)',
-            'Sun / Saturn cleft (Age 42)',
-            'Saturn finger base (Age 48)',
-            'Saturn / Jupiter cleft (Age 66)',
-            'Jupiter finger base (Age 72)',
-            'Jupiter radial edge (Age 90)',
-          ];
+          'Mercury outer edge / percussion (Age 0)',
+          'Mercury / Sun cleft (Age 18)',
+          'Sun finger base (Age 24)',
+          'Sun / Saturn cleft (Age 42)',
+          'Saturn finger base (Age 48)',
+          'Saturn / Jupiter cleft (Age 66)',
+          'Jupiter finger base (Age 72)',
+          'Jupiter radial edge (Age 90)',
+        ];
       return `📍 Tap ${step} of 8: Age ${age} at finger base (${fingerNames[stepIdx] || ''})`;
     }
     if (type === 'manibandha') {
@@ -1827,6 +2368,11 @@ export default function HandCanvas({
     }
     if (type === 'fate') {
       return '📍 Tap 1 of 1: Tap the base joint of middle (Saturn) finger on Saturn Mount';
+    }
+    if (type === 'mercury_56') {
+      return step === 1
+        ? '📍 Tap 1 of 2: Tap Heart Line level on outer Mercury Mount (Age 0)'
+        : '📍 Tap 2 of 2: Tap root crease under Mercury (little) finger (Age 56)';
     }
     return '';
   };
@@ -1974,8 +2520,219 @@ export default function HandCanvas({
     };
   }, [calibAnchors, manibandhaData, vedicData?.max_age]);
 
+  // Reset 30-Midpoint master anchors to standard anatomical defaults
+  const handleReset30MidpointToDefaults = useCallback(() => {
+    const isRight = activeView === 'right_palm';
+    const defaults = getDefault30MidpointAnchors(isRight);
+
+    // Replace line_manibandha drawing with canonical wrist base line
+    const cleanDrawings = drawings.filter(
+      (d) => !(d.lineCategory === 'line_manibandha' && (!d.view || d.view === activeView))
+    );
+    const newManibandha: Drawing = {
+      id: crypto.randomUUID(),
+      view: activeView,
+      points: [defaults.manibandha_start, defaults.manibandha_end],
+      color: '#f59e0b',
+      thickness: 2.5,
+      lineCategory: 'line_manibandha',
+    };
+    const updated = [...cleanDrawings, newManibandha];
+    onChangeDrawings(updated);
+    pushHistory(updated, pins);
+
+    updateAgingCalibration({
+      manibandha_start: defaults.manibandha_start,
+      manibandha_end: defaults.manibandha_end,
+      life_start: defaults.life_start,
+      mercury_sandhi: defaults.mercury_sandhi,
+      saturn_root: defaults.saturn_root,
+    });
+  }, [activeView, drawings, pins, onChangeDrawings, pushHistory, updateAgingCalibration]);
+
+  // Dedicated Mercury Mount Timing Geometry (Lecture 28 §4.2 - 50 / 56 Year Scale)
+  const mercury56Geometry = useMemo(() => {
+    if (agingMethod !== 'mercury-56') return null;
+    if (!calibAnchors?.mercury_heart_level || !calibAnchors?.mercury_base) return null;
+
+    const isRight = activeView === 'right_palm';
+    const p0 = calibAnchors.mercury_heart_level;
+    const p56 = calibAnchors.mercury_base;
+
+    const dx = p56.x - p0.x;
+    const dy = p56.y - p0.y;
+    const len = Math.hypot(dx, dy) || 1;
+
+    const interp = (t: number): Point2D => ({
+      x: p0.x + dx * t,
+      y: p0.y + dy * t,
+    });
+
+    const maxScale = mercuryScaleMax;
+    const milestones = maxScale === 50
+      ? [
+          { pt: p0, age: 0, isMajor: true },
+          { pt: interp(10 / 50), age: 10, isMajor: false },
+          { pt: interp(20 / 50), age: 20, isMajor: false },
+          { pt: interp(25 / 50), age: 25, isMajor: true },
+          { pt: interp(30 / 50), age: 30, isMajor: false },
+          { pt: interp(40 / 50), age: 40, isMajor: false },
+          { pt: p56, age: 50, isMajor: true },
+        ]
+      : [
+          { pt: p0, age: 0, isMajor: true },
+          { pt: interp(14 / 56), age: 14, isMajor: false },
+          { pt: interp(21 / 56), age: 21, isMajor: false },
+          { pt: interp(28 / 56), age: 28, isMajor: true },
+          { pt: interp(35 / 56), age: 35, isMajor: false },
+          { pt: interp(42 / 56), age: 42, isMajor: false },
+          { pt: interp(49 / 56), age: 49, isMajor: false },
+          { pt: p56, age: 56, isMajor: true },
+        ];
+
+    // Inward normal perpendicular to the timing axis across Mercury Mount
+    let nx = -dy / len;
+    let ny = dx / len;
+    const inwardDir = isRight ? -1 : 1;
+    if (nx * inwardDir < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+
+    return {
+      p0,
+      p56,
+      dx,
+      dy,
+      len,
+      nx,
+      ny,
+      isRight,
+      maxScale,
+      milestones,
+      isCalibrated: true,
+    };
+  }, [agingMethod, activeView, calibAnchors?.mercury_heart_level, calibAnchors?.mercury_base, mercuryScaleMax]);
+
+  // ─── 3-Line Average Method (Notes 27 §3) Geometry & Handlers ───
+  const updateThreeLineAvg = useCallback(
+    (line: 'life' | 'heart' | 'head', patch: Partial<ThreeLineAvgAnchor>) => {
+      const currentThree = calibAnchors?.three_line_avg || {};
+      const currentLine = currentThree[line] || {};
+      const updatedLine: ThreeLineAvgAnchor = {
+        ...currentLine,
+        ...patch,
+      };
+      const updatedThree: ThreeLineAvgData = {
+        ...currentThree,
+        [line]: updatedLine,
+      };
+
+      const lAge = line === 'life' ? (patch.age ?? updatedLine.age) : currentThree.life?.age;
+      const hAge = line === 'heart' ? (patch.age ?? updatedLine.age) : currentThree.heart?.age;
+      const mAge = line === 'head' ? (patch.age ?? updatedLine.age) : currentThree.head?.age;
+      const summary = calculateThreeLineAverage(lAge, hAge, mAge);
+      if (summary) {
+        updatedThree.final_age = summary.average;
+      }
+
+      updateAgingCalibration({
+        three_line_avg: updatedThree,
+      });
+    },
+    [calibAnchors?.three_line_avg, updateAgingCalibration]
+  );
+
+  const clearThreeLineArc = useCallback(
+    (line: 'life' | 'heart' | 'head') => {
+      const currentThree = { ...(calibAnchors?.three_line_avg || {}) };
+      delete currentThree[line];
+      const lAge = currentThree.life?.age;
+      const hAge = currentThree.heart?.age;
+      const mAge = currentThree.head?.age;
+      const summary = calculateThreeLineAverage(lAge, hAge, mAge);
+      currentThree.final_age = summary ? summary.average : undefined;
+      updateAgingCalibration({
+        three_line_avg: Object.keys(currentThree).length > 0 ? currentThree : undefined,
+      });
+    },
+    [calibAnchors?.three_line_avg, updateAgingCalibration]
+  );
+
+  const threeLineAvgGeometry = useMemo(() => {
+    if (agingMethod !== 'three-line-avg') return null;
+    const isRight = activeView === 'right_palm';
+    const mk = manibandhaData?.midpoint || null;
+    const stored = calibAnchors?.three_line_avg;
+
+    const lifePath = stored?.life?.full_path && stored.life.full_path.length > 1
+      ? stored.life.full_path
+      : undefined;
+
+    const heartPath = stored?.heart?.full_path && stored.heart.full_path.length > 1
+      ? stored.heart.full_path
+      : undefined;
+
+    const headPath = stored?.head?.full_path && stored.head.full_path.length > 1
+      ? stored.head.full_path
+      : undefined;
+
+    const getPathFractionPoint = (pts: Point2D[] | undefined, frac: number): Point2D | null => {
+      if (!pts || pts.length < 2) return null;
+      const clamped = Math.max(0, Math.min(1, frac));
+      const geom = getPointAndNormalAtFraction(pts, clamped);
+      return geom ? geom.point : pts[Math.min(pts.length - 1, Math.floor(clamped * (pts.length - 1)))];
+    };
+
+    // Life Line
+    const lifeFrac = stored?.life?.end_fraction ?? 0.75;
+    const lifePoint = lifePath ? (stored?.life?.end_point || getPathFractionPoint(lifePath, lifeFrac)) : null;
+    const lifeAge = lifePath ? (stored?.life?.age ?? Math.round(lifeFrac * 100)) : null;
+
+    // Heart Line
+    const heartFrac = stored?.heart?.end_fraction ?? 0.75;
+    const heartPoint = heartPath ? (stored?.heart?.end_point || getPathFractionPoint(heartPath, heartFrac)) : null;
+    const heartAge = heartPath ? (stored?.heart?.age ?? Math.round(heartFrac * 100)) : null;
+
+    // Head Line
+    const headFrac = stored?.head?.end_fraction ?? 0.75;
+    const headPoint = headPath ? (stored?.head?.end_point || getPathFractionPoint(headPath, headFrac)) : null;
+    const headAge = headPath ? (stored?.head?.age ?? Math.round(headFrac * 100)) : null;
+
+    const summary = calculateThreeLineAverage(lifeAge, heartAge, headAge);
+
+    return {
+      isRight,
+      mk,
+      life: { path: lifePath, fraction: lifeFrac, point: lifePoint, age: lifeAge, hasCustomPath: !!stored?.life?.full_path },
+      heart: { path: heartPath, fraction: heartFrac, point: heartPoint, age: heartAge, hasCustomPath: !!stored?.heart?.full_path },
+      head: { path: headPath, fraction: headFrac, point: headPoint, age: headAge, hasCustomPath: !!stored?.head?.full_path },
+      lifePath,
+      lifeFraction: lifeFrac,
+      lifeEndPoint: lifePoint,
+      lifeAge,
+      heartPath,
+      heartFraction: heartFrac,
+      heartEndPoint: heartPoint,
+      heartAge,
+      headPath,
+      headFraction: headFrac,
+      headEndPoint: headPoint,
+      headAge,
+      summary,
+      avgAge: summary?.average ?? null,
+      classicalCategory: summary?.rangeText ?? null,
+    };
+  }, [agingMethod, activeView, manibandhaData?.midpoint, calibAnchors?.three_line_avg]);
+
+  const threeLineAvgData = useMemo(() => calibAnchors?.three_line_avg || {}, [calibAnchors?.three_line_avg]);
+
   const currentAgingTicks =
-    activeAgingDrawing && activeAgingDrawing.points.length > 1 && agingMethod !== '18-6-cadence'
+    activeAgingDrawing &&
+    !hiddenDrawingIds.includes(activeAgingDrawing.id) &&
+    activeAgingDrawing.points.length > 1 &&
+    agingMethod !== '18-6-cadence' &&
+    agingMethod !== 'three-line-avg'
       ? computeAgeTicks(
         activeAgingDrawing.points,
         agingMethod,
@@ -1986,7 +2743,10 @@ export default function HandCanvas({
       : [];
 
   const comparisonCheiroTicks =
-    activeAgingDrawing && showAllMethodsComparison && activeAgingDrawing.points.length > 1
+    activeAgingDrawing &&
+    !hiddenDrawingIds.includes(activeAgingDrawing.id) &&
+    showAllMethodsComparison &&
+    activeAgingDrawing.points.length > 1
       ? computeAgeTicks(
         activeAgingDrawing.points,
         'cheiro-98',
@@ -2047,7 +2807,7 @@ export default function HandCanvas({
     const placedBadges: typeof items = [];
 
     for (const item of items) {
-      if (item.tick.isMajor || item.tick.age === 0 || item.tick.age === 28 || item.tick.age === 56) {
+      if (item.tick.isMajor) {
         item.showLabel = true;
         placedBadges.push(item);
       }
@@ -2706,159 +3466,167 @@ export default function HandCanvas({
                   >
                     {/* Render already drawn lines */}
                     {showDrawings &&
-                      visibleDrawings.map((drawing) => {
-                      const pointsString = drawing.points
-                        .map((p) => `${p.x},${p.y}`)
-                        .join(' ');
-                      const isSelected = selectedDrawingId === drawing.id;
-                      const isDashed = drawing.label === 'dashed';
+                      visibleDrawings
+                        .filter((drawing) => {
+                          if (hiddenDrawingIds.includes(drawing.id)) return false;
+                          if ((mode === 'aging' && agingMethod === 'three-line-avg') || threeLineTracing) {
+                            return drawing.lineCategory === 'line_manibandha';
+                          }
+                          return true;
+                        })
+                        .map((drawing) => {
+                        const pointsString = drawing.points
+                          .map((p) => `${p.x},${p.y}`)
+                          .join(' ');
+                        const isSelected = selectedDrawingId === drawing.id;
+                        const isDashed = drawing.label === 'dashed';
 
-                      return (
-                        <g key={drawing.id} className={`group ${mode === 'draw' ? 'pointer-events-none' : 'cursor-pointer'}`}>
-                          {/* Glowing highlight under selected line */}
-                          {isSelected && (
+                        return (
+                          <g key={drawing.id} className={`group ${mode === 'draw' ? 'pointer-events-none' : 'cursor-pointer'}`}>
+                            {/* Glowing highlight under selected line */}
+                            {isSelected && (
+                              <polyline
+                                points={pointsString}
+                                fill="none"
+                                stroke="#f59e0b"
+                                strokeWidth={drawing.thickness + 4}
+                                strokeDasharray={isDashed ? '4,3' : undefined}
+                                vectorEffect="non-scaling-stroke"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="animate-pulse"
+                                style={{
+                                  filter: 'blur(2px)',
+                                  opacity: 0.8,
+                                }}
+                              />
+                            )}
                             <polyline
                               points={pointsString}
                               fill="none"
-                              stroke="#f59e0b"
-                              strokeWidth={drawing.thickness + 4}
+                              stroke={isSelected ? '#d97706' : drawing.color}
+                              strokeWidth={drawing.thickness}
+                              strokeOpacity={lineOpacity}
                               strokeDasharray={isDashed ? '4,3' : undefined}
                               vectorEffect="non-scaling-stroke"
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              className="animate-pulse"
+                              className="transition-all"
                               style={{
-                                filter: 'blur(2px)',
-                                opacity: 0.8,
+                                opacity: lineOpacity,
+                                filter: isSelected
+                                  ? 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4))'
+                                  : `drop-shadow(0 1px 2px rgba(0,0,0,0.2))`,
                               }}
                             />
-                          )}
-                          <polyline
-                            points={pointsString}
-                            fill="none"
-                            stroke={isSelected ? '#d97706' : drawing.color}
-                            strokeWidth={drawing.thickness}
-                            strokeOpacity={lineOpacity}
-                            strokeDasharray={isDashed ? '4,3' : undefined}
-                            vectorEffect="non-scaling-stroke"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="transition-all"
-                            style={{
-                              opacity: lineOpacity,
-                              filter: isSelected
-                                ? 'drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4))'
-                                : `drop-shadow(0 1px 2px rgba(0,0,0,0.2))`,
-                            }}
-                          />
-                          {/* Thick overlay for easy click selection (only rendered in pan or aging mode) */}
-                          {mode !== 'draw' && (
-                            <polyline
-                            points={pointsString}
-                            fill="none"
-                            stroke="transparent"
-                            strokeWidth={16}
-                            vectorEffect="non-scaling-stroke"
-                            onMouseDown={(e) => {
-                              if (mode !== 'aging') e.stopPropagation();
-                            }}
-                            onMouseUp={(e) => {
-                              if (mode !== 'aging') e.stopPropagation();
-                            }}
-                            onTouchStart={(e) => {
-                              if (mode !== 'aging') e.stopPropagation();
-                            }}
-                            onTouchEnd={(e) => {
-                              e.stopPropagation();
-                              if (mode === 'aging') {
-                                if (drawing.lineCategory === 'line_manibandha') {
-                                  // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
-                                  return;
-                                }
-                                setSelectedAgingDrawingId(drawing.id);
-                                if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
-                                if (e.changedTouches.length > 0) {
-                                  const t = e.changedTouches[0];
-                                  const coords = getPointCoords(t.clientX, t.clientY);
-                                  const nearest = getNearestPointOnPolyline(drawing.points, coords);
-                                  if (nearest) {
-                                    const age = getAgeForFraction(
-                                      agingMethod,
-                                      nearest.fraction,
-                                      drawing.lineCategory || agingLineCategory,
-                                      vedicData?.max_age ?? 75
-                                    );
-                                    setAgeEventModal({
-                                      isOpen: true,
-                                      age,
-                                      point: nearest.point,
-                                      lineCategory: drawing.lineCategory || agingLineCategory,
-                                      sign: 'Triangle △ (Property / Shield)',
-                                      note: '',
-                                    });
-                                    setHoveredAgeData(null);
+                            {/* Thick overlay for easy click selection (only rendered in pan or aging mode) */}
+                            {mode !== 'draw' && (
+                              <polyline
+                                points={pointsString}
+                                fill="none"
+                                stroke="transparent"
+                                strokeWidth={16}
+                                vectorEffect="non-scaling-stroke"
+                                onMouseDown={(e) => {
+                                  if (mode !== 'aging') e.stopPropagation();
+                                }}
+                                onMouseUp={(e) => {
+                                  if (mode !== 'aging') e.stopPropagation();
+                                }}
+                                onTouchStart={(e) => {
+                                  if (mode !== 'aging') e.stopPropagation();
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                  if (mode === 'aging') {
+                                    if (drawing.lineCategory === 'line_manibandha') {
+                                      // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
+                                      return;
+                                    }
+                                    setSelectedAgingDrawingId(drawing.id);
+                                    if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
+                                    if (e.changedTouches.length > 0) {
+                                      const t = e.changedTouches[0];
+                                      const coords = getPointCoords(t.clientX, t.clientY);
+                                      const nearest = getNearestPointOnPolyline(drawing.points, coords);
+                                      if (nearest) {
+                                        const age = getAgeForFraction(
+                                          agingMethod,
+                                          nearest.fraction,
+                                          drawing.lineCategory || agingLineCategory,
+                                          vedicData?.max_age ?? 75
+                                        );
+                                        setAgeEventModal({
+                                          isOpen: true,
+                                          age,
+                                          point: nearest.point,
+                                          lineCategory: drawing.lineCategory || agingLineCategory,
+                                          sign: 'Triangle △ (Property / Shield)',
+                                          note: '',
+                                        });
+                                        setHoveredAgeData(null);
+                                      }
+                                    }
+                                    return;
                                   }
+                                  setSelectedDrawingId(isSelected ? null : drawing.id);
+                                  onSelectPin(null);
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (mode === 'aging') {
+                                    if (drawing.lineCategory === 'line_manibandha') {
+                                      // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
+                                      return;
+                                    }
+                                    setSelectedAgingDrawingId(drawing.id);
+                                    if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
+                                    const coords = getPointCoords(e.clientX, e.clientY);
+                                    const nearest = getNearestPointOnPolyline(drawing.points, coords);
+                                    if (nearest) {
+                                      const age = getAgeForFraction(
+                                        agingMethod,
+                                        nearest.fraction,
+                                        drawing.lineCategory || agingLineCategory,
+                                        vedicData?.max_age ?? 75
+                                      );
+                                      setAgeEventModal({
+                                        isOpen: true,
+                                        age,
+                                        point: nearest.point,
+                                        lineCategory: drawing.lineCategory || agingLineCategory,
+                                        sign: 'Triangle △ (Property / Shield)',
+                                        note: '',
+                                      });
+                                      setHoveredAgeData(null);
+                                    }
+                                    return;
+                                  }
+                                  setSelectedDrawingId(isSelected ? null : drawing.id);
+                                  onSelectPin(null);
+                                }}
+                                className={
+                                  mode === 'aging'
+                                    ? drawing.lineCategory === 'line_manibandha'
+                                      ? 'cursor-default'
+                                      : 'cursor-pointer'
+                                    : 'hover:stroke-rose-500/10 cursor-pointer'
                                 }
-                                return;
-                              }
-                              setSelectedDrawingId(isSelected ? null : drawing.id);
-                              onSelectPin(null);
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (mode === 'aging') {
-                                if (drawing.lineCategory === 'line_manibandha') {
-                                  // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
-                                  return;
-                                }
-                                setSelectedAgingDrawingId(drawing.id);
-                                if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
-                                const coords = getPointCoords(e.clientX, e.clientY);
-                                const nearest = getNearestPointOnPolyline(drawing.points, coords);
-                                if (nearest) {
-                                  const age = getAgeForFraction(
-                                      agingMethod,
-                                      nearest.fraction,
-                                      drawing.lineCategory || agingLineCategory,
-                                      vedicData?.max_age ?? 75
-                                    );
-                                  setAgeEventModal({
-                                    isOpen: true,
-                                    age,
-                                    point: nearest.point,
-                                    lineCategory: drawing.lineCategory || agingLineCategory,
-                                    sign: 'Triangle △ (Property / Shield)',
-                                    note: '',
-                                  });
-                                  setHoveredAgeData(null);
-                                }
-                                return;
-                              }
-                              setSelectedDrawingId(isSelected ? null : drawing.id);
-                              onSelectPin(null);
-                            }}
-                            className={
-                              mode === 'aging'
-                                ? drawing.lineCategory === 'line_manibandha'
-                                  ? 'cursor-default'
-                                  : 'cursor-pointer'
-                                : 'hover:stroke-rose-500/10 cursor-pointer'
-                            }
-                          >
-                            <title>
-                              {drawing.lineCategory === 'line_manibandha'
-                                ? 'Maṇibandha Rekhā (मणिबन्ध - Baseline Midpoint Anchor)'
-                                : mode === 'aging'
-                                  ? 'Click anywhere on this line to log an age milestone'
-                                  : isSelected
-                                    ? 'Selected line (Delete to remove)'
-                                    : 'Click to select this line'}
-                            </title>
-                          </polyline>
-                        )}
-                      </g>
-                      );
-                    })}
+                              >
+                                <title>
+                                  {drawing.lineCategory === 'line_manibandha'
+                                    ? 'Maṇibandha Rekhā (मणिबन्ध - Baseline Midpoint Anchor)'
+                                    : mode === 'aging'
+                                      ? 'Click anywhere on this line to log an age milestone'
+                                      : isSelected
+                                        ? 'Selected line (Delete to remove)'
+                                        : 'Click to select this line'}
+                                </title>
+                              </polyline>
+                            )}
+                          </g>
+                        );
+                      })}
 
                     {/* Render current live drawing path */}
                     {isDrawing && currentPoints.length > 0 && (
@@ -3085,6 +3853,11 @@ export default function HandCanvas({
                                     fontSize="0.70"
                                     fontWeight="bold"
                                     textAnchor="middle"
+                                    paintOrder="stroke"
+                                    stroke="#18181b"
+                                    strokeWidth="0.35"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                     style={{ pointerEvents: 'none', userSelect: 'none' }}
                                   >
                                     {tick.label}
@@ -3159,7 +3932,7 @@ export default function HandCanvas({
                         )}
 
                         {/* 2.5 Life Line 30-Midpoint T-Frame Calibration Overlay */}
-                        {agingMethod === '30-midpoint' && showLifeCalibrationGrid && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibrationGeometry.lifeStart && calibrationGeometry.mk && (
+                        {agingMethod === '30-midpoint' && showLifeCalibrationGrid && calibrationGeometry.lifeStart && calibrationGeometry.mk && (
                           <g className="life-calibration-grid">
                             {/* Baseline chord connecting Life origin (0) to Maṇibandha Kendra (75) */}
                             <line
@@ -3174,19 +3947,27 @@ export default function HandCanvas({
                             />
 
                             {/* Transverse T-Bar connecting Mercury Crease across to Age 30 Midpoint */}
-                            {calibrationGeometry.mercurySandhi && calibrationGeometry.life30 && (
-                              <line
-                                x1={calibrationGeometry.mercurySandhi.x}
-                                y1={calibrationGeometry.mercurySandhi.y}
-                                x2={calibrationGeometry.life30.x}
-                                y2={calibrationGeometry.life30.y}
-                                stroke="#0284c7"
-                                strokeWidth="1.6"
-                                strokeDasharray="3,2"
-                                opacity="0.9"
-                                vectorEffect="non-scaling-stroke"
-                              />
-                            )}
+                            {calibrationGeometry.mercurySandhi && calibrationGeometry.life30 && (() => {
+                              const ms = calibrationGeometry.mercurySandhi;
+                              const l30 = calibrationGeometry.life30;
+                              const dx = l30.x - ms.x;
+                              const dy = l30.y - ms.y;
+                              const extX = l30.x + dx * 0.15;
+                              const extY = l30.y + dy * 0.15;
+                              return (
+                                <line
+                                  x1={ms.x}
+                                  y1={ms.y}
+                                  x2={extX}
+                                  y2={extY}
+                                  stroke="#0284c7"
+                                  strokeWidth="1.8"
+                                  strokeDasharray="3,2"
+                                  opacity="0.95"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                              );
+                            })()}
 
                             {/* Age 30 Midpoint Crossing Hub - Compact badge with minor padding */}
                             {calibrationGeometry.life30 && (
@@ -3206,6 +3987,11 @@ export default function HandCanvas({
                                   fontSize="0.85"
                                   fontWeight="bold"
                                   textAnchor="middle"
+                                  paintOrder="stroke"
+                                  stroke="#18181b"
+                                  strokeWidth="0.4"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
                                   style={{ pointerEvents: 'none', userSelect: 'none' }}
                                 >
                                   30
@@ -3216,8 +4002,33 @@ export default function HandCanvas({
                             {/* Binary Halving Projection Lines (Before 30: 7.5, 15, 22.5; After 30: 41.25, 47, 52.5) */}
                             {(() => {
                               const isThumbOnRight = calibrationGeometry.lifeStart.x > calibrationGeometry.mk.x;
-                              const projDir = isThumbOnRight ? 1 : -1;
+                              const fallbackDir = isThumbOnRight ? 1 : -1;
                               const projLen = 8.5;
+
+                              // Direction parallel to the line joining the 30 midpoint and the ME (Mercury Sandhi) point
+                              let ux = fallbackDir;
+                              let uy = 0;
+
+                              if (calibrationGeometry.mercurySandhi && calibrationGeometry.life30) {
+                                const ms = calibrationGeometry.mercurySandhi;
+                                const l30 = calibrationGeometry.life30;
+                                const vx = l30.x - ms.x;
+                                const vy = l30.y - ms.y;
+                                const len = Math.hypot(vx, vy);
+                                if (len > 0.001) {
+                                  ux = vx / len;
+                                  uy = vy / len;
+                                  // Ensure the arrow points towards the Life Line / thumb side (same side as fallbackDir)
+                                  if (ux * fallbackDir < 0) {
+                                    ux = -ux;
+                                    uy = -uy;
+                                  }
+                                }
+                              }
+
+                              // Normal unit vector perpendicular to the arrow direction for arrowhead wings
+                              const nx = -uy;
+                              const ny = ux;
 
                               return [
                                 { pt: calibrationGeometry.life7_5, label: '7.5' },
@@ -3229,30 +4040,53 @@ export default function HandCanvas({
                               ]
                                 .filter((item): item is { pt: Point2D; label: string } => !!item.pt)
                                 .map(({ pt, label }) => {
-                                  const xTarget = pt.x + projDir * projLen;
+                                  const inwardLen = projLen * 0.75;
+                                  const startX = pt.x - ux * inwardLen;
+                                  const startY = pt.y - uy * inwardLen;
+                                  const targetX = pt.x + ux * projLen;
+                                  const targetY = pt.y + uy * projLen;
+
+                                  // Arrowhead rotated smoothly along the arrow vector
+                                  const arrowHeadLen = 1.6;
+                                  const arrowHeadHalfW = 0.6;
+                                  const backX = targetX - ux * arrowHeadLen;
+                                  const backY = targetY - uy * arrowHeadLen;
+                                  const wing1X = backX + nx * arrowHeadHalfW;
+                                  const wing1Y = backY + ny * arrowHeadHalfW;
+                                  const wing2X = backX - nx * arrowHeadHalfW;
+                                  const wing2Y = backY - ny * arrowHeadHalfW;
+
+                                  const labelOffsetX = pt.x;
+                                  const labelOffsetY = pt.y - 0.7;
+
                                   return (
                                     <g key={`life-proj-${label}`}>
                                       <line
-                                        x1={pt.x}
-                                        y1={pt.y}
-                                        x2={xTarget}
-                                        y2={pt.y}
+                                        x1={startX}
+                                        y1={startY}
+                                        x2={targetX}
+                                        y2={targetY}
                                         stroke="#0284c7"
                                         strokeWidth="1.2"
                                         strokeDasharray="1.5,1.5"
                                         vectorEffect="non-scaling-stroke"
                                       />
                                       <polygon
-                                        points={`${xTarget},${pt.y} ${xTarget - projDir * 1.6},${pt.y - 0.6} ${xTarget - projDir * 1.6},${pt.y + 0.6}`}
+                                        points={`${targetX},${targetY} ${wing1X},${wing1Y} ${wing2X},${wing2Y}`}
                                         fill="#0284c7"
                                       />
                                       <text
-                                        x={pt.x - projDir * 1.2}
-                                        y={pt.y - 0.4}
-                                        fill="#0284c7"
+                                        x={labelOffsetX}
+                                        y={labelOffsetY}
+                                        fill="#38bdf8"
                                         fontSize="0.75"
                                         fontWeight="bold"
-                                        textAnchor={projDir > 0 ? 'end' : 'start'}
+                                        textAnchor="middle"
+                                        paintOrder="stroke"
+                                        stroke="#18181b"
+                                        strokeWidth="0.4"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
                                         style={{ pointerEvents: 'none', userSelect: 'none' }}
                                       >
                                         {label}
@@ -3265,7 +4099,7 @@ export default function HandCanvas({
                         )}
 
                         {/* 2.6 Fate Line Saturn Axis & 30-Midpoint Calibration Overlay */}
-                        {agingMethod === '30-midpoint' && showFateCalibrationGrid && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_fate') && calibrationGeometry.saturnRoot && calibrationGeometry.mk && (
+                        {agingMethod === '30-midpoint' && showFateCalibrationGrid && calibrationGeometry.saturnRoot && calibrationGeometry.mk && (
                           <g className="fate-calibration-grid">
                             {/* Vertical Axis from Maṇibandha Kendra (0) to Saturn Root (75) */}
                             <line
@@ -3279,22 +4113,41 @@ export default function HandCanvas({
                               vectorEffect="non-scaling-stroke"
                             />
 
-                            {/* Fate Age 30 Midpoint Hub - Compact badge */}
+                            {/* Fate Age 30 Midpoint Hub - Positioned cleanly on the left */}
                             {calibrationGeometry.fate30 && (
                               <g>
+                                {/* Center tick and anchor dot on the orange axis */}
+                                <line
+                                  x1={calibrationGeometry.fate30.x - 1.6}
+                                  y1={calibrationGeometry.fate30.y}
+                                  x2={calibrationGeometry.fate30.x + 1.6}
+                                  y2={calibrationGeometry.fate30.y}
+                                  stroke="#d97706"
+                                  strokeWidth="1.6"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                                <circle
+                                  cx={calibrationGeometry.fate30.x}
+                                  cy={calibrationGeometry.fate30.y}
+                                  r="0.45"
+                                  fill="#d97706"
+                                  stroke="#ffffff"
+                                  strokeWidth="0.15"
+                                />
+                                {/* Compact Age 30 Badge on the left at a slight distance */}
                                 <rect
-                                  x={calibrationGeometry.fate30.x - 1.5}
-                                  y={calibrationGeometry.fate30.y - 0.8}
-                                  width="3.0"
-                                  height="1.6"
-                                  rx="0.4"
+                                  x={calibrationGeometry.fate30.x - 4.8}
+                                  y={calibrationGeometry.fate30.y - 0.75}
+                                  width="2.6"
+                                  height="1.5"
+                                  rx="0.35"
                                   fill="#d97706"
                                 />
                                 <text
-                                  x={calibrationGeometry.fate30.x}
+                                  x={calibrationGeometry.fate30.x - 3.5}
                                   y={calibrationGeometry.fate30.y + 0.35}
                                   fill="#ffffff"
-                                  fontSize="0.85"
+                                  fontSize="0.80"
                                   fontWeight="bold"
                                   textAnchor="middle"
                                   style={{ pointerEvents: 'none', userSelect: 'none' }}
@@ -3325,11 +4178,17 @@ export default function HandCanvas({
                                     vectorEffect="non-scaling-stroke"
                                   />
                                   <text
-                                    x={pt.x + 2.4}
+                                    x={pt.x - 2.5}
                                     y={pt.y + 0.3}
-                                    fill="#d97706"
+                                    fill="#f59e0b"
                                     fontSize="0.75"
                                     fontWeight="bold"
+                                    textAnchor="end"
+                                    paintOrder="stroke"
+                                    stroke="#18181b"
+                                    strokeWidth="0.4"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                     style={{ pointerEvents: 'none', userSelect: 'none' }}
                                   >
                                     {label}
@@ -3403,14 +4262,14 @@ export default function HandCanvas({
                               />
                             )}
 
-                            {/* Rubberband line for Mercury 56-Year Scale (Step 2: from Point 1 to cursor) */}
-                            {activeCalibration.type === 'mercury' && activeCalibration.tempPoint && calibCursorPos && (
+                            {/* Rubberband line for Mercury 56-Year Scale (from M0 to cursor) */}
+                            {activeCalibration.type === 'mercury_56' && activeCalibration.tempPoint && calibCursorPos && (
                               <line
                                 x1={activeCalibration.tempPoint.x}
                                 y1={activeCalibration.tempPoint.y}
                                 x2={calibCursorPos.x}
                                 y2={calibCursorPos.y}
-                                stroke="#f59e0b"
+                                stroke="#10b981"
                                 strokeWidth="2.0"
                                 strokeDasharray="3,2"
                                 opacity="0.85"
@@ -3421,7 +4280,7 @@ export default function HandCanvas({
                         )}
 
                         {/* 2.6. 18+6 Cadence Finger-Base Projections (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
-                        {agingMethod === '18-6-cadence' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_heart' || activeAgingDrawing?.lineCategory === 'line_head') && (() => {
+                        {agingMethod === '18-6-cadence' && (() => {
                           const pointsToRender = activeCalibration?.type === 'cadence'
                             ? activeCalibration.points || []
                             : calibAnchors?.cadence_points || [];
@@ -3429,7 +4288,7 @@ export default function HandCanvas({
                           if (pointsToRender.length === 0 && !calibCursorPos) return null;
 
                           // Find Heart Line drawing if present to calculate intersections
-                          const heartDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_heart') || 
+                          const heartDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_heart') ||
                             (activeAgingDrawing?.lineCategory === 'line_heart' ? activeAgingDrawing : null);
                           const heartPts = heartDrawing?.points;
 
@@ -3506,50 +4365,73 @@ export default function HandCanvas({
                                     )}
 
                                     {/* Intersection mark on the Heart Line */}
-                                    {showCadenceIntersections && intersection && (
-                                      <g>
-                                        <circle
-                                          cx={intersection.x}
-                                          cy={intersection.y}
-                                          r="0.9"
-                                          fill={strokeColor}
-                                          stroke="#ffffff"
-                                          strokeWidth="0.3"
-                                        />
-                                        {/* Cross tick across the heart line */}
-                                        <line
-                                          x1={intersection.x - 1.4}
-                                          y1={intersection.y}
-                                          x2={intersection.x + 1.4}
-                                          y2={intersection.y}
-                                          stroke={strokeColor}
-                                          strokeWidth="1.2"
-                                          vectorEffect="non-scaling-stroke"
-                                        />
-                                        {/* Age badge on the Heart Line */}
-                                        <rect
-                                          x={intersection.x - 1.8}
-                                          y={intersection.y + 0.8}
-                                          width="3.6"
-                                          height="1.8"
-                                          rx="0.5"
-                                          fill="#1c1917"
-                                          stroke={strokeColor}
-                                          strokeWidth="0.25"
-                                        />
-                                        <text
-                                          x={intersection.x}
-                                          y={intersection.y + 2.05}
-                                          fill="#fecdd3"
-                                          fontSize="0.95"
-                                          fontWeight="bold"
-                                          textAnchor="middle"
-                                          style={{ pointerEvents: 'none', userSelect: 'none' }}
-                                        >
-                                          {age}
-                                        </text>
-                                      </g>
-                                    )}
+                                    {showCadenceIntersections && intersection && (() => {
+                                      const isStaggered = isGap; // Stagger ages 24, 48, 72 below 18, 42, 66 to completely prevent overlap
+                                      const badgeW = age >= 10 ? 1.9 : 1.3;
+                                      const badgeH = 1.0;
+                                      const badgeY = isStaggered ? intersection.y + 1.65 : intersection.y + 0.45;
+
+                                      return (
+                                        <g key={`cadence-isect-${age}`} className="cadence-intersection-group">
+                                          {/* Connecting hairline to staggered badge */}
+                                          {isStaggered && (
+                                            <line
+                                              x1={intersection.x}
+                                              y1={intersection.y + 0.35}
+                                              x2={intersection.x}
+                                              y2={badgeY}
+                                              stroke={strokeColor}
+                                              strokeWidth="0.6"
+                                              strokeDasharray="0.8,0.8"
+                                              opacity="0.65"
+                                              vectorEffect="non-scaling-stroke"
+                                            />
+                                          )}
+                                          {/* Tiny perpendicular cross tick across the heart line */}
+                                          <line
+                                            x1={intersection.x - 0.65}
+                                            y1={intersection.y}
+                                            x2={intersection.x + 0.65}
+                                            y2={intersection.y}
+                                            stroke={strokeColor}
+                                            strokeWidth="1.0"
+                                            vectorEffect="non-scaling-stroke"
+                                          />
+                                          {/* Subtle, precise anchor dot on the Heart Line */}
+                                          <circle
+                                            cx={intersection.x}
+                                            cy={intersection.y}
+                                            r="0.36"
+                                            fill={strokeColor}
+                                            stroke="#ffffff"
+                                            strokeWidth="0.12"
+                                            vectorEffect="non-scaling-stroke"
+                                          />
+                                          {/* Very small, clean age badge on the Heart Line */}
+                                          <rect
+                                            x={intersection.x - badgeW / 2}
+                                            y={badgeY}
+                                            width={badgeW}
+                                            height={badgeH}
+                                            rx="0.25"
+                                            fill="#18181b"
+                                            stroke={strokeColor}
+                                            strokeWidth="0.2"
+                                          />
+                                          <text
+                                            x={intersection.x}
+                                            y={badgeY + 0.72}
+                                            fill={isGap ? '#fde68a' : '#fecdd3'}
+                                            fontSize="0.58"
+                                            fontWeight="bold"
+                                            textAnchor="middle"
+                                            style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                          >
+                                            {age}
+                                          </text>
+                                        </g>
+                                      );
+                                    })()}
                                   </g>
                                 );
                               })}
@@ -3574,176 +4456,391 @@ export default function HandCanvas({
                           );
                         })()}
 
-                        {/* 2.8. Mercury Mount 56-Year Timing Scale (Lecture 28 §4.2: 0..56 yrs) */}
-                        {agingMethod === 'mercury-56' && showMercuryCalibrationScale && (() => {
-                          const p0 = calibAnchors?.mercury_heart_level;
-                          const p56 = calibAnchors?.mercury_base;
+                        {/* 2.7. Mercury Mount 56-Year Scale Overlay (Lecture 28 §4.2) */}
+                        {agingMethod === 'mercury-56' && mercury56Geometry && (
+                          <g className="mercury-56-mount-overlay">
+                            {/* Soft mount highlight band */}
+                            <line
+                              x1={mercury56Geometry.p0.x}
+                              y1={mercury56Geometry.p0.y}
+                              x2={mercury56Geometry.p56.x}
+                              y2={mercury56Geometry.p56.y}
+                              stroke="#10b981"
+                              strokeWidth="6.0"
+                              strokeLinecap="round"
+                              opacity="0.12"
+                              vectorEffect="non-scaling-stroke"
+                            />
 
-                          if (!p0 || !p56) return null;
+                            {/* Primary 0 -> 56 timing axis */}
+                            <line
+                              x1={mercury56Geometry.p0.x}
+                              y1={mercury56Geometry.p0.y}
+                              x2={mercury56Geometry.p56.x}
+                              y2={mercury56Geometry.p56.y}
+                              stroke="#10b981"
+                              strokeWidth="2.0"
+                              strokeDasharray="3,2"
+                              vectorEffect="non-scaling-stroke"
+                            />
 
-                          const dx = p56.x - p0.x;
-                          const dy = p56.y - p0.y;
-                          const len = Math.hypot(dx, dy) || 1;
+                            {/* Horizontal guideline projections across the Mercury mount to date marriage lines */}
+                            {mercury56Geometry.milestones.map(({ pt, age, isMajor }) => {
+                              const guideLen = isMajor ? 7.5 : 4.5;
+                              const inwardX = pt.x + mercury56Geometry.nx * guideLen;
+                              const inwardY = pt.y + mercury56Geometry.ny * guideLen;
+                              const outwardX = pt.x - mercury56Geometry.nx * (isMajor ? 1.8 : 0.8);
+                              const outwardY = pt.y - mercury56Geometry.ny * (isMajor ? 1.8 : 0.8);
 
-                          // Compute perpendicular unit normal pointing inward towards the palm center (x ≈ 50%)
-                          let nx = -dy / len;
-                          let ny = dx / len;
-                          if (p0.x > 50 && nx > 0) {
-                            nx = -nx;
-                            ny = -ny;
-                          } else if (p0.x < 50 && nx < 0) {
-                            nx = -nx;
-                            ny = -ny;
-                          }
+                              const labelOffset = isMajor ? 3.0 : 2.0;
+                              const labelX = pt.x - mercury56Geometry.nx * labelOffset;
+                              const labelY = pt.y - mercury56Geometry.ny * labelOffset + 0.35;
 
-                          // Classical milestones on 0..56 scale (Lecture 28 §4.2)
-                          const milestones = [
-                            { age: 0, frac: 0, isMajor: true, label: '0' },
-                            { age: 14, frac: 14 / 56, isMajor: false, label: '14' },
-                            { age: 21, frac: 21 / 56, isMajor: false, label: '21' },
-                            { age: 28, frac: 28 / 56, isMajor: true, label: '28' },
-                            { age: 35, frac: 35 / 56, isMajor: false, label: '35' },
-                            { age: 42, frac: 42 / 56, isMajor: true, label: '42' },
-                            { age: 49, frac: 49 / 56, isMajor: false, label: '49' },
-                            { age: 56, frac: 1.0, isMajor: true, label: '56' },
-                          ];
+                              return (
+                                <g key={`mercury-milestone-${age}`}>
+                                  {/* Subtle horizontal dashed guide ray */}
+                                  <line
+                                    x1={outwardX}
+                                    y1={outwardY}
+                                    x2={inwardX}
+                                    y2={inwardY}
+                                    stroke="#10b981"
+                                    strokeWidth={isMajor ? '1.4' : '0.9'}
+                                    strokeDasharray={isMajor ? '2,2' : '1.5,1.5'}
+                                    opacity={isMajor ? '0.75' : '0.45'}
+                                    vectorEffect="non-scaling-stroke"
+                                  />
 
-                          return (
-                            <g className="mercury-56-scale-overlay">
-                              {/* Main vertical scale axis */}
-                              <line
-                                x1={p0.x}
-                                y1={p0.y}
-                                x2={p56.x}
-                                y2={p56.y}
-                                stroke="#f59e0b"
-                                strokeWidth="2.2"
-                                vectorEffect="non-scaling-stroke"
-                                strokeLinecap="round"
-                                style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}
-                              />
+                                  {/* Anchor tick dot on axis */}
+                                  <circle
+                                    cx={pt.x}
+                                    cy={pt.y}
+                                    r={isMajor ? '0.5' : '0.3'}
+                                    fill={isMajor ? '#10b981' : '#34d399'}
+                                    stroke="#ffffff"
+                                    strokeWidth="0.12"
+                                  />
 
-                              {/* Clickable transparent hit area along the scale */}
-                              <line
-                                x1={p0.x}
-                                y1={p0.y}
-                                x2={p56.x}
-                                y2={p56.y}
-                                stroke="transparent"
-                                strokeWidth="14"
-                                vectorEffect="non-scaling-stroke"
-                                className="cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const coords = getPointCoords(e.clientX, e.clientY);
-                                  const nearest = getNearestPointOnPolyline([p0, p56], coords);
-                                  if (nearest) {
-                                    const age = parseFloat((nearest.fraction * 56).toFixed(1));
-                                    setAgeEventModal({
-                                      isOpen: true,
-                                      age,
-                                      point: nearest.point,
-                                      lineCategory: 'line_marriage',
-                                      sign: 'Marriage Event / Union (Vivāha)',
-                                      note: `Vivāha Rekhā mark at age ${age}`,
-                                    });
-                                    setHoveredAgeData(null);
-                                  }
-                                }}
-                              >
-                                <title>Click anywhere on Mercury Mount scale to log marriage event</title>
-                              </line>
+                                  {/* Optional static milestone age numbers on hand (skipped by default for clean hand) */}
+                                  {showMercuryAgeLabels && (
+                                    isMajor ? (
+                                      <g>
+                                        <rect
+                                          x={labelX - 1.4}
+                                          y={labelY - 1.0}
+                                          width="2.8"
+                                          height="1.5"
+                                          rx="0.35"
+                                          fill={age === Math.round(mercury56Geometry.maxScale / 2) ? '#10b981' : '#18181b'}
+                                          stroke="#10b981"
+                                          strokeWidth="0.2"
+                                        />
+                                        <text
+                                          x={labelX}
+                                          y={labelY - 0.05}
+                                          fill={age === Math.round(mercury56Geometry.maxScale / 2) ? '#ffffff' : '#34d399'}
+                                          fontSize="0.75"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                        >
+                                          {age}
+                                        </text>
+                                      </g>
+                                    ) : (
+                                      <text
+                                        x={labelX}
+                                        y={labelY}
+                                        fill="#6ee7b7"
+                                        fontSize="0.65"
+                                        fontWeight="bold"
+                                        textAnchor="middle"
+                                        paintOrder="stroke"
+                                        stroke="#18181b"
+                                        strokeWidth="0.4"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                      >
+                                        {age}
+                                      </text>
+                                    )
+                                  )}
+                                </g>
+                              );
+                            })}
 
-                              {/* Ticks and Age Badges */}
-                              {milestones.map((m) => {
-                                const pt = { x: p0.x + m.frac * dx, y: p0.y + m.frac * dy };
-                                const tickLen = m.isMajor ? 3.0 : 1.8;
-                                const x2 = pt.x + nx * tickLen;
-                                const y2 = pt.y + ny * tickLen;
-                                const textX = pt.x + nx * (tickLen + 1.6);
-                                const textY = pt.y + ny * (tickLen + 1.6);
-                                const isMidpoint = m.age === 28;
+                            {/* Live interactive hover tracker on Mercury Mount */}
+                            {hoveredAgeData && (
+                              <g className="mercury-hover-indicator">
+                                {/* Horizontal ray projecting across mount at hovered height */}
+                                <line
+                                  x1={hoveredAgeData.point.x - mercury56Geometry.nx * 2.5}
+                                  y1={hoveredAgeData.point.y - mercury56Geometry.ny * 2.5}
+                                  x2={hoveredAgeData.point.x + mercury56Geometry.nx * 10.0}
+                                  y2={hoveredAgeData.point.y + mercury56Geometry.ny * 10.0}
+                                  stroke="#059669"
+                                  strokeWidth="1.5"
+                                  strokeDasharray="2.5,1.5"
+                                  opacity="0.95"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                                {/* Clean focal dot */}
+                                <circle
+                                  cx={hoveredAgeData.point.x}
+                                  cy={hoveredAgeData.point.y}
+                                  r="0.75"
+                                  fill="#10b981"
+                                  stroke="#ffffff"
+                                  strokeWidth="0.2"
+                                />
+                                {/* Dynamic age label: floating text with crisp outline, zero palm obstruction */}
+                                <text
+                                  x={hoveredAgeData.point.x + mercury56Geometry.nx * 2.2}
+                                  y={hoveredAgeData.point.y + mercury56Geometry.ny * 2.2 + 0.35}
+                                  fill="#34d399"
+                                  fontSize="0.8"
+                                  fontWeight="bold"
+                                  textAnchor={mercury56Geometry.nx >= 0 ? 'start' : 'end'}
+                                  paintOrder="stroke"
+                                  stroke="#18181b"
+                                  strokeWidth="0.45"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                >
+                                  {hoveredAgeData.age} yrs
+                                </text>
+                              </g>
+                            )}
+                          </g>
+                        )}
+
+                        {/* 2.8. 3-Line Average Method Overlay (Lecture 27 §3) */}
+                        {agingMethod === 'three-line-avg' && threeLineAvgGeometry && (
+                          <g className="three-line-avg-overlay">
+                            {(() => {
+                              const renderLineSystem = (
+                                path: Point2D[] | undefined,
+                                endFraction: number,
+                                endPt: Point2D | null | undefined,
+                                age: number | null | undefined,
+                                strokeColor: string,
+                                name: string,
+                                labelPrefix: string
+                              ) => {
+                                if (!path || path.length < 2) return null;
+                                const fullPointsStr = path.map((p) => `${p.x},${p.y}`).join(' ');
+
+                                // Milestones along 100y path: 25, 50, 75, 100
+                                const milestones = [25, 50, 75, 100];
 
                                 return (
-                                  <g
-                                    key={`mercury-tick-${m.age}`}
-                                    className="cursor-pointer hover:opacity-90"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setAgeEventModal({
-                                        isOpen: true,
-                                        age: m.age,
-                                        point: pt,
-                                        lineCategory: 'line_marriage',
-                                        sign: isMidpoint ? 'Average Marriage Milestone (Vivāha Midpoint)' : 'Marriage Event / Union (Vivāha)',
-                                        note: `Mercury 56-yr scale: Vivāha event timing at age ${m.age}`,
-                                      });
-                                      setHoveredAgeData(null);
-                                    }}
-                                  >
-                                    {/* Perpendicular tick line extending into mount */}
-                                    <line
-                                      x1={pt.x}
-                                      y1={pt.y}
-                                      x2={x2}
-                                      y2={y2}
-                                      stroke={isMidpoint ? '#f59e0b' : m.isMajor ? '#fbbf24' : '#d97706'}
-                                      strokeWidth={m.isMajor ? '2.0' : '1.2'}
+                                  <g key={`three-line-${name}`}>
+                                    {/* 1. Underlying full 100-year theoretical guideline */}
+                                    <polyline
+                                      points={fullPointsStr}
+                                      fill="none"
+                                      stroke={strokeColor}
+                                      strokeWidth="1.8"
+                                      strokeDasharray="2.5,2.5"
+                                      opacity={0.45 * lineOpacity}
+                                      strokeOpacity={0.45 * lineOpacity}
                                       vectorEffect="non-scaling-stroke"
                                       strokeLinecap="round"
+                                      strokeLinejoin="round"
                                     />
-                                    {/* Anchor dot on axis */}
-                                    <circle
-                                      cx={pt.x}
-                                      cy={pt.y}
-                                      r={isMidpoint ? 0.9 : m.isMajor ? 0.75 : 0.45}
-                                      fill={isMidpoint ? '#f59e0b' : '#d97706'}
-                                      stroke="#ffffff"
-                                      strokeWidth="0.25"
-                                    />
-                                    {/* Horizontal alignment guide across Mercury mount */}
-                                    {isMidpoint && (
-                                      <line
-                                        x1={pt.x}
-                                        y1={pt.y}
-                                        x2={pt.x + nx * 10}
-                                        y2={pt.y}
-                                        stroke="#f59e0b"
-                                        strokeWidth="1.0"
-                                        strokeDasharray="2,2"
-                                        opacity="0.6"
-                                        vectorEffect="non-scaling-stroke"
-                                      />
+
+                                    {/* 2. Vibrant active portion up to line termination */}
+                                    {endPt && (() => {
+                                      const totalLen = calculatePolylineLength(path);
+                                      if (totalLen <= 0) return null;
+                                      const targetDist = endFraction * totalLen;
+                                      let accumulated = 0;
+                                      const subPts: Point2D[] = [path[0]];
+                                      for (let i = 0; i < path.length - 1; i++) {
+                                        const d = Math.hypot(path[i + 1].x - path[i].x, path[i + 1].y - path[i].y);
+                                        if (accumulated + d >= targetDist) {
+                                          subPts.push(endPt);
+                                          break;
+                                        } else {
+                                          accumulated += d;
+                                          subPts.push(path[i + 1]);
+                                        }
+                                      }
+                                      const subStr = subPts.map((p) => `${p.x},${p.y}`).join(' ');
+                                      return (
+                                        <>
+                                          {/* Glow filter underlay */}
+                                          <polyline
+                                            points={subStr}
+                                            fill="none"
+                                            stroke={strokeColor}
+                                            strokeWidth="4.5"
+                                            opacity={0.25 * lineOpacity}
+                                            strokeOpacity={0.25 * lineOpacity}
+                                            vectorEffect="non-scaling-stroke"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                          {/* Solid main stroke */}
+                                          <polyline
+                                            points={subStr}
+                                            fill="none"
+                                            stroke={strokeColor}
+                                            strokeWidth="2.4"
+                                            opacity={lineOpacity}
+                                            strokeOpacity={lineOpacity}
+                                            vectorEffect="non-scaling-stroke"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </>
+                                      );
+                                    })()}
+
+                                    {/* 3. Milestone tick marks at 25, 50, 75, 100 */}
+                                    {milestones.map((mAge) => {
+                                      const frac = mAge / 100;
+                                      const geom = getPointAndNormalAtFraction(path, frac);
+                                      if (!geom) return null;
+                                      const { point, normal } = geom;
+                                      const tickLen = mAge === 50 || mAge === 100 ? 1.8 : 1.2;
+                                      const x1 = point.x - normal.x * (tickLen / 2);
+                                      const y1 = point.y - normal.y * (tickLen / 2);
+                                      const x2 = point.x + normal.x * (tickLen / 2);
+                                      const y2 = point.y + normal.y * (tickLen / 2);
+                                      const textX = point.x + normal.x * (tickLen + 1.2);
+                                      const textY = point.y + normal.y * (tickLen + 1.2) + 0.35;
+                                      return (
+                                        <g key={`${labelPrefix}-m-${mAge}`} opacity={lineOpacity}>
+                                          <line
+                                            x1={x1}
+                                            y1={y1}
+                                            x2={x2}
+                                            y2={y2}
+                                            stroke={strokeColor}
+                                            strokeWidth="1.2"
+                                            opacity="0.8"
+                                            vectorEffect="non-scaling-stroke"
+                                          />
+                                          <text
+                                            x={textX}
+                                            y={textY}
+                                            fill={strokeColor}
+                                            fontSize="0.65"
+                                            fontWeight="bold"
+                                            textAnchor="middle"
+                                            style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                          >
+                                            {mAge}
+                                          </text>
+                                        </g>
+                                      );
+                                    })}
+
+                                    {/* 4. Termination Endpoint Marker */}
+                                    {endPt && (
+                                      <g opacity={lineOpacity}>
+                                        {/* Outer pulse circle */}
+                                        <circle
+                                          cx={endPt.x}
+                                          cy={endPt.y}
+                                          r="1.4"
+                                          fill={strokeColor}
+                                          opacity="0.3"
+                                        />
+                                        {/* Core circle */}
+                                        <circle
+                                          cx={endPt.x}
+                                          cy={endPt.y}
+                                          r="0.8"
+                                          fill={strokeColor}
+                                          stroke="#ffffff"
+                                          strokeWidth="0.25"
+                                        />
+                                      </g>
                                     )}
-                                    {/* Age Badge */}
-                                    <rect
-                                      x={textX - (isMidpoint ? 2.5 : 2.0)}
-                                      y={textY - 1.1}
-                                      width={isMidpoint ? 5.0 : 4.0}
-                                      height="2.2"
-                                      rx="0.5"
-                                      fill={isMidpoint ? '#b45309' : '#1c1917'}
-                                      stroke={isMidpoint ? '#fbbf24' : '#f59e0b'}
-                                      strokeWidth={isMidpoint ? '0.35' : '0.2'}
-                                      opacity="0.95"
-                                    />
-                                    <text
-                                      x={textX}
-                                      y={textY + 0.55}
-                                      fill={isMidpoint ? '#ffffff' : '#fef08a'}
-                                      fontSize={isMidpoint ? '1.1' : '0.95'}
-                                      fontWeight="bold"
-                                      textAnchor="middle"
-                                      style={{ pointerEvents: 'none', userSelect: 'none' }}
-                                    >
-                                      {m.label}
-                                    </text>
                                   </g>
                                 );
-                              })}
-                            </g>
-                          );
-                        })()}
+                              };
+
+                              return (
+                                <>
+                                  {/* Life Line (Emerald) */}
+                                  {renderLineSystem(
+                                    threeLineAvgGeometry.lifePath,
+                                    threeLineAvgGeometry.lifeFraction,
+                                    threeLineAvgGeometry.lifeEndPoint,
+                                    threeLineAvgGeometry.lifeAge,
+                                    '#10b981',
+                                    'Life',
+                                    'life'
+                                  )}
+
+                                  {/* Heart Line (Rose) */}
+                                  {renderLineSystem(
+                                    threeLineAvgGeometry.heartPath,
+                                    threeLineAvgGeometry.heartFraction,
+                                    threeLineAvgGeometry.heartEndPoint,
+                                    threeLineAvgGeometry.heartAge,
+                                    '#f43f5e',
+                                    'Heart',
+                                    'heart'
+                                  )}
+
+                                  {/* Mind / Head Line (Indigo) */}
+                                  {renderLineSystem(
+                                    threeLineAvgGeometry.headPath,
+                                    threeLineAvgGeometry.headFraction,
+                                    threeLineAvgGeometry.headEndPoint,
+                                    threeLineAvgGeometry.headAge,
+                                    '#6366f1',
+                                    'Mind',
+                                    'head'
+                                  )}
+
+                                  {/* Live Hover Tracker along any of the 3 lines */}
+                                  {hoveredAgeData && (
+                                    <g className="three-line-hover-indicator">
+                                      <circle
+                                        cx={hoveredAgeData.point.x}
+                                        cy={hoveredAgeData.point.y}
+                                        r="1.0"
+                                        fill="#f59e0b"
+                                        stroke="#ffffff"
+                                        strokeWidth="0.25"
+                                      />
+                                      <g>
+                                        <rect
+                                          x={hoveredAgeData.point.x - 3.8}
+                                          y={hoveredAgeData.point.y - 3.0}
+                                          width="7.6"
+                                          height="1.9"
+                                          rx="0.4"
+                                          fill="#0c0a09"
+                                          stroke="#f59e0b"
+                                          strokeWidth="0.25"
+                                        />
+                                        <text
+                                          x={hoveredAgeData.point.x}
+                                          y={hoveredAgeData.point.y - 1.7}
+                                          fill="#ffffff"
+                                          fontSize="0.75"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                        >
+                                          {hoveredAgeData.label || `${hoveredAgeData.age} yrs`}
+                                        </text>
+                                      </g>
+                                    </g>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </g>
+                        )}
 
                         {/* 3. Geometric Axial Grid */}
                         {showArvindJiAxialGrid && (() => {
@@ -3947,46 +5044,80 @@ export default function HandCanvas({
                         })()}
 
                         {/* 4. Hover Age Target & Tooltip */}
-                        {hoveredAgeData && !ageEventModal?.isOpen && (
+                        {hoveredAgeData && !ageEventModal?.isOpen && agingMethod !== 'three-line-avg' && agingMethod !== 'mercury-56' && (
                           <g className="hover-age-cursor" style={{ pointerEvents: 'none' }}>
+                            {/* Moving perpendicular / transverse projection line (30-midpoint lines) */}
+                            {hoveredAgeData.projectionLine && (
+                              <line
+                                x1={hoveredAgeData.projectionLine.p1.x}
+                                y1={hoveredAgeData.projectionLine.p1.y}
+                                x2={hoveredAgeData.projectionLine.p2.x}
+                                y2={hoveredAgeData.projectionLine.p2.y}
+                                stroke={hoveredAgeData.projectionLine.strokeColor}
+                                strokeWidth="1.5"
+                                strokeDasharray="2.5,1.5"
+                                opacity="0.95"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
                             <circle
                               cx={hoveredAgeData.point.x}
                               cy={hoveredAgeData.point.y}
-                              r="1.4"
-                              fill="#f59e0b"
-                              fillOpacity="0.25"
-                              stroke="#f59e0b"
-                              strokeWidth="0.3"
+                              r={hoveredAgeData.projectionLine ? "0.8" : "1.4"}
+                              fill={hoveredAgeData.projectionLine ? hoveredAgeData.projectionLine.strokeColor : "#f59e0b"}
+                              fillOpacity="0.2"
+                              stroke={hoveredAgeData.projectionLine ? hoveredAgeData.projectionLine.strokeColor : "#f59e0b"}
+                              strokeWidth="0.25"
                             />
                             <circle
                               cx={hoveredAgeData.point.x}
                               cy={hoveredAgeData.point.y}
-                              r="0.7"
-                              fill="#d97706"
+                              r={hoveredAgeData.projectionLine ? "0.4" : "0.7"}
+                              fill={hoveredAgeData.projectionLine ? hoveredAgeData.projectionLine.strokeColor : "#d97706"}
                               stroke="#ffffff"
-                              strokeWidth="0.3"
+                              strokeWidth="0.2"
                             />
-                            <rect
-                              x={hoveredAgeData.point.x - 8.5}
-                              y={hoveredAgeData.point.y - 4.5}
-                              width="17"
-                              height="3.4"
-                              rx="0.6"
-                              fill="#1c1917"
-                              stroke="#f59e0b"
-                              strokeWidth="0.3"
-                            />
-                            <text
-                              x={hoveredAgeData.point.x}
-                              y={hoveredAgeData.point.y - 2.3}
-                              fill="#fef08a"
-                              fontSize="1.0"
-                              fontWeight="bold"
-                              textAnchor="middle"
-                              style={{ pointerEvents: 'none', userSelect: 'none' }}
-                            >
-                              ⏳ {hoveredAgeData.label} (Click)
-                            </text>
+                            {(() => {
+                              const is30Midpoint = agingMethod === '30-midpoint' && !!hoveredAgeData.projectionLine;
+                              const displayText = is30Midpoint ? hoveredAgeData.label : `⏳ ${hoveredAgeData.label} (Click)`;
+                              const boxWidth = is30Midpoint ? 5.6 : 17;
+                              const boxHeight = is30Midpoint ? 1.7 : 3.4;
+                              const strokeCol = hoveredAgeData.projectionLine?.strokeColor || '#f59e0b';
+                              const isNearTop = hoveredAgeData.point.y < 5.0;
+                              const boxY = isNearTop
+                                ? hoveredAgeData.point.y + 1.6
+                                : hoveredAgeData.point.y - (is30Midpoint ? 2.5 : 4.5);
+                              const textY = isNearTop
+                                ? hoveredAgeData.point.y + (is30Midpoint ? 2.8 : 3.9)
+                                : hoveredAgeData.point.y - (is30Midpoint ? 1.3 : 2.3);
+
+                              return (
+                                <g>
+                                  <rect
+                                    x={hoveredAgeData.point.x - boxWidth / 2}
+                                    y={boxY}
+                                    width={boxWidth}
+                                    height={boxHeight}
+                                    rx={is30Midpoint ? "0.85" : "0.5"}
+                                    fill="#09090b"
+                                    fillOpacity={is30Midpoint ? "0.55" : "0.92"}
+                                    stroke={strokeCol}
+                                    strokeWidth="0.2"
+                                  />
+                                  <text
+                                    x={hoveredAgeData.point.x}
+                                    y={textY}
+                                    fill="#ffffff"
+                                    fontSize={is30Midpoint ? "0.75" : "1.0"}
+                                    fontWeight="bold"
+                                    textAnchor="middle"
+                                    style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                  >
+                                    {displayText}
+                                  </text>
+                                </g>
+                              );
+                            })()}
                           </g>
                         )}
                       </g>
@@ -4142,19 +5273,13 @@ export default function HandCanvas({
                         }}
                       >
                         <div
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
+                          className={`w-2.5 h-2.5 rounded-full ${activeCalibration.type === 'manibandha'
                               ? 'bg-amber-500/70 border border-white/80'
                               : 'bg-sky-500/70 border border-white/80'
-                          } shadow-xs flex items-center justify-center`}
+                            } shadow-xs flex items-center justify-center`}
                         >
                           <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
                         </div>
-                        {activeCalibration.type === 'mercury' && (
-                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8px] font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
-                            Age 0
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -4169,17 +5294,11 @@ export default function HandCanvas({
                         }}
                       >
                         <div
-                          className={`w-2 h-2 rounded-full ${
-                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
+                          className={`w-2 h-2 rounded-full ${activeCalibration.type === 'manibandha'
                               ? 'bg-amber-400/65 border border-white/70'
                               : 'bg-sky-400/65 border border-white/70'
-                          } shadow-xs`}
+                            } shadow-xs`}
                         />
-                        {activeCalibration.type === 'mercury' && (
-                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-stone-900 border border-amber-300 text-[8px] font-extrabold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
-                            Age 28
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -4194,17 +5313,11 @@ export default function HandCanvas({
                         }}
                       >
                         <div
-                          className={`w-2.5 h-2.5 rounded-full ${
-                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
+                          className={`w-2.5 h-2.5 rounded-full ${activeCalibration.type === 'manibandha'
                               ? 'bg-amber-500/70 border border-white/80'
                               : 'bg-sky-500/70 border border-white/80'
-                          } shadow-xs animate-ping`}
+                            } shadow-xs`}
                         />
-                        {activeCalibration.type === 'mercury' && (
-                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-200 border border-amber-400/50 text-[8px] font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
-                            Age 56
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -4263,20 +5376,18 @@ export default function HandCanvas({
                               }}
                             >
                               <div
-                                className={`w-2.5 h-2.5 rounded-full ${
-                                  isGap
+                                className={`w-2.5 h-2.5 rounded-full ${isGap
                                     ? 'bg-amber-500/75 ring-1 ring-amber-300/60'
                                     : 'bg-rose-500/75 ring-1 ring-rose-300/60'
-                                } border border-white/85 shadow-xs flex items-center justify-center`}
+                                  } border border-white/85 shadow-xs flex items-center justify-center`}
                               >
                                 <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
                               </div>
                               <div
-                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${
-                                  isGap
+                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${isGap
                                     ? 'bg-amber-950/90 text-amber-300 border-amber-500/40'
                                     : 'bg-stone-900/90 text-rose-300 border-rose-500/40'
-                                } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs border leading-tight`}
+                                  } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs border leading-tight`}
                               >
                                 {age}
                               </div>
@@ -4311,7 +5422,7 @@ export default function HandCanvas({
                 {activeView !== 'd1_chart' && (mode === 'aging' || mode === 'draw') && !activeCalibration && calibAnchors && (
                   <>
                     {/* Life Line Origin Anchor (L0) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibAnchors.life_start && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && showLifeCalibrationGrid && calibAnchors.life_start && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4339,7 +5450,7 @@ export default function HandCanvas({
                     )}
 
                     {/* Mercury Crease Sandhi Anchor (ME) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibAnchors.mercury_sandhi && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && showLifeCalibrationGrid && calibAnchors.mercury_sandhi && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4367,7 +5478,7 @@ export default function HandCanvas({
                     )}
 
                     {/* Saturn Mount / Middle Finger Base Joint Anchor (S75/80) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_fate') && calibAnchors.saturn_root && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && showFateCalibrationGrid && calibAnchors.saturn_root && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4394,8 +5505,8 @@ export default function HandCanvas({
                       </div>
                     )}
 
-                    {/* Maṇibandha Bracelet Edges (Wrist L & Wrist R) */}
-                    {calibAnchors.manibandha_start && (
+                    {/* Maṇibandha Bracelet Edges (Wrist L & Wrist R) - Only for 30-Midpoint method or Draw mode */}
+                    {((mode === 'aging' && agingMethod === '30-midpoint') || mode === 'draw') && calibAnchors.manibandha_start && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4419,7 +5530,7 @@ export default function HandCanvas({
                       </div>
                     )}
 
-                    {calibAnchors.manibandha_end && (
+                    {((mode === 'aging' && agingMethod === '30-midpoint') || mode === 'draw') && calibAnchors.manibandha_end && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4443,8 +5554,63 @@ export default function HandCanvas({
                       </div>
                     )}
 
+                    {/* Mercury Mount 56-Year Scale Draggable Anchor Handles (M0 & M56) */}
+                    {mode === 'aging' && agingMethod === 'mercury-56' && mercury56Geometry && (
+                      <>
+                        <div
+                          className="absolute cursor-move z-30 group"
+                          style={{
+                            left: `${mercury56Geometry.p0.x}%`,
+                            top: `${mercury56Geometry.p0.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            setDraggingCalibNode('mercury_heart_level');
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setDraggingCalibNode('mercury_heart_level');
+                          }}
+                          title="Mercury Mount Level (Age 0 / Heart Line Level) - Drag to fine-tune"
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/85 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                            <div className="w-0.5 h-0.5 bg-white rounded-full" />
+                          </div>
+                          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 text-[8px] text-emerald-300 font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border border-emerald-500/40">
+                            M0
+                          </div>
+                        </div>
+
+                        <div
+                          className="absolute cursor-move z-30 group"
+                          style={{
+                            left: `${mercury56Geometry.p56.x}%`,
+                            top: `${mercury56Geometry.p56.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            setDraggingCalibNode('mercury_base');
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setDraggingCalibNode('mercury_base');
+                          }}
+                          title={`Mercury Finger Root Crease (Age ${mercuryScaleMax}) - Drag to fine-tune`}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/85 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                            <div className="w-0.5 h-0.5 bg-white rounded-full" />
+                          </div>
+                          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/90 text-[8px] text-emerald-300 font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border border-emerald-500/40">
+                            M{mercuryScaleMax}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     {/* 18+6 Cadence Finger-Base Draggable Anchor Handles (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
-                    {mode === 'aging' && agingMethod === '18-6-cadence' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_heart' || activeAgingDrawing?.lineCategory === 'line_head') && calibAnchors.cadence_points && (
+                    {mode === 'aging' && agingMethod === '18-6-cadence' && calibAnchors.cadence_points && (
                       <>
                         {calibAnchors.cadence_points.map((pt, idx) => {
                           const age = CADENCE_AGES[idx];
@@ -4471,104 +5637,24 @@ export default function HandCanvas({
                               title={`18+6 Cadence Age ${age} (Drag to adjust finger base position)`}
                             >
                               <div
-                                className={`w-2.5 h-2.5 rounded-full ${
-                                  isGap
+                                className={`w-2.5 h-2.5 rounded-full ${isGap
                                     ? 'bg-amber-500/75 ring-1 ring-amber-300/60'
                                     : 'bg-rose-500/75 ring-1 ring-rose-300/60'
-                                } border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform`}
+                                  } border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform`}
                               >
                                 <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
                               </div>
                               <div
-                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${
-                                  isGap
+                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${isGap
                                     ? 'bg-amber-950/90 text-amber-300 border-amber-500/40'
                                     : 'bg-stone-900/90 text-rose-300 border-rose-500/40'
-                                } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border leading-tight`}
+                                  } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border leading-tight`}
                               >
                                 {age}
                               </div>
                             </div>
                           );
                         })}
-                      </>
-                    )}
-
-                    {/* Mercury Mount 56-Year Scale Draggable Anchor Handles (Age 0 and Age 56) */}
-                    {mode === 'aging' && agingMethod === 'mercury-56' && showMercuryCalibrationScale && (
-                      <>
-                        {/* Age 0 Anchor (Heart Line Level on Percussion) */}
-                        {calibAnchors.mercury_heart_level && (
-                          <div
-                            className="absolute cursor-move z-30 group"
-                            style={{
-                              left: `${calibAnchors.mercury_heart_level.x}%`,
-                              top: `${calibAnchors.mercury_heart_level.y}%`,
-                              transform: 'translate(-50%, -50%)',
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              setDraggingCalibNode('mercury_heart_level');
-                            }}
-                            onTouchStart={(e) => {
-                              e.stopPropagation();
-                              setDraggingCalibNode('mercury_heart_level');
-                            }}
-                            title="Heart Line Level (Age 0) - Drag to fine-tune"
-                          >
-                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80 ring-1 ring-amber-300/70 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
-                              <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
-                            </div>
-                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none leading-tight">
-                              0
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Age 56 Anchor (Mercury Finger Base Joint Crease) */}
-                        {calibAnchors.mercury_base && (
-                          <div
-                            className="absolute cursor-move z-30 group"
-                            style={{
-                              left: `${calibAnchors.mercury_base.x}%`,
-                              top: `${calibAnchors.mercury_base.y}%`,
-                              transform: 'translate(-50%, -50%)',
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              setDraggingCalibNode('mercury_base');
-                            }}
-                            onTouchStart={(e) => {
-                              e.stopPropagation();
-                              setDraggingCalibNode('mercury_base');
-                            }}
-                            title="Mercury Finger Root Crease (Age 56) - Drag to fine-tune"
-                          >
-                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80 ring-1 ring-amber-300/70 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
-                              <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
-                            </div>
-                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none leading-tight">
-                              56
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Classical Midpoint Indicator (Age 28) */}
-                        {calibAnchors.mercury_heart_level && calibAnchors.mercury_base && (
-                          <div
-                            className="absolute pointer-events-none z-30"
-                            style={{
-                              left: `${(calibAnchors.mercury_heart_level.x + calibAnchors.mercury_base.x) / 2}%`,
-                              top: `${(calibAnchors.mercury_heart_level.y + calibAnchors.mercury_base.y) / 2}%`,
-                              transform: 'translate(-50%, -50%)',
-                            }}
-                          >
-                            <div className="w-2 h-2 rounded-full bg-amber-400 border border-white/90 shadow-xs" />
-                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-stone-900 border border-amber-300 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded whitespace-nowrap shadow-md leading-tight">
-                              28
-                            </div>
-                          </div>
-                        )}
                       </>
                     )}
                   </>
@@ -4626,6 +5712,46 @@ export default function HandCanvas({
                       )}
                     </div>
                   ))}
+
+                {/* 3-Line Average Draggable Termination Handles (Life, Heart, Mind) */}
+                {activeView !== 'd1_chart' && mode === 'aging' && agingMethod === 'three-line-avg' && threeLineAvgGeometry && (
+                  <>
+                    {[
+                      { key: 'life' as const, label: 'Life End', colorBg: 'bg-emerald-600', ringColor: 'ring-emerald-400', pt: threeLineAvgGeometry.lifeEndPoint, age: threeLineAvgGeometry.lifeAge },
+                      { key: 'heart' as const, label: 'Heart End', colorBg: 'bg-rose-600', ringColor: 'ring-rose-400', pt: threeLineAvgGeometry.heartEndPoint, age: threeLineAvgGeometry.heartAge },
+                      { key: 'head' as const, label: 'Mind End', colorBg: 'bg-indigo-600', ringColor: 'ring-indigo-400', pt: threeLineAvgGeometry.headEndPoint, age: threeLineAvgGeometry.headAge },
+                    ].map(({ key, label, colorBg, ringColor, pt, age }) => {
+                      if (!pt) return null;
+                      return (
+                        <div
+                          key={`three-line-handle-${key}`}
+                          className="absolute cursor-move z-30 group"
+                          style={{
+                            left: `${pt.x}%`,
+                            top: `${pt.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            setDraggingThreeLineNode(key);
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setDraggingThreeLineNode(key);
+                          }}
+                          title={`Drag to slide ${label} (Current: ${age} yrs)`}
+                        >
+                          <div className={`w-3.5 h-3.5 rounded-full ${colorBg} border-2 border-white shadow-md ring-2 ${ringColor} flex items-center justify-center transition-transform hover:scale-125`}>
+                            <div className="w-1 h-1 bg-white rounded-full" />
+                          </div>
+                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-stone-900/90 text-white text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-sm border border-stone-700 pointer-events-none leading-tight">
+                            {age}y
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
 
                 {/* Grid Handles */}
                 {activeView !== 'd1_chart' && mode === 'aging' && showArvindJiAxialGrid && (
@@ -4832,104 +5958,162 @@ export default function HandCanvas({
                   </p>
                 </div>
 
-                {/* Line Selection & Tagging */}
-                <div className="space-y-2 pt-3 border-t border-stone-800/80">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-stone-300">
-                      Line to Age
-                    </label>
-                    {activeAgingDrawing && (() => {
-                      let span = 0;
-                      for (let i = 1; i < activeAgingDrawing.points.length; i++) {
-                        const dx = activeAgingDrawing.points[i].x - activeAgingDrawing.points[i - 1].x;
-                        const dy = activeAgingDrawing.points[i].y - activeAgingDrawing.points[i - 1].y;
-                        span += Math.sqrt(dx * dx + dy * dy);
-                      }
-                      return (
-                        <span
-                          className="text-[10px] text-amber-400 font-mono"
-                          title="Traced polyline length as a percentage of palm span"
-                        >
-                          {Math.round(span)}% palm span
-                        </span>
-                      );
-                    })()}
-                  </div>
-
-                  {palmDrawings.length > 0 ? (
-                    <div className="space-y-2">
-                      <select
-                        className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
-                        value={activeAgingDrawing?.id || palmDrawings[0]?.id || ''}
-                        onChange={(e) => {
-                          const drawingId = e.target.value;
-                          setSelectedAgingDrawingId(drawingId);
-                          const d = drawings.find((item) => item.id === drawingId);
-                          if (d?.lineCategory) {
-                            setAgingLineCategory(d.lineCategory);
-                          }
-                        }}
-                      >
-                        {palmDrawings.map((d, i) => (
-                          <option key={d.id} value={d.id}>
-                            Line {i + 1} {d.lineCategory ? `— ${LINE_LABELS[d.lineCategory]}` : ''}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Tag Active Line Category */}
-                      {activeAgingDrawing && (
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          <span className="text-[10px] text-stone-400 shrink-0">Classify:</span>
-                          <select
-                            className="w-full bg-stone-800/80 border border-stone-700/80 text-stone-200 rounded px-2 py-1 text-[11px] cursor-pointer"
-                            value={activeAgingDrawing.lineCategory || agingLineCategory}
-                            onChange={(e) =>
-                              handleTagDrawingLineCategory(activeAgingDrawing.id, e.target.value as LineCategory)
-                            }
-                          >
-                            <option value="line_life">Life Line (Āyur Rekhā)</option>
-                            <option value="line_fate">Fate Line (Bhāgya Rekhā)</option>
-                            <option value="line_heart">Heart Line (Hṛdaya Rekhā)</option>
-                            <option value="line_head">Head Line (Mastiska Rekhā)</option>
-                            <option value="line_sun">Sun Line (Sūrya Rekhā)</option>
-                            <option value="line_mercury">Mercury Line (Budha Rekhā)</option>
-                            <option value="line_marriage">Marriage Line (Vivāha Rekhā)</option>
-                            <option value="other">Other Crease</option>
-                          </select>
-                        </div>
-                      )}
-                      {/* Active Line Isolation Toggle */}
-                      <div className="pt-1.5 pb-0.5">
-                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white select-none">
-                          <input
-                            type="checkbox"
-                            checked={isolateActiveAgingLine}
-                            onChange={(e) => setIsolateActiveAgingLine(e.target.checked)}
-                            className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
-                          />
-                          <span className="font-semibold text-stone-200">Focus Active Line Only</span>
+                {/* Drawn Lines Management & Selection */}
+                {agingMethod !== 'three-line-avg' && (
+                  <div className="space-y-2 pt-3 border-t border-stone-800/80">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <label className="text-[11px] font-bold text-stone-300">
+                          Drawn Lines
                         </label>
-                        <p className="text-[9.5px] text-stone-400 pl-5 leading-tight">
-                          Hides markers from other lines to prevent intermingling.
-                        </p>
+                        <span className="text-[10px] bg-stone-800 text-stone-400 px-1.5 py-0.2 rounded font-mono">
+                          {palmDrawings.length}
+                        </span>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          returnToAgingAfterTraceRef.current = true;
-                          setAgingLineCategory('line_life');
-                          setShowDrawings(true);
-                          setMode('draw');
-                        }}
-                        className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer border border-stone-700/60 shadow-xs"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                        + Trace Another Line on Hand
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {hiddenDrawingIds.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setHiddenDrawingIds([])}
+                            className="text-[9.5px] text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer underline"
+                            title="Unhide all hidden lines"
+                          >
+                            Show All
+                          </button>
+                        )}
+                        {activeAgingDrawing && (() => {
+                          let span = 0;
+                          for (let i = 1; i < activeAgingDrawing.points.length; i++) {
+                            const dx = activeAgingDrawing.points[i].x - activeAgingDrawing.points[i - 1].x;
+                            const dy = activeAgingDrawing.points[i].y - activeAgingDrawing.points[i - 1].y;
+                            span += Math.sqrt(dx * dx + dy * dy);
+                          }
+                          return (
+                            <span
+                              className="text-[10px] text-amber-400 font-mono"
+                              title="Active line length as percentage of palm span"
+                            >
+                              {Math.round(span)}% span
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
-                  ) : (
+
+                    {palmDrawings.length > 0 ? (
+                      <div className="space-y-2">
+                        {/* Scrollable, compact list of lines */}
+                        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-0.5 custom-scrollbar">
+                          {palmDrawings.map((d, i) => {
+                            let dSpan = 0;
+                            for (let k = 1; k < d.points.length; k++) {
+                              const dx = d.points[k].x - d.points[k - 1].x;
+                              const dy = d.points[k].y - d.points[k - 1].y;
+                              dSpan += Math.sqrt(dx * dx + dy * dy);
+                            }
+                            const isActive = activeAgingDrawing?.id === d.id;
+                            const isHidden = hiddenDrawingIds.includes(d.id);
+
+                            return (
+                              <div
+                                key={d.id}
+                                onClick={() => {
+                                  setSelectedAgingDrawingId(d.id);
+                                  setSelectedDrawingId(d.id);
+                                  if (d.lineCategory) setAgingLineCategory(d.lineCategory);
+                                }}
+                                className={`flex items-center justify-between gap-1.5 p-1.5 rounded-lg border transition-all cursor-pointer select-none ${
+                                  isActive
+                                    ? 'bg-amber-950/30 border-amber-500/70 shadow-xs ring-1 ring-amber-500/30'
+                                    : isHidden
+                                    ? 'bg-stone-900/40 border-stone-800/60 opacity-60 hover:opacity-85'
+                                    : 'bg-stone-850/80 border-stone-800 hover:border-stone-700 hover:bg-stone-800/70'
+                                }`}
+                                title="Click to select as active line for aging"
+                              >
+                                {/* Left indicator: color swatch + line number */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <div
+                                    className="w-2.5 h-2.5 rounded-full border border-white/40 shadow-xs shrink-0"
+                                    style={{ backgroundColor: d.color }}
+                                  />
+                                  <span
+                                    className={`text-[10.5px] font-bold ${
+                                      isActive ? 'text-amber-400' : 'text-stone-300'
+                                    }`}
+                                  >
+                                    #{i + 1}
+                                  </span>
+                                  <span className="text-[9px] text-stone-400 font-mono">
+                                    {Math.round(dSpan)}%
+                                  </span>
+                                </div>
+
+                                {/* Middle: Classification Selector */}
+                                <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                                  <select
+                                    value={d.lineCategory || 'other'}
+                                    onChange={(e) => {
+                                      handleTagDrawingLineCategory(d.id, e.target.value as LineCategory);
+                                      if (isActive) setAgingLineCategory(e.target.value as LineCategory);
+                                    }}
+                                    className="w-full bg-stone-900/90 border border-stone-700/80 text-stone-200 rounded px-1.5 py-0.5 text-[10.5px] font-medium cursor-pointer focus:outline-hidden focus:border-amber-500 truncate"
+                                  >
+                                    <option value="line_life">Life (Āyur)</option>
+                                    <option value="line_fate">Fate (Bhāgya)</option>
+                                    <option value="line_heart">Heart (Hṛdaya)</option>
+                                    <option value="line_head">Head (Mastiska)</option>
+                                    <option value="line_sun">Sun (Sūrya)</option>
+                                    <option value="line_mercury">Mercury (Budha)</option>
+                                    <option value="line_marriage">Marriage (Vivāha)</option>
+                                    <option value="other">Other Crease</option>
+                                  </select>
+                                </div>
+
+                                {/* Right actions: Visibility Toggle + Delete */}
+                                <div className="flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleDrawingVisibility(d.id)}
+                                    title={isHidden ? 'Show line on palm' : 'Hide line from palm'}
+                                    className={`p-1 rounded transition cursor-pointer ${
+                                      isHidden
+                                        ? 'text-stone-500 hover:text-stone-300 bg-stone-800'
+                                        : 'text-emerald-400 hover:text-emerald-300 bg-emerald-950/40'
+                                    }`}
+                                  >
+                                    {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteDrawing(d.id)}
+                                    title="Delete line"
+                                    className="p-1 text-stone-500 hover:text-rose-400 hover:bg-rose-950/40 rounded transition cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            returnToAgingAfterTraceRef.current = true;
+                            setAgingLineCategory('line_life');
+                            setShowDrawings(true);
+                            setMode('draw');
+                          }}
+                          className="w-full flex items-center justify-center gap-2 my-1 py-1.5 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer border border-stone-700/60 shadow-xs"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                          + Trace Another Line on Hand
+                        </button>
+                      </div>
+                    ) : (
                     <div className="p-4 bg-amber-500/15 border border-amber-500/30 rounded-xl space-y-3">
                       <div className="text-[11px] text-amber-200 font-medium leading-relaxed">
                         Cheiro's method requires a traced palm line to divide into <strong>14 equal 7-year cycles</strong> (7, 14, 21 ... 98 yrs).
@@ -4953,6 +6137,7 @@ export default function HandCanvas({
                     </div>
                   )}
                 </div>
+              )}
 
                 {/* Method-Specific Calibration Suite */}
                 <div className="space-y-3 pt-3 border-t border-stone-800/80">
@@ -4965,9 +6150,20 @@ export default function HandCanvas({
                             30-Midpoint Calibration
                           </span>
                         </div>
-                        <span className="text-[10px] text-amber-300 font-semibold bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
-                          Tap-to-Plot
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={handleReset30MidpointToDefaults}
+                            className="text-[10px] text-amber-300 hover:text-white bg-amber-500/10 hover:bg-amber-500/25 px-2 py-0.5 rounded border border-amber-500/30 transition cursor-pointer flex items-center gap-1 shadow-xs active:scale-95"
+                            title="Reset wrist, Life origin, Mercury sandhi and Saturn root to standard anatomical defaults"
+                          >
+                            <RotateCcw className="w-2.5 h-2.5 text-amber-400" />
+                            Reset Anchors
+                          </button>
+                          <span className="text-[10px] text-amber-300 font-semibold bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
+                            Tap-to-Plot
+                          </span>
+                        </div>
                       </div>
 
                       {/* 1. Maṇibandha Base Anchor (Prerequisite) */}
@@ -5003,7 +6199,7 @@ export default function HandCanvas({
                             <button
                               type="button"
                               onClick={() => {
-                                const clean = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+                                const clean = drawings.filter((d) => !(d.lineCategory === 'line_manibandha' && (!d.view || d.view === activeView)));
                                 onChangeDrawings(clean);
                                 pushHistory(clean, pins);
                                 clearAgingCalibration(['manibandha_start', 'manibandha_end']);
@@ -5041,11 +6237,10 @@ export default function HandCanvas({
                             onClick={() => {
                               setActiveCalibration({ type: 'life', step: 1 });
                             }}
-                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${
-                              !manibandhaData
+                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${!manibandhaData
                                 ? 'bg-stone-800/40 text-stone-500 border-stone-700 cursor-not-allowed'
                                 : 'bg-sky-600/30 hover:bg-sky-600/45 text-sky-200 border-sky-500/40'
-                            }`}
+                              }`}
                             title={!manibandhaData ? 'Set Maṇibandha first' : 'Calibrate Life Line'}
                           >
                             <Edit3 className="w-3.5 h-3.5 text-sky-400" />
@@ -5088,11 +6283,10 @@ export default function HandCanvas({
                             onClick={() => {
                               setActiveCalibration({ type: 'fate', step: 1 });
                             }}
-                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${
-                              !manibandhaData
+                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${!manibandhaData
                                 ? 'bg-stone-800/40 text-stone-500 border-stone-700 cursor-not-allowed'
                                 : 'bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 border-amber-500/40'
-                            }`}
+                              }`}
                             title={!manibandhaData ? 'Set Maṇibandha first' : 'Calibrate Fate Line'}
                           >
                             <Target className="w-3.5 h-3.5 text-amber-400" />
@@ -5210,61 +6404,423 @@ export default function HandCanvas({
                       </div>
                     </div>
                   ) : agingMethod === 'mercury-56' ? (
-                    <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          Mercury Mount 56-Year Timing (0–56 yrs)
+                    <div className="p-3 bg-stone-800/40 border border-stone-700/50 rounded-xl text-[11px] text-stone-300 space-y-2.5">
+                      <div className="font-semibold text-amber-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-amber-400" />
+                          Mercury Mount Scale
                         </span>
-                        {calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base ? (
+                        {mercury56Geometry?.isCalibrated ? (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            56-Yr Scale Active
+                            Calibrated
                           </span>
                         ) : (
-                          <span className="text-[10px] text-stone-400">Not Calibrated</span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-stone-700/60 text-stone-400 border border-stone-600/40">
+                            Not Calibrated
+                          </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-stone-400 leading-tight">
-                        Lecture 28 §4.2: Classical scale for dating marriage (Vivāha Rekhā) &amp; relationship unions along the outer percussion edge under the Mercury (little) finger.
-                        Age 0 at Heart Line level, Age 28 midpoint, and Age 56 at the finger root crease. Move cursor over scale to see exact age.
+
+                      {/* 50 vs 56 Year Scale Selector */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10.5px] text-stone-400 font-medium">
+                          <span>Mount Scale Mode</span>
+                          <span className="font-mono text-amber-400/90 text-[10px]">Midpoint ≈ {mercuryScaleMax / 2} yrs</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 bg-stone-900/90 p-1 rounded-lg border border-stone-700/80">
+                          <button
+                            type="button"
+                            onClick={() => setMercuryScaleMax(56)}
+                            className={`py-1 text-center rounded text-[10.5px] font-bold transition cursor-pointer ${
+                              mercuryScaleMax === 56
+                                ? 'bg-amber-600 text-white shadow-xs'
+                                : 'text-stone-400 hover:text-stone-200'
+                            }`}
+                          >
+                            56 Years (Modern)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMercuryScaleMax(50)}
+                            className={`py-1 text-center rounded text-[10.5px] font-bold transition cursor-pointer ${
+                              mercuryScaleMax === 50
+                                ? 'bg-amber-600 text-white shadow-xs'
+                                : 'text-stone-400 hover:text-stone-200'
+                            }`}
+                          >
+                            50 Years (Classical)
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-stone-400 leading-normal text-[10px]">
+                        Vertical timing scale for Marriage &amp; Affection lines (Lecture 28 §4.2). <strong className="text-stone-200">Age 0</strong> at Heart Line, <strong className="text-stone-200">Age {mercuryScaleMax}</strong> at little finger root crease.
                       </p>
-                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setActiveCalibration({ type: 'mercury_56', step: 1 })}
+                          className="flex-1 py-1.5 px-3 bg-amber-600/20 hover:bg-amber-600/35 text-amber-200 rounded-lg text-xs font-semibold border border-amber-500/30 transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5"
+                          title="Tap 2 points: Heart Line level (Age 0) then little finger crease (Age 56)"
+                        >
+                          <Target className="w-3.5 h-3.5 text-amber-400" />
+                          {mercury56Geometry?.isCalibrated ? 'Re-tap (2 Taps)' : 'Calibrate Scale (2 Taps)'}
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveCalibration({ type: 'mercury', step: 1 });
+                            const isRight = activeView === 'right_palm';
+                            const def = getDefaultMercury56Anchors(isRight);
+                            updateAgingCalibration({
+                              mercury_heart_level: def.mercury_heart_level,
+                              mercury_base: def.mercury_base,
+                            });
                           }}
-                          className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 border-amber-500/40"
-                          title="Tap 2 points: Heart Line level (Age 0) then Mercury root crease (Age 56)"
+                          className="py-1.5 px-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-medium border border-stone-600 transition cursor-pointer active:scale-95 shadow-xs"
+                          title="Apply standard anatomical placement for Mercury mount"
                         >
-                          <Target className="w-3.5 h-3.5 text-amber-400" />
-                          {calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base
-                            ? 'Re-tap (2 Taps: 0 → 56)'
-                            : 'Tap 2 Points (0 → 56)'}
+                          Preset
                         </button>
                         {calibAnchors?.mercury_heart_level && (
                           <button
                             type="button"
                             onClick={() => clearAgingCalibration(['mercury_heart_level', 'mercury_base'])}
                             className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
-                            title="Clear Mercury Scale"
+                            title="Reset to default preset"
                           >
                             Clear
                           </button>
                         )}
                       </div>
 
-                      {/* Display Toggles */}
-                      <div className="space-y-1.5 pt-2 border-t border-stone-800">
-                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                      {/* Optional display toggles */}
+                      <div className="pt-2 border-t border-stone-800/80">
+                        <label className="flex items-center gap-2 cursor-pointer text-[10.5px] text-stone-300 hover:text-white select-none">
                           <input
                             type="checkbox"
-                            checked={showMercuryCalibrationScale}
-                            onChange={(e) => setShowMercuryCalibrationScale(e.target.checked)}
+                            checked={showMercuryAgeLabels}
+                            onChange={(e) => setShowMercuryAgeLabels(e.target.checked)}
                             className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
                           />
-                          <span>Show 56-Yr Scale Axis &amp; Age Ticks</span>
+                          <span>Show static milestone numbers on hand</span>
                         </label>
+                      </div>
+
+                      {/* Milestone Quick Inspect Chips */}
+                      <div className="pt-2 border-t border-stone-800/80 space-y-1.5">
+                        <div className="text-[9.5px] uppercase tracking-wider font-semibold text-stone-400">
+                          Mount Milestones ({mercuryScaleMax}-Yr Scale)
+                        </div>
+                        <div className="grid grid-cols-5 gap-1">
+                          {(mercuryScaleMax === 50
+                            ? [
+                                { age: 0, label: '0' },
+                                { age: 10, label: '10' },
+                                { age: 25, label: '25' },
+                                { age: 35, label: '35' },
+                                { age: 50, label: '50' },
+                              ]
+                            : [
+                                { age: 0, label: '0' },
+                                { age: 14, label: '14' },
+                                { age: 28, label: '28' },
+                                { age: 42, label: '42' },
+                                { age: 56, label: '56' },
+                              ]
+                          ).map((m) => (
+                            <button
+                              key={m.age}
+                              type="button"
+                              onClick={() => {
+                                if (mercury56Geometry) {
+                                  const t = m.age / mercuryScaleMax;
+                                  const pt = {
+                                    x: mercury56Geometry.p0.x + mercury56Geometry.dx * t,
+                                    y: mercury56Geometry.p0.y + mercury56Geometry.dy * t,
+                                  };
+                                  setAgeEventModal({
+                                    isOpen: true,
+                                    age: m.age,
+                                    point: pt,
+                                    lineCategory: 'line_marriage',
+                                    sign: 'Marriage / Vivāha Rekhā (विवाह रेखा)',
+                                    note: `Marriage / Vivāha Rekhā at age ${m.age}`,
+                                  });
+                                }
+                              }}
+                              className="py-1 text-center rounded bg-stone-800/80 hover:bg-stone-700 text-[10px] text-stone-200 border border-stone-700/80 font-semibold transition cursor-pointer active:scale-95"
+                              title={`Log milestone for Age ${m.age}`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : agingMethod === 'three-line-avg' && threeLineAvgGeometry ? (
+                    <div className="space-y-3">
+                      {/* Step 0: Maṇibandha Rekhā Midpoint Anchor */}
+                      <div className="p-3 bg-stone-800/60 border border-amber-600/40 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                            <Target className="w-3.5 h-3.5 text-amber-400" />
+                            Step 0: Maṇibandha Midpoint (MK)
+                          </span>
+                          {manibandhaData ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              MK Locked ({manibandhaData.midpoint.x.toFixed(0)}%, {manibandhaData.midpoint.y.toFixed(0)}%)
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                              Required for Life Line 100y
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          The Life Line full 100-year arc terminates directly at the <strong>midpoint of the wrist bracelet (MK)</strong>.
+                        </p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setActiveCalibration({ type: 'manibandha', step: 1 })}
+                            className="flex-1 py-1.5 px-3 bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 rounded-lg text-xs font-semibold border border-amber-500/40 transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5"
+                          >
+                            <Target className="w-3.5 h-3.5 text-amber-400" />
+                            {manibandhaData ? 'Re-tap Wrist Midpoint (2 Taps)' : 'Tap Wrist Bracelet (2 Taps)'}
+                          </button>
+                          {manibandhaData && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const clean = drawings.filter((d) => !(d.lineCategory === 'line_manibandha' && (!d.view || d.view === activeView)));
+                                onChangeDrawings(clean);
+                                pushHistory(clean, pins);
+                                clearAgingCalibration(['manibandha_start', 'manibandha_end']);
+                              }}
+                              className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                              title="Clear Maṇibandha Midpoint"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 1. Life Line Block */}
+                      <div className="p-3 bg-stone-800/50 border border-emerald-600/40 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-emerald-300 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                            1. Life Line (L₀ → Wrist MK = 100y)
+                          </span>
+                          {threeLineAvgGeometry.lifePath ? (
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                              {threeLineAvgGeometry.lifeAge} yrs
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-stone-800 text-stone-400 border border-stone-700">
+                              Not Traced
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          Full 100y arc curves from L₀ to wrist center MK. Drag the green handle or tap along the line to mark where the actual Life Line terminates.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setThreeLineTracing('life');
+                              setMode('draw');
+                              setThickness(3);
+                              setAgingLineCategory('line_life');
+                              setCurrentColor('#10b981');
+                            }}
+                            className={`flex-1 py-1 px-2.5 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1 ${
+                              threeLineTracing === 'life'
+                                ? 'bg-emerald-500 text-stone-900 border-white'
+                                : 'bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-200 border-emerald-500/35'
+                            }`}
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-emerald-400" />
+                            {threeLineAvgGeometry.lifePath ? 'Re-trace 100y Arc' : '+ Trace Life Line (L₀ → MK)'}
+                          </button>
+                          {threeLineAvgGeometry.lifePath && (
+                            <button
+                              type="button"
+                              onClick={() => clearThreeLineArc('life')}
+                              className="py-1 px-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs border border-red-500/30 transition cursor-pointer"
+                              title="Clear Life Line Arc"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 2. Heart Line Block */}
+                      <div className="p-3 bg-stone-800/50 border border-rose-600/40 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-rose-300 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-rose-500" />
+                            2. Heart Line (Percussion → Radial = 100y)
+                          </span>
+                          {threeLineAvgGeometry.heartPath ? (
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-950/80 text-rose-300 border border-rose-500/40">
+                              {threeLineAvgGeometry.heartAge} yrs
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-stone-800 text-stone-400 border border-stone-700">
+                              Not Traced
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          Full 100y arc traverses from ulnar edge across to radial edge. Drag the rose handle or tap along the line to mark where the actual Heart Line ends.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setThreeLineTracing('heart');
+                              setMode('draw');
+                              setThickness(3);
+                              setAgingLineCategory('line_heart');
+                              setCurrentColor('#f43f5e');
+                            }}
+                            className={`flex-1 py-1 px-2.5 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1 ${
+                              threeLineTracing === 'heart'
+                                ? 'bg-rose-500 text-white border-white'
+                                : 'bg-rose-600/25 hover:bg-rose-600/40 text-rose-200 border-rose-500/35'
+                            }`}
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-rose-400" />
+                            {threeLineAvgGeometry.heartPath ? 'Re-trace 100y Arc' : '+ Trace Heart Line (Percussion → Radial)'}
+                          </button>
+                          {threeLineAvgGeometry.heartPath && (
+                            <button
+                              type="button"
+                              onClick={() => clearThreeLineArc('heart')}
+                              className="py-1 px-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs border border-red-500/30 transition cursor-pointer"
+                              title="Clear Heart Line Arc"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Mind / Head Line Block */}
+                      <div className="p-3 bg-stone-800/50 border border-indigo-600/40 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-300 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                            3. Mind Line (Origin → Moon Percussion = 100y)
+                          </span>
+                          {threeLineAvgGeometry.headPath ? (
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-500/40">
+                              {threeLineAvgGeometry.headAge} yrs
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-stone-800 text-stone-400 border border-stone-700">
+                              Not Traced
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-300 leading-tight">
+                          Full 100y arc traverses from radial origin across to Moon mount percussion. Drag indigo handle or tap along line to mark where the actual Mind Line ends.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setThreeLineTracing('head');
+                              setMode('draw');
+                              setThickness(3);
+                              setAgingLineCategory('line_head');
+                              setCurrentColor('#6366f1');
+                            }}
+                            className={`flex-1 py-1 px-2.5 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1 ${
+                              threeLineTracing === 'head'
+                                ? 'bg-indigo-500 text-white border-white'
+                                : 'bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-200 border-indigo-500/35'
+                            }`}
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+                            {threeLineAvgGeometry.headPath ? 'Re-trace 100y Arc' : '+ Trace Mind Line (Origin → Moon)'}
+                          </button>
+                          {threeLineAvgGeometry.headPath && (
+                            <button
+                              type="button"
+                              onClick={() => clearThreeLineArc('head')}
+                              className="py-1 px-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs border border-red-500/30 transition cursor-pointer"
+                              title="Clear Mind Line Arc"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 4. Combined 3-Line Average Calculation Card */}
+                      <div className="p-3 bg-gradient-to-br from-amber-950/40 via-stone-900/80 to-stone-950 border-2 border-amber-500/50 rounded-xl space-y-2 shadow-lg">
+                        <div className="flex items-center justify-between border-b border-amber-500/30 pb-1.5">
+                          <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            3-Line Average Lifespan
+                          </span>
+                          {threeLineAvgGeometry.avgAge !== null ? (
+                            <span className="text-amber-200 font-mono font-black text-base px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40">
+                              {threeLineAvgGeometry.avgAge} yrs
+                            </span>
+                          ) : (
+                            <span className="text-stone-400 text-[10px] font-medium">
+                              Trace lines above
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-1.5 text-center pt-0.5">
+                          <div className={`rounded-lg p-1.5 border ${threeLineAvgGeometry.lifePath ? 'bg-emerald-950/40 border-emerald-500/30' : 'bg-stone-900/40 border-stone-800'}`}>
+                            <div className={`text-[9px] font-semibold uppercase ${threeLineAvgGeometry.lifePath ? 'text-emerald-400' : 'text-stone-500'}`}>Life</div>
+                            <div className={`text-sm font-bold ${threeLineAvgGeometry.lifePath ? 'text-emerald-200' : 'text-stone-600'}`}>
+                              {threeLineAvgGeometry.lifeAge !== null ? `${threeLineAvgGeometry.lifeAge}y` : '—'}
+                            </div>
+                          </div>
+                          <div className={`rounded-lg p-1.5 border ${threeLineAvgGeometry.heartPath ? 'bg-rose-950/40 border-rose-500/30' : 'bg-stone-900/40 border-stone-800'}`}>
+                            <div className={`text-[9px] font-semibold uppercase ${threeLineAvgGeometry.heartPath ? 'text-rose-400' : 'text-stone-500'}`}>Heart</div>
+                            <div className={`text-sm font-bold ${threeLineAvgGeometry.heartPath ? 'text-rose-200' : 'text-stone-600'}`}>
+                              {threeLineAvgGeometry.heartAge !== null ? `${threeLineAvgGeometry.heartAge}y` : '—'}
+                            </div>
+                          </div>
+                          <div className={`rounded-lg p-1.5 border ${threeLineAvgGeometry.headPath ? 'bg-indigo-950/40 border-indigo-500/30' : 'bg-stone-900/40 border-stone-800'}`}>
+                            <div className={`text-[9px] font-semibold uppercase ${threeLineAvgGeometry.headPath ? 'text-indigo-400' : 'text-stone-500'}`}>Mind</div>
+                            <div className={`text-sm font-bold ${threeLineAvgGeometry.headPath ? 'text-indigo-200' : 'text-stone-600'}`}>
+                              {threeLineAvgGeometry.headAge !== null ? `${threeLineAvgGeometry.headAge}y` : '—'}
+                            </div>
+                          </div>
+                        </div>
+
+                        {threeLineAvgGeometry.summary ? (
+                          <div className="pt-1 text-[10.5px] text-stone-300 flex items-center justify-between bg-stone-900/60 px-2 py-1.5 rounded-lg border border-stone-800">
+                            <span className="text-stone-400">
+                              Formula: ({[
+                                threeLineAvgGeometry.lifeAge !== null ? `${threeLineAvgGeometry.lifeAge}` : null,
+                                threeLineAvgGeometry.heartAge !== null ? `${threeLineAvgGeometry.heartAge}` : null,
+                                threeLineAvgGeometry.headAge !== null ? `${threeLineAvgGeometry.headAge}` : null,
+                              ].filter(Boolean).join(' + ')}) / {threeLineAvgGeometry.summary.count}
+                            </span>
+                            <span className="font-semibold text-amber-300">
+                              {threeLineAvgGeometry.classicalCategory}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="pt-1 text-[10px] text-stone-400 text-center bg-stone-900/40 px-2 py-1.5 rounded-lg border border-stone-800/80">
+                            Trace each line from start to opposite end. The average of all 3 gives the estimated lifespan.
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -5296,7 +6852,7 @@ export default function HandCanvas({
                           <button
                             type="button"
                             onClick={() => {
-                              const clean = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+                              const clean = drawings.filter((d) => !(d.lineCategory === 'line_manibandha' && (!d.view || d.view === activeView)));
                               onChangeDrawings(clean);
                               pushHistory(clean, pins);
                               clearAgingCalibration(['manibandha_start', 'manibandha_end']);
@@ -5335,11 +6891,10 @@ export default function HandCanvas({
                           key={ageVal}
                           type="button"
                           onClick={() => handleUpdateMaxAge(ageVal)}
-                          className={`flex-1 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
-                            isSelected
+                          className={`flex-1 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${isSelected
                               ? 'bg-amber-600 text-white shadow-xs font-bold'
                               : 'bg-stone-800/80 hover:bg-stone-750 text-stone-400 hover:text-stone-200 border border-stone-700/60'
-                          }`}
+                            }`}
                           title={ageVal === 75 ? '75 yrs (Classical Default)' : `${ageVal} yrs`}
                         >
                           {ageVal}
@@ -5541,6 +7096,27 @@ export default function HandCanvas({
               </div>
             )}
 
+            {/* 3-Line Average Arc Trace Floating Hint */}
+            {mode === 'draw' && threeLineTracing && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 backdrop-blur-md border border-emerald-500/70 text-emerald-200 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  ✏️ Draw full 100-year arc for {threeLineTracing === 'life' ? 'Life Line (L₀ to Wrist MK)' : threeLineTracing === 'heart' ? 'Heart Line (Percussion across to Jupiter/Radial edge)' : 'Mind Line (Radial origin across to Moon percussion)'} — release to finish
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setThreeLineTracing(null);
+                    setMode('aging');
+                    setShowDrawings(true);
+                  }}
+                  className="bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white px-2 py-0.5 rounded text-[11px] font-medium border border-stone-600 cursor-pointer ml-1 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
             {/* Scroll vs Zoom guidance hint */}
             {showScrollHint && (
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-stone-900/90 backdrop-blur text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-2xl border border-stone-700 pointer-events-none select-none flex items-center gap-2">
@@ -5671,103 +7247,134 @@ export default function HandCanvas({
       {ageEventModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-stone-900">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-              <div className="flex items-center gap-2 text-stone-900 font-bold text-base">
-                <Calendar className="w-5 h-5 text-accent-gold" />
-                <span>{ageEventModal.editingIndex !== undefined ? 'Edit Age Milestone' : 'Log Age Milestone'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAgeEventModal(null)}
-                className="text-stone-400 hover:text-stone-600 p-1 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+            {(() => {
+              const isMarriage = ageEventModal.lineCategory === 'line_marriage' || agingMethod === 'mercury-56';
+              return (
+                <>
+                  <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+                    <div className="flex items-center gap-2 text-stone-900 font-bold text-base">
+                      <Calendar className="w-5 h-5 text-accent-gold" />
+                      <span>
+                        {ageEventModal.editingIndex !== undefined
+                          ? (isMarriage ? 'Edit Marriage Milestone' : 'Edit Age Milestone')
+                          : (isMarriage ? 'Log Marriage / Vivāha Rekhā' : 'Log Age Milestone')}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAgeEventModal(null)}
+                      className="text-stone-400 hover:text-stone-600 p-1 rounded-lg cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block text-stone-700 font-bold mb-1">
-                  Line & Location
-                </label>
-                <div className="p-2 bg-stone-50 border border-stone-200 rounded-lg text-stone-700 font-medium">
-                  {LINE_LABELS[ageEventModal.lineCategory]}
-                </div>
-              </div>
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="block text-stone-700 font-bold mb-1">
+                        Line & Location
+                      </label>
+                      <div className="p-2 bg-stone-50 border border-stone-200 rounded-lg text-stone-700 font-medium">
+                        {LINE_LABELS[ageEventModal.lineCategory]}
+                      </div>
+                    </div>
 
-              <div>
-                <label className="block text-stone-700 font-bold mb-1">
-                  Estimated Age
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    max="120"
-                    value={ageEventModal.age}
-                    onChange={(e) =>
-                      setAgeEventModal({
-                        ...ageEventModal,
-                        age: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="form-input text-sm font-bold text-stone-900 w-28 text-center"
-                  />
-                  <span className="text-stone-600 font-semibold">years</span>
-                  <span className="text-[11px] text-stone-400 ml-auto font-mono">
-                    ({AGING_METHODS[agingMethod].title})
-                  </span>
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-stone-700 font-bold mb-1">
+                        Estimated Age
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          max="120"
+                          value={ageEventModal.age}
+                          onChange={(e) =>
+                            setAgeEventModal({
+                              ...ageEventModal,
+                              age: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          className="form-input text-sm font-bold text-stone-900 w-28 text-center"
+                        />
+                        <span className="text-stone-600 font-semibold">years</span>
+                        <span className="text-[11px] text-stone-400 ml-auto font-mono">
+                          ({AGING_METHODS[agingMethod].title})
+                        </span>
+                      </div>
+                    </div>
 
-              <div>
-                <label className="block text-stone-700 font-bold mb-1">
-                  Palmistry Sign / Feature Observed
-                </label>
-                <select
-                  value={ageEventModal.sign}
-                  onChange={(e) =>
-                    setAgeEventModal({
-                      ...ageEventModal,
-                      sign: e.target.value,
-                    })
-                  }
-                  className="form-input text-xs w-full font-semibold cursor-pointer"
-                >
-                  <option value="Triangle △ (Property / Shield)">Triangle △ (Property / Shield / Wealth)</option>
-                  <option value="Fish 🐟 (Spiritual / Prosperity)">Fish 🐟 (Spiritual / Prosperity)</option>
-                  <option value="Star ✳ (Sudden impact / Renown)">Star ✳ (Sudden impact / Renown)</option>
-                  <option value="Cross ✝ (Obstacle / Conflict)">Cross ✝ (Obstacle / Conflict / Heartbreak)</option>
-                  <option value="Square □ (Protection / Bandhana)">Square □ (Protection / Shield / Bandhana)</option>
-                  <option value="Island ⬭ (Health decline / Illness)">Island ⬭ (Health decline / Loss of vitality)</option>
-                  <option value="Break / Gap (Life shift)">Break / Gap (Life shift / Relocation / Expansion)</option>
-                  <option value="Upward Branch (Ambition / Rise)">Upward Branch (Ambition / Rise in career)</option>
-                  <option value="Downward Branch (Loss of vitality)">Downward Branch (Loss of vitality / Sadness)</option>
-                  <option value="Enemy Line / Cut (Rahu / Mars affliction)">Enemy Line / Cut (Rahu / Mars affliction)</option>
-                  <option value="Supportive Line (Family support)">Supportive Line (Family support / Mars guardian)</option>
-                  <option value="General Milestone">General Milestone / Life Event</option>
-                </select>
-              </div>
+                    <div>
+                      <label className="block text-stone-700 font-bold mb-1">
+                        {isMarriage ? 'Marriage / Relationship Feature Observed' : 'Palmistry Sign / Feature Observed'}
+                      </label>
+                      <select
+                        value={ageEventModal.sign}
+                        onChange={(e) =>
+                          setAgeEventModal({
+                            ...ageEventModal,
+                            sign: e.target.value,
+                          })
+                        }
+                        className="form-input text-xs w-full font-semibold cursor-pointer"
+                      >
+                        {isMarriage ? (
+                          <>
+                            <option value="Marriage / Vivāha Rekhā (विवाह रेखा)">Marriage / Vivāha Rekhā (विवाह रेखा - Primary Union)</option>
+                            <option value="Deep Affection / Relationship (प्रेम रेखा)">Deep Affection / Relationship (प्रेम रेखा - Significant Bond)</option>
+                            <option value="Engagement / Betrothal (सगाई)">Engagement / Betrothal (सगाई)</option>
+                            <option value="Forked End (Marital friction / Separation)">Forked End (Marital friction / Separation)</option>
+                            <option value="Island on Marriage Line (Marital distress)">Island on Marriage Line (Marital distress / Separation)</option>
+                            <option value="Downward Droop towards Heart Line (Loss / Grief)">Downward Droop towards Heart Line (Loss / Grief)</option>
+                            <option value="Upward Curving (Prosperous union / Wealth)">Upward Curving (Prosperous union / Wealth via partner)</option>
+                            <option value="Parallel Sister Line (Second affection)">Parallel Sister Line (Second affection / Guardian)</option>
+                            <option value="General Relationship Milestone">General Relationship Milestone</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="Triangle △ (Property / Shield)">Triangle △ (Property / Shield / Wealth)</option>
+                            <option value="Fish 🐟 (Spiritual / Prosperity)">Fish 🐟 (Spiritual / Prosperity)</option>
+                            <option value="Star ✳ (Sudden impact / Renown)">Star ✳ (Sudden impact / Renown)</option>
+                            <option value="Cross ✝ (Obstacle / Conflict)">Cross ✝ (Obstacle / Conflict / Heartbreak)</option>
+                            <option value="Square □ (Protection / Bandhana)">Square □ (Protection / Shield / Bandhana)</option>
+                            <option value="Island ⬭ (Health decline / Illness)">Island ⬭ (Health decline / Loss of vitality)</option>
+                            <option value="Break / Gap (Life shift)">Break / Gap (Life shift / Relocation / Expansion)</option>
+                            <option value="Upward Branch (Ambition / Rise)">Upward Branch (Ambition / Rise in career)</option>
+                            <option value="Downward Branch (Loss of vitality)">Downward Branch (Loss of vitality / Sadness)</option>
+                            <option value="Enemy Line / Cut (Rahu / Mars affliction)">Enemy Line / Cut (Rahu / Mars affliction)</option>
+                            <option value="Supportive Line (Family support)">Supportive Line (Family support / Mars guardian)</option>
+                            <option value="General Milestone">General Milestone / Life Event</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
 
-              <div>
-                <label className="block text-stone-700 font-bold mb-1">
-                  Event / Client Verification Notes
-                </label>
-                <textarea
-                  rows={3}
-                  value={ageEventModal.note}
-                  onChange={(e) =>
-                    setAgeEventModal({
-                      ...ageEventModal,
-                      note: e.target.value,
-                    })
-                  }
-                  placeholder="e.g. Client bought commercial property in Pune; verified during consultation."
-                  className="form-input text-xs w-full resize-none"
-                />
-              </div>
-            </div>
+                    <div>
+                      <label className="block text-stone-700 font-bold mb-1">
+                        Event / Client Verification Notes
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={ageEventModal.note}
+                        onChange={(e) =>
+                          setAgeEventModal({
+                            ...ageEventModal,
+                            note: e.target.value,
+                          })
+                        }
+                        placeholder={
+                          isMarriage
+                            ? 'e.g. Marriage solemnized; deep affection union verified.'
+                            : 'e.g. Client bought commercial property in Pune; verified during consultation.'
+                        }
+                        className="form-input text-xs w-full resize-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             <div className="flex items-center justify-between gap-2 pt-3 border-t border-stone-100">
               {ageEventModal.editingIndex !== undefined ? (

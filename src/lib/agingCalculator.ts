@@ -114,11 +114,11 @@ export const AGING_METHODS: Record<AgingMethod, AgingMethodInfo> = {
   },
   'mercury-56': {
     id: 'mercury-56',
-    title: 'Mercury Mount 56-Year Scale',
+    title: 'Mercury Mount (Marriage 50 / 56-Year Scale)',
     sanskritName: 'Budha Vivāha Kāla (बुध विवाह काल)',
     defaultLifespan: 56,
     description:
-      'Lecture 28 §4.2: Mercury mount timing scale for Vivāha Rekhā. Heart Line level = 0 years; base joint of Mercury finger (sandhi rekhā) = 56 years (earlier 50). Midpoint ≈ 28 years.',
+      'Lecture 28 §4.2: Mercury mount timing scale for Vivāha Rekhā. Heart Line level = 0 years; base joint of Mercury finger (sandhi rekhā) = 50 or 56 years. Midpoint ≈ 25 / 28 years.',
     lectureReference: 'Lecture 28 §4.2',
     color: '#ec4899', // pink-500
     applicableLines: ['line_marriage'],
@@ -155,6 +155,135 @@ export const getDefaultCadencePoints = (isRightPalm: boolean): Point2D[] => {
     ];
   }
 };
+
+export const getDefault30MidpointAnchors = (isRightPalm: boolean): {
+  manibandha_start: Point2D;
+  manibandha_end: Point2D;
+  life_start: Point2D;
+  mercury_sandhi: Point2D;
+  saturn_root: Point2D;
+} => {
+  if (isRightPalm) {
+    return {
+      manibandha_start: { x: 42, y: 92 },
+      manibandha_end: { x: 62, y: 92 },
+      life_start: { x: 38, y: 48 },
+      mercury_sandhi: { x: 86, y: 48 },
+      saturn_root: { x: 52, y: 35 },
+    };
+  } else {
+    return {
+      manibandha_start: { x: 28, y: 92 },
+      manibandha_end: { x: 48, y: 92 },
+      life_start: { x: 62, y: 48 },
+      mercury_sandhi: { x: 14, y: 48 },
+      saturn_root: { x: 38, y: 35 },
+    };
+  }
+};
+
+export const getDefaultMercury56Anchors = (isRightPalm: boolean): {
+  mercury_heart_level: Point2D;
+  mercury_base: Point2D;
+} => {
+  if (isRightPalm) {
+    return {
+      mercury_heart_level: { x: 80, y: 38 },
+      mercury_base: { x: 77, y: 22 },
+    };
+  } else {
+    return {
+      mercury_heart_level: { x: 17, y: 38 },
+      mercury_base: { x: 20, y: 22 },
+    };
+  }
+};
+
+export const getDefaultThreeLineAvgPaths = (
+  isRightPalm: boolean,
+  wristMidpoint?: Point2D | null
+): { life: Point2D[]; heart: Point2D[]; head: Point2D[] } => {
+  if (isRightPalm) {
+    const mk = wristMidpoint || { x: 52, y: 92 };
+    return {
+      // Life Line: from thumb origin (0y) around Venus to wrist center (100y)
+      life: [
+        { x: 38, y: 48 },
+        { x: 40, y: 56 },
+        { x: 43, y: 66 },
+        { x: 47, y: 78 },
+        { x: mk.x, y: mk.y },
+      ],
+      // Heart Line: from ulnar percussion (0y) across to opposite radial edge under Jupiter (100y)
+      heart: [
+        { x: 82, y: 38 },
+        { x: 68, y: 38 },
+        { x: 54, y: 39 },
+        { x: 40, y: 38 },
+        { x: 26, y: 35 },
+      ],
+      // Mind Line: from radial origin (0y) across to opposite Moon mount percussion (100y)
+      head: [
+        { x: 37, y: 49 },
+        { x: 49, y: 55 },
+        { x: 62, y: 61 },
+        { x: 74, y: 65 },
+        { x: 84, y: 67 },
+      ],
+    };
+  } else {
+    const mk = wristMidpoint || { x: 38, y: 92 };
+    return {
+      // Life Line: from thumb origin (0y) around Venus to wrist center (100y)
+      life: [
+        { x: 62, y: 48 },
+        { x: 60, y: 56 },
+        { x: 57, y: 66 },
+        { x: 53, y: 78 },
+        { x: mk.x, y: mk.y },
+      ],
+      // Heart Line: from ulnar percussion (0y) across to opposite radial edge under Jupiter (100y)
+      heart: [
+        { x: 18, y: 38 },
+        { x: 32, y: 38 },
+        { x: 46, y: 39 },
+        { x: 60, y: 38 },
+        { x: 74, y: 35 },
+      ],
+      // Mind Line: from radial origin (0y) across to opposite Moon mount percussion (100y)
+      head: [
+        { x: 63, y: 49 },
+        { x: 51, y: 55 },
+        { x: 38, y: 61 },
+        { x: 26, y: 65 },
+        { x: 16, y: 67 },
+      ],
+    };
+  }
+};
+
+export function calculateThreeLineAverage(
+  lifeAge: number | null | undefined,
+  heartAge: number | null | undefined,
+  headAge: number | null | undefined
+): {
+  sum: number;
+  average: number;
+  rangeText: string;
+  count: number;
+} | null {
+  const valid = [
+    { name: 'life', age: lifeAge },
+    { name: 'heart', age: heartAge },
+    { name: 'head', age: headAge },
+  ].filter((item) => item.age !== null && item.age !== undefined && !isNaN(item.age) && item.age > 0);
+
+  if (valid.length === 0) return null;
+  const sum = valid.reduce((acc, curr) => acc + (curr.age as number), 0);
+  const average = Math.round(sum / valid.length);
+  const rangeText = `${average} to ${average + 2} yrs`;
+  return { sum, average, rangeText, count: valid.length };
+}
 
 export const LINE_LABELS: Record<LineCategory, string> = {
   line_life: 'Life Line (Āyur Rekhā)',
@@ -347,7 +476,7 @@ export function getFractionForAge(
     }
 
     case 'mercury-56': {
-      return Math.min(1, age / 56);
+      return Math.min(1, age / (maxAge === 50 ? 50 : 56));
     }
 
     default:
@@ -396,7 +525,7 @@ export function getAgeForFraction(
     }
 
     case 'mercury-56': {
-      return parseFloat((t * 56).toFixed(1));
+      return parseFloat((t * (maxAge === 50 ? 50 : 56)).toFixed(1));
     }
 
     default:
@@ -591,6 +720,11 @@ export function computeAgeTicks(
 
     case 'mercury-56': {
       // Lecture 28 §4.2: Mercury Mount scale (0 to 56 years)
+      // Only applicable to Marriage lines or Mercury lines across the mount, NOT Heart Line!
+      if (lineCategory !== 'line_marriage' && lineCategory !== 'line_mercury') {
+        break;
+      }
+
       // Heart Line level = 0, Mercury base joint = 56. Midpoint ≈ 28.
       const milestones: Array<{ age: number; fraction: number; isMajor: boolean; desc: string }> = [
         { age: 0, fraction: 0, isMajor: true, desc: 'Heart Line Level (Age 0)' },
@@ -606,19 +740,11 @@ export function computeAgeTicks(
       for (const m of milestones) {
         const geom = getPointAndNormalAtFraction(points, m.fraction, dimensions);
         if (geom) {
-          // Ensure normal vector points inward toward the palm center (so tick and badge never clip outside screen)
-          let normal = { ...geom.normal };
-          if (geom.point.x > 50 && normal.x > 0) {
-            normal = { x: -normal.x, y: -normal.y };
-          } else if (geom.point.x < 50 && normal.x < 0) {
-            normal = { x: -normal.x, y: -normal.y };
-          }
-
           ticks.push({
             age: m.age,
             fraction: m.fraction,
             point: geom.point,
-            normal,
+            normal: geom.normal,
             label: `${m.age}`,
             isMajor: m.isMajor,
             method: 'mercury-56',
