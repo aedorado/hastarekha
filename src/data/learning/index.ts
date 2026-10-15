@@ -4,6 +4,7 @@ import { lecture19Deck } from './19-symbols-life-line-01';
 import { lecture20Deck } from './20-symbols-life-line-02';
 import { lecture21Deck } from './21-symbols-life-line-03';
 import { lecture27Deck } from './27-aging-mercury-line';
+import { lecture28Deck } from './28-marriage-line';
 
 const decksRegistry: Record<string, CuratedDeck> = {
   '13 - JU Mount.md': lecture13Deck,
@@ -21,6 +22,9 @@ const decksRegistry: Record<string, CuratedDeck> = {
   '27 - Aging.md': lecture27Deck,
   '27 - Aging': lecture27Deck,
   '27': lecture27Deck,
+  '28 - Marriage Line.md': lecture28Deck,
+  '28 - Marriage Line': lecture28Deck,
+  '28': lecture28Deck,
 };
 
 export function getCuratedDeckForNote(noteId: string): CuratedDeck | null {
@@ -38,6 +42,6 @@ export function hasCuratedDeck(noteId: string): boolean {
   return !!getCuratedDeckForNote(noteId);
 }
 
-export { lecture13Deck, lecture19Deck, lecture20Deck, lecture21Deck, lecture27Deck };
+export { lecture13Deck, lecture19Deck, lecture20Deck, lecture21Deck, lecture27Deck, lecture28Deck };
 
 
