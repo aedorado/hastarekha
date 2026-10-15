@@ -35,6 +35,7 @@ import {
   serializeVedicData,
   VedicData,
   LineAnalysisData,
+  AgingCalibrationAnchors,
 } from '@/lib/supabase';
 import {
   AgingMethod,
@@ -47,6 +48,8 @@ import {
   getAgeForFraction,
   getManibandhaMidpoint,
   Point2D,
+  CADENCE_AGES,
+  getDefaultCadencePoints,
 } from '@/lib/agingCalculator';
 import ConfirmModal from './ConfirmModal';
 
@@ -174,7 +177,9 @@ export default function HandCanvas({
 
   // Drawing state
   const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false);
   const [currentPoints, setCurrentPoints] = useState<{ x: number; y: number }[]>([]);
+  const currentPointsRef = useRef<{ x: number; y: number }[]>([]);
   const [selectedDrawingId, setSelectedDrawingId] = useState<string | null>(null);
 
   // Zoom & Pan state
@@ -217,6 +222,20 @@ export default function HandCanvas({
   const [draggingAxialNode, setDraggingAxialNode] = useState<
     'wrist' | 'midpoint' | 'saturn' | 'jupiter' | null
   >(null);
+
+  // ─── 30-Midpoint Master & Cadence Calibration State ───
+  const [activeCalibration, setActiveCalibration] = useState<{
+    type: 'manibandha' | 'life' | 'fate' | 'cadence';
+    step: number;
+    tempPoint?: Point2D | null;
+    points?: Point2D[];
+  } | null>(null);
+  const [calibCursorPos, setCalibCursorPos] = useState<Point2D | null>(null);
+  const [draggingCalibNode, setDraggingCalibNode] = useState<
+    'manibandha_start' | 'manibandha_end' | 'life_start' | 'mercury_sandhi' | 'saturn_root' | string | null
+  >(null);
+  const [showLifeCalibrationGrid, setShowLifeCalibrationGrid] = useState(true);
+  const [showFateCalibrationGrid, setShowFateCalibrationGrid] = useState(true);
   const [hoveredAgeData, setHoveredAgeData] = useState<{
     age: number;
     point: Point2D;
@@ -430,6 +449,24 @@ export default function HandCanvas({
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
+  const handleEndInteractionRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    handleEndInteractionRef.current = handleEndInteraction;
+  });
+
+  // Global pointer release listener to guarantee drawing/drag states terminate cleanly
+  useEffect(() => {
+    const handleGlobalPointerRelease = () => {
+      handleEndInteractionRef.current();
+    };
+    window.addEventListener('mouseup', handleGlobalPointerRelease);
+    window.addEventListener('touchend', handleGlobalPointerRelease);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalPointerRelease);
+      window.removeEventListener('touchend', handleGlobalPointerRelease);
+    };
+  }, []);
+
   const toggleFullscreen = () => {
     if (!containerWrapperRef.current) return;
     if (!document.fullscreenElement) {
@@ -446,8 +483,31 @@ export default function HandCanvas({
     setPan({ x: 0, y: 0 });
     setSelectedDrawingId(null);
     onSelectPin(null);
-    if (mode === 'measure') setMode('pan');
+    setActiveCalibration(null);
+    setCalibCursorPos(null);
+    returnToAgingAfterTraceRef.current = false;
+    const isBackOrChart = view === 'right_back' || view === 'left_back' || view === 'd1_chart';
+    if (isBackOrChart && (mode === 'measure' || mode === 'aging')) {
+      setMode('pan');
+    }
   };
+
+  useEffect(() => {
+    const isBackOrChart = activeView === 'right_back' || activeView === 'left_back' || activeView === 'd1_chart';
+    if (isBackOrChart && (mode === 'measure' || mode === 'aging')) {
+      setMode('pan');
+    }
+    setActiveCalibration(null);
+    setCalibCursorPos(null);
+  }, [activeView]);
+
+  useEffect(() => {
+    if (mode !== 'aging') {
+      setActiveCalibration(null);
+      setCalibCursorPos(null);
+      setHoveredAgeData(null);
+    }
+  }, [mode]);
 
   // ─── Isometric Screen Distance & Vedic Measurement Unit Calculation ───
   // All measurements use the exact same Euclidean distance on screen, normalized to a standard 600px viewport baseline.
@@ -684,6 +744,11 @@ export default function HandCanvas({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     hasMovedSignificantlyRef.current = false;
+    // Calibration tap mode takes precedence
+    if (activeCalibration) {
+      return;
+    }
+
     // Middle click, pan mode, or spacebar held
     if (e.button === 1 || isPanActive) {
       e.preventDefault();
@@ -695,8 +760,16 @@ export default function HandCanvas({
     if (mode === 'measure' || mode === 'aging') return;
 
     if (mode === 'draw' && imageUrl) {
-      setIsDrawing(true);
+      if (agingLineCategory === 'line_manibandha') {
+        const remaining = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+        if (remaining.length !== drawings.length) {
+          onChangeDrawings(remaining);
+        }
+      }
+      isDrawingRef.current = true;
       const coords = getPointCoords(e.clientX, e.clientY);
+      currentPointsRef.current = [coords];
+      setIsDrawing(true);
       setCurrentPoints([coords]);
     }
   };
@@ -707,6 +780,27 @@ export default function HandCanvas({
       const nextX = e.clientX - panStartRef.current.x;
       const nextY = e.clientY - panStartRef.current.y;
       setPan(clampPan(nextX, nextY, zoom));
+      return;
+    }
+
+    if (activeCalibration) {
+      const coords = getPointCoords(e.clientX, e.clientY);
+      setCalibCursorPos(coords);
+      return;
+    }
+
+    if (draggingCalibNode) {
+      const coords = getPointCoords(e.clientX, e.clientY);
+      if (draggingCalibNode.startsWith('cadence_')) {
+        const idx = parseInt(draggingCalibNode.replace('cadence_', ''), 10);
+        if (!isNaN(idx) && calibAnchors?.cadence_points) {
+          const updated = [...calibAnchors.cadence_points];
+          updated[idx] = coords;
+          updateAgingCalibration({ cadence_points: updated });
+        }
+      } else {
+        updateAgingCalibration({ [draggingCalibNode]: coords });
+      }
       return;
     }
 
@@ -745,9 +839,10 @@ export default function HandCanvas({
       return;
     }
 
-    if (mode === 'draw' && isDrawing) {
+    if (mode === 'draw' && (isDrawing || isDrawingRef.current)) {
       hasMovedSignificantlyRef.current = true;
       const coords = getPointCoords(e.clientX, e.clientY);
+      currentPointsRef.current.push(coords);
       setCurrentPoints((prev) => [...prev, coords]);
     }
   };
@@ -781,6 +876,10 @@ export default function HandCanvas({
 
     // Single touch
     if (e.touches.length === 1) {
+      if (activeCalibration) {
+        return;
+      }
+
       if (isPanActive) {
         setIsPanning(true);
         panStartRef.current = {
@@ -793,8 +892,16 @@ export default function HandCanvas({
       if (mode === 'measure') return;
 
       if (mode === 'draw' && imageUrl) {
-        setIsDrawing(true);
+        if (agingLineCategory === 'line_manibandha') {
+          const remaining = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+          if (remaining.length !== drawings.length) {
+            onChangeDrawings(remaining);
+          }
+        }
+        isDrawingRef.current = true;
         const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
+        currentPointsRef.current = [coords];
+        setIsDrawing(true);
         setCurrentPoints([coords]);
       }
     }
@@ -849,6 +956,27 @@ export default function HandCanvas({
         return;
       }
 
+      if (activeCalibration && e.touches.length === 1) {
+        const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
+        setCalibCursorPos(coords);
+        return;
+      }
+
+      if (draggingCalibNode) {
+        const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
+        if (draggingCalibNode.startsWith('cadence_')) {
+          const idx = parseInt(draggingCalibNode.replace('cadence_', ''), 10);
+          if (!isNaN(idx) && calibAnchors?.cadence_points) {
+            const updated = [...calibAnchors.cadence_points];
+            updated[idx] = coords;
+            updateAgingCalibration({ cadence_points: updated });
+          }
+        } else {
+          updateAgingCalibration({ [draggingCalibNode]: coords });
+        }
+        return;
+      }
+
       const coords = getPointCoords(e.touches[0].clientX, e.touches[0].clientY);
 
       if (mode === 'measure') {
@@ -884,8 +1012,9 @@ export default function HandCanvas({
         return;
       }
 
-      if (mode === 'draw' && isDrawing) {
+      if (mode === 'draw' && (isDrawing || isDrawingRef.current)) {
         hasMovedSignificantlyRef.current = true;
+        currentPointsRef.current.push(coords);
         setCurrentPoints((prev) => [...prev, coords]);
       }
     }
@@ -898,6 +1027,19 @@ export default function HandCanvas({
     }
     if (isPanning) {
       setIsPanning(false);
+      return;
+    }
+
+    // Handle calibration tap on quick touch
+    if (
+      activeCalibration &&
+      imageUrl &&
+      !hasMovedSignificantlyRef.current &&
+      e.changedTouches.length === 1
+    ) {
+      const touch = e.changedTouches[0];
+      const coords = getPointCoords(touch.clientX, touch.clientY);
+      handleCalibrationClick(coords);
       return;
     }
 
@@ -976,6 +1118,31 @@ export default function HandCanvas({
   };
 
   const handleEndInteraction = () => {
+    if (draggingCalibNode) {
+      if (
+        (draggingCalibNode === 'manibandha_start' || draggingCalibNode === 'manibandha_end') &&
+        calibAnchors?.manibandha_start &&
+        calibAnchors?.manibandha_end
+      ) {
+        const cleanDrawings = drawings.filter(
+          (d) => !(d.view === activeView && d.lineCategory === 'line_manibandha')
+        );
+        const updatedManibandha: Drawing = {
+          id: crypto.randomUUID(),
+          view: activeView,
+          points: [calibAnchors.manibandha_start, calibAnchors.manibandha_end],
+          color: '#f59e0b',
+          thickness: 2.5,
+          lineCategory: 'line_manibandha',
+        };
+        const updated = [...cleanDrawings, updatedManibandha];
+        onChangeDrawings(updated);
+        pushHistory(updated, pins);
+      }
+      setDraggingCalibNode(null);
+      return;
+    }
+
     if (mode === 'measure') {
       if (draggingNode && measurementModifiedRef.current) {
         measurementModifiedRef.current = false;
@@ -992,41 +1159,61 @@ export default function HandCanvas({
       return;
     }
 
-    if (mode !== 'draw' || !isDrawing) return;
+    const wasDrawing = isDrawing || isDrawingRef.current;
+    isDrawingRef.current = false;
     setIsDrawing(false);
 
-    if (currentPoints.length > 2) {
-      const newDrawing: Drawing = {
-        id: crypto.randomUUID(),
-        view: activeView,
-        points: currentPoints,
-        color: currentColor,
-        thickness: thickness,
-        label: strokeStyle === 'dashed' ? 'dashed' : undefined,
-        lineCategory: agingLineCategory || 'line_life',
-      };
-      const updated = [...drawings, newDrawing];
-      onChangeDrawings(updated);
-      pushHistory(updated, pins);
-      setSelectedDrawingId(newDrawing.id);
-      if (newDrawing.lineCategory !== 'line_manibandha') {
-        setSelectedAgingDrawingId(newDrawing.id);
-      }
+    if (mode === 'draw' && wasDrawing) {
+      const finalPoints = currentPointsRef.current.length >= 2 ? currentPointsRef.current : currentPoints;
+      if (finalPoints.length >= 2) {
+        const isManibandha = agingLineCategory === 'line_manibandha';
+        const newDrawing: Drawing = {
+          id: crypto.randomUUID(),
+          view: activeView,
+          points: [...finalPoints],
+          color: isManibandha ? '#f59e0b' : currentColor,
+          thickness: thickness,
+          label: strokeStyle === 'dashed' ? 'dashed' : undefined,
+          lineCategory: agingLineCategory || 'line_life',
+        };
 
-      if (returnToAgingAfterTraceRef.current) {
-        returnToAgingAfterTraceRef.current = false;
-        if (agingLineCategory === 'line_manibandha') {
-          setAgingLineCategory(activeAgingDrawing?.lineCategory || 'line_life');
+        // Enforce ONLY ONE Maṇibandha Rekhā trace allowed per view: replace any existing one
+        const baseDrawings = isManibandha
+          ? drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'))
+          : drawings;
+        const updated = [...baseDrawings, newDrawing];
+
+        onChangeDrawings(updated);
+        pushHistory(updated, pins);
+        setSelectedDrawingId(newDrawing.id);
+
+        // Maṇibandha is only an anchor baseline to find its midpoint; do not select it for aging
+        if (!isManibandha) {
+          setSelectedAgingDrawingId(newDrawing.id);
         }
-        setMode('aging');
+
+        if (returnToAgingAfterTraceRef.current) {
+          returnToAgingAfterTraceRef.current = false;
+          if (agingLineCategory === 'line_manibandha') {
+            setAgingLineCategory(activeAgingDrawing?.lineCategory || 'line_life');
+          }
+          setShowDrawings(true);
+          setMode('aging');
+        }
       }
+      currentPointsRef.current = [];
+      setCurrentPoints([]);
     }
-    setCurrentPoints([]);
   };
 
   const handleSvgClick = (e: React.MouseEvent<SVGSVGElement>) => {
     setSelectedDrawingId(null);
     if (hasMovedSignificantlyRef.current || isPanning || isPanActive) return;
+    if (activeCalibration) {
+      const coords = getPointCoords(e.clientX, e.clientY);
+      handleCalibrationClick(coords);
+      return;
+    }
     if (mode === 'measure') return;
     if (mode === 'aging') {
       const lineToUse = activeAgingDrawing;
@@ -1123,6 +1310,7 @@ export default function HandCanvas({
   const handleSetMeasureMode = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    returnToAgingAfterTraceRef.current = false;
     if (mode === 'measure') {
       setMode('pan');
       return;
@@ -1169,6 +1357,30 @@ export default function HandCanvas({
 
   const handleSelectAgingMethod = (method: AgingMethod) => {
     setAgingMethod(method);
+
+    // Auto-focus the relevant palm line to prevent intermingling
+    if (method === '18-6-cadence') {
+      const heartD = visibleDrawings.find((d) => d.lineCategory === 'line_heart');
+      if (heartD) {
+        setSelectedAgingDrawingId(heartD.id);
+        setAgingLineCategory('line_heart');
+      }
+    } else if (method === '30-midpoint') {
+      const lifeOrFate = visibleDrawings.find(
+        (d) => d.lineCategory === 'line_life' || d.lineCategory === 'line_fate'
+      );
+      if (lifeOrFate) {
+        setSelectedAgingDrawingId(lifeOrFate.id);
+        setAgingLineCategory(lifeOrFate.lineCategory || 'line_life');
+      }
+    } else if (method === 'mercury-56') {
+      const marriageD = visibleDrawings.find((d) => d.lineCategory === 'line_marriage');
+      if (marriageD) {
+        setSelectedAgingDrawingId(marriageD.id);
+        setAgingLineCategory('line_marriage');
+      }
+    }
+
     if (profile && onChangeProfile) {
       const currentVedic = parseVedicData(profile.general_notes);
       currentVedic.age_method = method;
@@ -1197,6 +1409,19 @@ export default function HandCanvas({
     onChangeDrawings(updated);
     pushHistory(updated, pins);
     setAgingLineCategory(category);
+
+    // Auto-select canonical method for line category to prevent intermingling
+    if (category === 'line_heart') {
+      setAgingMethod('18-6-cadence');
+    } else if (category === 'line_fate') {
+      setAgingMethod('30-midpoint');
+    } else if (category === 'line_marriage') {
+      setAgingMethod('mercury-56');
+    } else if (category === 'line_life') {
+      if (agingMethod === '18-6-cadence' || agingMethod === 'mercury-56') {
+        setAgingMethod('30-midpoint');
+      }
+    }
   };
 
   const handleSaveAgeEvent = () => {
@@ -1265,6 +1490,27 @@ export default function HandCanvas({
     else if (lineKey === 'line_head') currentVedic.line_head = existingLine;
     else if (lineKey === 'line_heart') currentVedic.line_heart = existingLine;
     else if (lineKey === 'line_sun') currentVedic.line_sun = existingLine;
+    else if (lineKey === 'line_marriage') {
+      if (!currentVedic.line_marriage) {
+        currentVedic.line_marriage = {
+          quality: 'Normal (Healthy)',
+          formations: [],
+          estimated_age: age,
+          has_parasite_line_on_life: false,
+          secondary_lines_count: '',
+          venus_line_cutting: false,
+          reaches_sun_mount: false,
+          cuts_sun_mount: false,
+          crosses_heart_line: false,
+          notes: eventText,
+        };
+      } else {
+        currentVedic.line_marriage.estimated_age = age;
+        if (note) {
+          currentVedic.line_marriage.notes = `${currentVedic.line_marriage.notes ? currentVedic.line_marriage.notes + '; ' : ''}${eventText}`;
+        }
+      }
+    }
 
     onChangeProfile({
       ...profile,
@@ -1319,18 +1565,342 @@ export default function HandCanvas({
     null;
   const lineToClassify = (currentSelectedDrawing && currentSelectedDrawing.lineCategory !== 'line_manibandha' ? currentSelectedDrawing : null) || activeAgingDrawing;
 
-  // Maṇibandha Rekhā (Wrist Crease) and Kendra (50% Midpoint) detection
+  // ─── 30-Midpoint Master Calibration (Vedic Aging) Handlers ───
+  const calibAnchors: AgingCalibrationAnchors | null = useMemo(() => {
+    if (vedicData?.aging_calibrations?.[activeView]) {
+      return vedicData.aging_calibrations[activeView] || null;
+    }
+    // Backward compatibility: if activeView is right_palm and legacy aging_calibration exists
+    if (activeView === 'right_palm' && vedicData?.aging_calibration) {
+      return vedicData.aging_calibration;
+    }
+    return null;
+  }, [vedicData?.aging_calibrations, vedicData?.aging_calibration, activeView]);
+
+  const updateAgingCalibration = useCallback(
+    (patch: Partial<AgingCalibrationAnchors>) => {
+      if (!profile || !onChangeProfile) return;
+      const currentVedic = parseVedicData(profile.general_notes);
+      const currentCalibs = { ...(currentVedic.aging_calibrations || {}) };
+      const currentViewCalib =
+        currentCalibs[activeView] ||
+        (activeView === 'right_palm' ? currentVedic.aging_calibration : null) ||
+        {};
+      const updatedCalib: AgingCalibrationAnchors = {
+        ...currentViewCalib,
+        ...patch,
+      };
+      currentCalibs[activeView] = updatedCalib;
+      currentVedic.aging_calibrations = currentCalibs;
+      if (activeView === 'right_palm') {
+        currentVedic.aging_calibration = updatedCalib;
+      }
+      onChangeProfile({
+        ...profile,
+        general_notes: serializeVedicData(currentVedic),
+      });
+    },
+    [profile, onChangeProfile, activeView]
+  );
+
+  const clearAgingCalibration = useCallback(
+    (keys?: Array<keyof AgingCalibrationAnchors>) => {
+      if (!profile || !onChangeProfile) return;
+      const currentVedic = parseVedicData(profile.general_notes);
+      const currentCalibs = { ...(currentVedic.aging_calibrations || {}) };
+      if (!keys) {
+        delete currentCalibs[activeView];
+        if (activeView === 'right_palm') {
+          currentVedic.aging_calibration = null;
+        }
+      } else if (currentCalibs[activeView]) {
+        const updated = { ...currentCalibs[activeView] };
+        keys.forEach((k) => delete updated[k]);
+        currentCalibs[activeView] = updated;
+        if (activeView === 'right_palm') {
+          currentVedic.aging_calibration = updated;
+        }
+      }
+      currentVedic.aging_calibrations = currentCalibs;
+      onChangeProfile({
+        ...profile,
+        general_notes: serializeVedicData(currentVedic),
+      });
+    },
+    [profile, onChangeProfile, activeView]
+  );
+
+  const handleCalibrationClick = useCallback(
+    (coords: Point2D) => {
+      if (!activeCalibration) return;
+      const { type, step, tempPoint } = activeCalibration;
+
+      if (type === 'manibandha') {
+        if (step === 1) {
+          setActiveCalibration({ type: 'manibandha', step: 2, tempPoint: coords });
+        } else {
+          const p1 = tempPoint!;
+          const p2 = coords;
+          // Create or replace line_manibandha drawing as a clean straight 2-point line
+          const cleanDrawings = drawings.filter(
+            (d) => !(d.view === activeView && d.lineCategory === 'line_manibandha')
+          );
+          const newManibandha: Drawing = {
+            id: crypto.randomUUID(),
+            view: activeView,
+            points: [p1, p2],
+            color: '#f59e0b',
+            thickness: 2.5,
+            lineCategory: 'line_manibandha',
+          };
+          const updated = [...cleanDrawings, newManibandha];
+          onChangeDrawings(updated);
+          pushHistory(updated, pins);
+
+          updateAgingCalibration({
+            manibandha_start: p1,
+            manibandha_end: p2,
+          });
+          setActiveCalibration(null);
+        }
+        return;
+      }
+
+      if (type === 'life') {
+        if (step === 1) {
+          setActiveCalibration({ type: 'life', step: 2, tempPoint: coords });
+        } else {
+          const p1 = tempPoint!;
+          const p2 = coords;
+          updateAgingCalibration({
+            life_start: p1,
+            mercury_sandhi: p2,
+          });
+          setActiveCalibration(null);
+        }
+        return;
+      }
+
+      if (type === 'fate') {
+        updateAgingCalibration({
+          saturn_root: coords,
+        });
+        setActiveCalibration(null);
+        return;
+      }
+
+      if (type === 'cadence') {
+        const prevPoints = activeCalibration.points || [];
+        const nextPoints = [...prevPoints, coords];
+        if (step < 8) {
+          setActiveCalibration({
+            type: 'cadence',
+            step: step + 1,
+            points: nextPoints,
+          });
+        } else {
+          updateAgingCalibration({
+            cadence_points: nextPoints,
+          });
+          setActiveCalibration(null);
+          setCalibCursorPos(null);
+        }
+        return;
+      }
+    },
+    [activeCalibration, drawings, activeView, pins, onChangeDrawings, pushHistory, updateAgingCalibration]
+  );
+
+  const getCalibrationPrompt = () => {
+    if (!activeCalibration) return '';
+    const { type, step } = activeCalibration;
+    if (type === 'cadence') {
+      const stepIdx = (step as number) - 1;
+      const age = CADENCE_AGES[stepIdx] ?? 0;
+      const fingerNames = activeView === 'right_palm'
+        ? [
+            'Mercury outer edge / percussion (Age 0)',
+            'Mercury / Sun cleft (Age 18)',
+            'Sun finger base (Age 24)',
+            'Sun / Saturn cleft (Age 42)',
+            'Saturn finger base (Age 48)',
+            'Saturn / Jupiter cleft (Age 66)',
+            'Jupiter finger base (Age 72)',
+            'Jupiter radial edge (Age 90)',
+          ]
+        : [
+            'Mercury outer edge / percussion (Age 0)',
+            'Mercury / Sun cleft (Age 18)',
+            'Sun finger base (Age 24)',
+            'Sun / Saturn cleft (Age 42)',
+            'Saturn finger base (Age 48)',
+            'Saturn / Jupiter cleft (Age 66)',
+            'Jupiter finger base (Age 72)',
+            'Jupiter radial edge (Age 90)',
+          ];
+      return `📍 Tap ${step} of 8: Age ${age} at finger base (${fingerNames[stepIdx] || ''})`;
+    }
+    if (type === 'manibandha') {
+      return step === 1
+        ? '📍 Tap 1 of 2: Tap LEFT edge of the 1st Maṇibandha wrist bracelet'
+        : '📍 Tap 2 of 2: Tap RIGHT edge of the wrist bracelet';
+    }
+    if (type === 'life') {
+      return step === 1
+        ? '📍 Tap 1 of 2: Tap where Life Line starts (between thumb & index finger)'
+        : '📍 Tap 2 of 2: Tap outer edge crease under Mercury (little) finger';
+    }
+    if (type === 'fate') {
+      return '📍 Tap 1 of 1: Tap the base joint of middle (Saturn) finger on Saturn Mount';
+    }
+    return '';
+  };
+
+  // Maṇibandha Rekhā and Kendra (50% Midpoint) detection
   const manibandhaDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_manibandha') || null;
   const manibandhaData = useMemo(() => {
-    if (!manibandhaDrawing || manibandhaDrawing.points.length < 2) return null;
-    return getManibandhaMidpoint(
-      manibandhaDrawing.points,
-      containerRef.current?.getBoundingClientRect()
-    );
-  }, [manibandhaDrawing]);
+    if (manibandhaDrawing && manibandhaDrawing.points.length >= 2) {
+      return getManibandhaMidpoint(
+        manibandhaDrawing.points,
+        containerRef.current?.getBoundingClientRect()
+      );
+    }
+    if (calibAnchors?.manibandha_start && calibAnchors?.manibandha_end) {
+      return getManibandhaMidpoint(
+        [calibAnchors.manibandha_start, calibAnchors.manibandha_end],
+        containerRef.current?.getBoundingClientRect()
+      );
+    }
+    return null;
+  }, [manibandhaDrawing, calibAnchors?.manibandha_start, calibAnchors?.manibandha_end]);
+
+  // Derived 30-Midpoint & T-Frame Geometry
+  const calibrationGeometry = useMemo(() => {
+    const mk = manibandhaData?.midpoint || null;
+    const lifeStart = calibAnchors?.life_start || null;
+    const mercurySandhi = calibAnchors?.mercury_sandhi || null;
+    const saturnRoot = calibAnchors?.saturn_root || null;
+    const maxAge = vedicData?.max_age ?? 75;
+
+    // Dynamically calculate post-30 halving labels based on configurable max lifespan
+    const midAfter30 = (30 + maxAge) / 2;
+    const q1After30 = (30 + midAfter30) / 2;
+    const q2After30 = (q1After30 + midAfter30) / 2;
+
+    const label52_5 = Number.isInteger(midAfter30) ? `${midAfter30}` : `${midAfter30.toFixed(1)}`;
+    const label41_25 = Number.isInteger(q1After30) ? `${q1After30}` : `${parseFloat(q1After30.toFixed(2))}`;
+    const label47 = Number.isInteger(q2After30) ? `${q2After30}` : `${Math.round(q2After30)}`;
+
+    let life7_5: Point2D | null = null;
+    let life15: Point2D | null = null;
+    let life22_5: Point2D | null = null;
+    let life30: Point2D | null = null;
+    let life41_25: Point2D | null = null;
+    let life47: Point2D | null = null;
+    let life52_5: Point2D | null = null;
+
+    if (lifeStart && mk) {
+      // Age 30 is the true 50% geometric midpoint between Life origin (L0) and Maṇibandha Kendra (MK)
+      life30 = {
+        x: (lifeStart.x + mk.x) / 2,
+        y: (lifeStart.y + mk.y) / 2,
+      };
+
+      // Binary halving before Age 30 (towards L0 / Age 0):
+      life15 = {
+        x: (lifeStart.x + life30.x) / 2,
+        y: (lifeStart.y + life30.y) / 2,
+      };
+      life7_5 = {
+        x: (lifeStart.x + life15.x) / 2,
+        y: (lifeStart.y + life15.y) / 2,
+      };
+      life22_5 = {
+        x: (life15.x + life30.x) / 2,
+        y: (life15.y + life30.y) / 2,
+      };
+
+      // Binary halving after Age 30 (towards MK / maxAge):
+      life52_5 = {
+        x: (life30.x + mk.x) / 2,
+        y: (life30.y + mk.y) / 2,
+      };
+      life41_25 = {
+        x: (life30.x + life52_5.x) / 2,
+        y: (life30.y + life52_5.y) / 2,
+      };
+      life47 = {
+        x: (life41_25.x + life52_5.x) / 2,
+        y: (life41_25.y + life52_5.y) / 2,
+      };
+    }
+
+    let fate15: Point2D | null = null;
+    let fate22_5: Point2D | null = null;
+    let fate30: Point2D | null = null;
+    let fate41_25: Point2D | null = null;
+    let fate47: Point2D | null = null;
+    let fate52_5: Point2D | null = null;
+
+    if (saturnRoot && mk) {
+      // Midpoint: Age 30
+      fate30 = {
+        x: (mk.x + saturnRoot.x) / 2,
+        y: (mk.y + saturnRoot.y) / 2,
+      };
+
+      // Halving before 30 (towards MK / Age 0):
+      fate15 = {
+        x: (mk.x + fate30.x) / 2,
+        y: (mk.y + fate30.y) / 2,
+      };
+      fate22_5 = {
+        x: (fate15.x + fate30.x) / 2,
+        y: (fate15.y + fate30.y) / 2,
+      };
+
+      // Halving after 30 (towards Saturn Root / maxAge):
+      fate52_5 = {
+        x: (fate30.x + saturnRoot.x) / 2,
+        y: (fate30.y + saturnRoot.y) / 2,
+      };
+      fate41_25 = {
+        x: (fate30.x + fate52_5.x) / 2,
+        y: (fate30.y + fate52_5.y) / 2,
+      };
+      fate47 = {
+        x: (fate41_25.x + fate52_5.x) / 2,
+        y: (fate41_25.y + fate52_5.y) / 2,
+      };
+    }
+
+    return {
+      mk,
+      lifeStart,
+      mercurySandhi,
+      life7_5,
+      life15,
+      life22_5,
+      life30,
+      life41_25,
+      life47,
+      life52_5,
+      saturnRoot,
+      fate15,
+      fate22_5,
+      fate30,
+      fate41_25,
+      fate47,
+      fate52_5,
+      maxAge,
+      label52_5,
+      label41_25,
+      label47,
+    };
+  }, [calibAnchors, manibandhaData, vedicData?.max_age]);
 
   const currentAgingTicks =
-    activeAgingDrawing && activeAgingDrawing.points.length > 1
+    activeAgingDrawing && activeAgingDrawing.points.length > 1 && agingMethod !== '18-6-cadence'
       ? computeAgeTicks(
         activeAgingDrawing.points,
         agingMethod,
@@ -1631,6 +2201,7 @@ export default function HandCanvas({
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        returnToAgingAfterTraceRef.current = false;
                         setMode('pan');
                       }}
                       className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'pan'
@@ -1651,6 +2222,7 @@ export default function HandCanvas({
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        returnToAgingAfterTraceRef.current = false;
                         setShowPins(true);
                         setMode('pin');
                       }}
@@ -1672,6 +2244,7 @@ export default function HandCanvas({
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
+                        returnToAgingAfterTraceRef.current = false;
                         setShowDrawings(true);
                         setMode('draw');
                       }}
@@ -1688,42 +2261,45 @@ export default function HandCanvas({
                       {mode === 'draw' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
                     </button>
 
-                    {/* 4. Measure */}
-                    <button
-                      type="button"
-                      onClick={handleSetMeasureMode}
-                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'measure'
-                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
-                        : !profile
-                          ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-50'
-                          : isFullscreen
-                            ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
-                            : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
-                        }`}
-                      title="Measure Hand (Align handles for palm/finger ratios)"
-                      disabled={!profile}
-                    >
-                      <Ruler className={`w-3.5 h-3.5 ${mode === 'measure' ? 'text-white' : 'text-stone-500'}`} />
-                      <span>Measure</span>
-                      {mode === 'measure' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
-                    </button>
+                    {/* 4. Measure & 5. Aging Ruler (Only for front palm views) */}
+                    {(activeView === 'right_palm' || activeView === 'left_palm') && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handleSetMeasureMode}
+                          className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'measure'
+                            ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                            : !profile
+                              ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-50'
+                              : isFullscreen
+                                ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                                : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                            }`}
+                          title="Measure Hand (Align handles for palm/finger ratios)"
+                          disabled={!profile}
+                        >
+                          <Ruler className={`w-3.5 h-3.5 ${mode === 'measure' ? 'text-white' : 'text-stone-500'}`} />
+                          <span>Measure</span>
+                          {mode === 'measure' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                        </button>
 
-                    {/* 5. Aging Ruler */}
-                    <button
-                      type="button"
-                      onClick={handleSetAgingMode}
-                      className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'aging'
-                        ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
-                        : isFullscreen
-                          ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
-                          : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
-                        }`}
-                      title="Aging Ruler & Grid (Calculate age milestones along lines & axial geometry)"
-                    >
-                      <Clock className={`w-3.5 h-3.5 ${mode === 'aging' ? 'text-white' : 'text-stone-500'}`} />
-                      <span>Aging Ruler</span>
-                      {mode === 'aging' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
-                    </button>
+                        <button
+                          type="button"
+                          onClick={handleSetAgingMode}
+                          className={`px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${mode === 'aging'
+                            ? 'bg-amber-600 text-white font-bold shadow-xs ring-1 ring-amber-700/50'
+                            : isFullscreen
+                              ? 'bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700 font-medium'
+                              : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-50 border border-stone-200/90 font-medium shadow-2xs'
+                            }`}
+                          title="Aging Ruler & Grid (Calculate age milestones along lines & axial geometry)"
+                        >
+                          <Clock className={`w-3.5 h-3.5 ${mode === 'aging' ? 'text-white' : 'text-stone-500'}`} />
+                          <span>Aging Ruler</span>
+                          {mode === 'aging' && <span className="w-1.5 h-1.5 rounded-full bg-white ml-0.5"></span>}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -1999,11 +2575,13 @@ export default function HandCanvas({
                 ? 'grabbing'
                 : isPanActive
                   ? 'grab'
-                  : mode === 'draw'
+                  : activeCalibration
                     ? 'crosshair'
-                    : mode === 'pin'
-                      ? 'pointer'
-                      : 'default',
+                    : mode === 'draw'
+                      ? 'crosshair'
+                      : mode === 'pin'
+                        ? 'pointer'
+                        : 'default',
             }}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
@@ -2061,7 +2639,7 @@ export default function HandCanvas({
                       const isDashed = drawing.label === 'dashed';
 
                       return (
-                        <g key={drawing.id} className="group cursor-pointer">
+                        <g key={drawing.id} className={`group ${mode === 'draw' ? 'pointer-events-none' : 'cursor-pointer'}`}>
                           {/* Glowing highlight under selected line */}
                           {isSelected && (
                             <polyline
@@ -2098,8 +2676,9 @@ export default function HandCanvas({
                                 : `drop-shadow(0 1px 2px rgba(0,0,0,0.2))`,
                             }}
                           />
-                          {/* Thick overlay for easy click selection */}
-                          <polyline
+                          {/* Thick overlay for easy click selection (only rendered in pan or aging mode) */}
+                          {mode !== 'draw' && (
+                            <polyline
                             points={pointsString}
                             fill="none"
                             stroke="transparent"
@@ -2117,6 +2696,10 @@ export default function HandCanvas({
                             onTouchEnd={(e) => {
                               e.stopPropagation();
                               if (mode === 'aging') {
+                                if (drawing.lineCategory === 'line_manibandha') {
+                                  // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
+                                  return;
+                                }
                                 setSelectedAgingDrawingId(drawing.id);
                                 if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
                                 if (e.changedTouches.length > 0) {
@@ -2149,17 +2732,21 @@ export default function HandCanvas({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (mode === 'aging') {
+                                if (drawing.lineCategory === 'line_manibandha') {
+                                  // Maṇibandha is only an anchor baseline to find its midpoint; no aging on it
+                                  return;
+                                }
                                 setSelectedAgingDrawingId(drawing.id);
                                 if (drawing.lineCategory) setAgingLineCategory(drawing.lineCategory);
                                 const coords = getPointCoords(e.clientX, e.clientY);
                                 const nearest = getNearestPointOnPolyline(drawing.points, coords);
                                 if (nearest) {
                                   const age = getAgeForFraction(
-                                    agingMethod,
-                                    nearest.fraction,
-                                    drawing.lineCategory || agingLineCategory,
-                                    vedicData?.max_age ?? 75
-                                  );
+                                      agingMethod,
+                                      nearest.fraction,
+                                      drawing.lineCategory || agingLineCategory,
+                                      vedicData?.max_age ?? 75
+                                    );
                                   setAgeEventModal({
                                     isOpen: true,
                                     age,
@@ -2175,17 +2762,26 @@ export default function HandCanvas({
                               setSelectedDrawingId(isSelected ? null : drawing.id);
                               onSelectPin(null);
                             }}
-                            className={mode === 'aging' ? 'cursor-pointer' : 'hover:stroke-rose-500/10 cursor-pointer'}
+                            className={
+                              mode === 'aging'
+                                ? drawing.lineCategory === 'line_manibandha'
+                                  ? 'cursor-default'
+                                  : 'cursor-pointer'
+                                : 'hover:stroke-rose-500/10 cursor-pointer'
+                            }
                           >
                             <title>
-                              {mode === 'aging'
-                                ? 'Click anywhere on this line to log an age milestone'
-                                : isSelected
-                                  ? 'Selected line (Delete to remove)'
-                                  : 'Click to select this line'}
+                              {drawing.lineCategory === 'line_manibandha'
+                                ? 'Maṇibandha Rekhā (मणिबन्ध - Baseline Midpoint Anchor)'
+                                : mode === 'aging'
+                                  ? 'Click anywhere on this line to log an age milestone'
+                                  : isSelected
+                                    ? 'Selected line (Delete to remove)'
+                                    : 'Click to select this line'}
                             </title>
                           </polyline>
-                        </g>
+                        )}
+                      </g>
                       );
                     })}
 
@@ -2330,102 +2926,21 @@ export default function HandCanvas({
                       </g>
                     )}
 
-                    {/* 0. Maṇibandha Rekhā (Wrist Crease) Kendra & Baseline Overlay - Always visible during aging mode AND when actively tracing another line */}
-                    {manibandhaData && (mode === 'aging' || mode === 'draw') && (
+                    {/* 0. Maṇibandha Rekhā (Wrist Crease) Persistent 50% Midpoint Guide Ray (Aging tab or when tracing lines) */}
+                    {(mode === 'aging' || mode === 'draw') && manibandhaData && showDrawings && (
                       <g className="manibandha-kendra-overlay">
-                        {/* Accent highlight along traced wrist crease */}
-                        {manibandhaDrawing && (
-                          <polyline
-                            points={manibandhaDrawing.points.map((p) => `${p.x},${p.y}`).join(' ')}
-                            fill="none"
-                            stroke="#f59e0b"
-                            strokeWidth="1.2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeDasharray="1.5,1.5"
-                            opacity="0.85"
-                            vectorEffect="non-scaling-stroke"
-                          />
-                        )}
-
                         {/* Upward central guide ray from Kendra toward palm center / Saturn axis */}
                         <line
                           x1={manibandhaData.midpoint.x}
                           y1={manibandhaData.midpoint.y}
                           x2={manibandhaData.midpoint.x}
-                          y2={Math.max(5, manibandhaData.midpoint.y - 10)}
-                          stroke="#f59e0b"
-                          strokeWidth="1.5"
-                          strokeDasharray="2,2"
-                          opacity="0.75"
-                          vectorEffect="non-scaling-stroke"
-                        />
-
-                        {/* Crosshairs at Kendra (Exact 50% Midpoint) */}
-                        <line
-                          x1={manibandhaData.midpoint.x - 2}
-                          y1={manibandhaData.midpoint.y}
-                          x2={manibandhaData.midpoint.x + 2}
-                          y2={manibandhaData.midpoint.y}
-                          stroke="#fbbf24"
-                          strokeWidth="1.8"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                        <line
-                          x1={manibandhaData.midpoint.x}
-                          y1={manibandhaData.midpoint.y - 2}
-                          x2={manibandhaData.midpoint.x}
-                          y2={manibandhaData.midpoint.y + 2}
-                          stroke="#fbbf24"
-                          strokeWidth="1.8"
-                          vectorEffect="non-scaling-stroke"
-                        />
-
-                        {/* Concentric glowing target rings */}
-                        <circle
-                          cx={manibandhaData.midpoint.x}
-                          cy={manibandhaData.midpoint.y}
-                          r="2.2"
-                          fill="none"
+                          y2={Math.max(5, manibandhaData.midpoint.y - 12)}
                           stroke="#f59e0b"
                           strokeWidth="1.2"
-                          strokeDasharray="1.5,1"
+                          strokeDasharray="2,2"
+                          opacity="0.65"
                           vectorEffect="non-scaling-stroke"
                         />
-                        <circle
-                          cx={manibandhaData.midpoint.x}
-                          cy={manibandhaData.midpoint.y}
-                          r="0.8"
-                          fill="#fbbf24"
-                          stroke="#ffffff"
-                          strokeWidth="0.3"
-                        />
-
-                        {/* Clean Kendra Badge */}
-                        <g transform={`translate(${manibandhaData.midpoint.x}, ${Math.min(96, manibandhaData.midpoint.y + 3.6)})`}>
-                          <rect
-                            x="-14"
-                            y="-1.5"
-                            width="28"
-                            height="3"
-                            rx="0.6"
-                            fill="#1c1917"
-                            opacity="0.95"
-                            stroke="#f59e0b"
-                            strokeWidth="0.3"
-                          />
-                          <text
-                            x="0"
-                            y="0.5"
-                            fill="#fef3c7"
-                            fontSize="1.0"
-                            fontWeight="bold"
-                            textAnchor="middle"
-                            style={{ pointerEvents: 'none', userSelect: 'none' }}
-                          >
-                            Maṇibandha Kendra • 50% (Base 0/75)
-                          </text>
-                        </g>
                       </g>
                     )}
 
@@ -2567,6 +3082,405 @@ export default function HandCanvas({
                             ))}
                           </>
                         )}
+
+                        {/* 2.5 Life Line 30-Midpoint T-Frame Calibration Overlay */}
+                        {agingMethod === '30-midpoint' && showLifeCalibrationGrid && calibrationGeometry.lifeStart && calibrationGeometry.mk && (
+                          <g className="life-calibration-grid">
+                            {/* Baseline chord connecting Life origin (0) to Maṇibandha Kendra (75) */}
+                            <line
+                              x1={calibrationGeometry.lifeStart.x}
+                              y1={calibrationGeometry.lifeStart.y}
+                              x2={calibrationGeometry.mk.x}
+                              y2={calibrationGeometry.mk.y}
+                              stroke="#0284c7"
+                              strokeWidth="1.6"
+                              strokeDasharray="3,2"
+                              vectorEffect="non-scaling-stroke"
+                            />
+
+                            {/* Transverse T-Bar connecting Mercury Crease across to Age 30 Midpoint */}
+                            {calibrationGeometry.mercurySandhi && calibrationGeometry.life30 && (
+                              <line
+                                x1={calibrationGeometry.mercurySandhi.x}
+                                y1={calibrationGeometry.mercurySandhi.y}
+                                x2={calibrationGeometry.life30.x}
+                                y2={calibrationGeometry.life30.y}
+                                stroke="#0284c7"
+                                strokeWidth="1.6"
+                                strokeDasharray="3,2"
+                                opacity="0.9"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
+
+                            {/* Age 30 Midpoint Crossing Hub - Compact badge with minor padding */}
+                            {calibrationGeometry.life30 && (
+                              <g>
+                                <rect
+                                  x={calibrationGeometry.life30.x - 1.5}
+                                  y={calibrationGeometry.life30.y - 0.8}
+                                  width="3.0"
+                                  height="1.6"
+                                  rx="0.4"
+                                  fill="#0284c7"
+                                />
+                                <text
+                                  x={calibrationGeometry.life30.x}
+                                  y={calibrationGeometry.life30.y + 0.35}
+                                  fill="#ffffff"
+                                  fontSize="0.85"
+                                  fontWeight="bold"
+                                  textAnchor="middle"
+                                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                >
+                                  30
+                                </text>
+                              </g>
+                            )}
+
+                            {/* Binary Halving Projection Lines (Before 30: 7.5, 15, 22.5; After 30: 41.25, 47, 52.5) */}
+                            {(() => {
+                              const isThumbOnRight = calibrationGeometry.lifeStart.x > calibrationGeometry.mk.x;
+                              const projDir = isThumbOnRight ? 1 : -1;
+                              const projLen = 8.5;
+
+                              return [
+                                { pt: calibrationGeometry.life7_5, label: '7.5' },
+                                { pt: calibrationGeometry.life15, label: '15' },
+                                { pt: calibrationGeometry.life22_5, label: '22.5' },
+                                { pt: calibrationGeometry.life41_25, label: calibrationGeometry.label41_25 },
+                                { pt: calibrationGeometry.life47, label: calibrationGeometry.label47 },
+                                { pt: calibrationGeometry.life52_5, label: calibrationGeometry.label52_5 },
+                              ]
+                                .filter((item): item is { pt: Point2D; label: string } => !!item.pt)
+                                .map(({ pt, label }) => {
+                                  const xTarget = pt.x + projDir * projLen;
+                                  return (
+                                    <g key={`life-proj-${label}`}>
+                                      <line
+                                        x1={pt.x}
+                                        y1={pt.y}
+                                        x2={xTarget}
+                                        y2={pt.y}
+                                        stroke="#0284c7"
+                                        strokeWidth="1.2"
+                                        strokeDasharray="1.5,1.5"
+                                        vectorEffect="non-scaling-stroke"
+                                      />
+                                      <polygon
+                                        points={`${xTarget},${pt.y} ${xTarget - projDir * 1.6},${pt.y - 0.6} ${xTarget - projDir * 1.6},${pt.y + 0.6}`}
+                                        fill="#0284c7"
+                                      />
+                                      <text
+                                        x={pt.x - projDir * 1.2}
+                                        y={pt.y - 0.4}
+                                        fill="#0284c7"
+                                        fontSize="0.75"
+                                        fontWeight="bold"
+                                        textAnchor={projDir > 0 ? 'end' : 'start'}
+                                        style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                      >
+                                        {label}
+                                      </text>
+                                    </g>
+                                  );
+                                });
+                            })()}
+                          </g>
+                        )}
+
+                        {/* 2.6 Fate Line Saturn Axis & 30-Midpoint Calibration Overlay */}
+                        {agingMethod === '30-midpoint' && showFateCalibrationGrid && calibrationGeometry.saturnRoot && calibrationGeometry.mk && (
+                          <g className="fate-calibration-grid">
+                            {/* Vertical Axis from Maṇibandha Kendra (0) to Saturn Root (75) */}
+                            <line
+                              x1={calibrationGeometry.mk.x}
+                              y1={calibrationGeometry.mk.y}
+                              x2={calibrationGeometry.saturnRoot.x}
+                              y2={calibrationGeometry.saturnRoot.y}
+                              stroke="#d97706"
+                              strokeWidth="2.0"
+                              strokeDasharray="3,2"
+                              vectorEffect="non-scaling-stroke"
+                            />
+
+                            {/* Fate Age 30 Midpoint Hub - Compact badge */}
+                            {calibrationGeometry.fate30 && (
+                              <g>
+                                <rect
+                                  x={calibrationGeometry.fate30.x - 1.5}
+                                  y={calibrationGeometry.fate30.y - 0.8}
+                                  width="3.0"
+                                  height="1.6"
+                                  rx="0.4"
+                                  fill="#d97706"
+                                />
+                                <text
+                                  x={calibrationGeometry.fate30.x}
+                                  y={calibrationGeometry.fate30.y + 0.35}
+                                  fill="#ffffff"
+                                  fontSize="0.85"
+                                  fontWeight="bold"
+                                  textAnchor="middle"
+                                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                >
+                                  30
+                                </text>
+                              </g>
+                            )}
+
+                            {/* Fate Binary Halving Milestones (15, 22.5, 41.25, 47, 52.5) */}
+                            {[
+                              { pt: calibrationGeometry.fate15, label: '15' },
+                              { pt: calibrationGeometry.fate22_5, label: '22.5' },
+                              { pt: calibrationGeometry.fate41_25, label: calibrationGeometry.label41_25 },
+                              { pt: calibrationGeometry.fate47, label: calibrationGeometry.label47 },
+                              { pt: calibrationGeometry.fate52_5, label: calibrationGeometry.label52_5 },
+                            ]
+                              .filter((item): item is { pt: Point2D; label: string } => !!item.pt)
+                              .map(({ pt, label }) => (
+                                <g key={`fate-halving-${label}`}>
+                                  <line
+                                    x1={pt.x - 1.5}
+                                    y1={pt.y}
+                                    x2={pt.x + 1.5}
+                                    y2={pt.y}
+                                    stroke="#d97706"
+                                    strokeWidth="1.4"
+                                    vectorEffect="non-scaling-stroke"
+                                  />
+                                  <text
+                                    x={pt.x + 2.4}
+                                    y={pt.y + 0.3}
+                                    fill="#d97706"
+                                    fontSize="0.75"
+                                    fontWeight="bold"
+                                    style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                  >
+                                    {label}
+                                  </text>
+                                </g>
+                              ))}
+                          </g>
+                        )}
+
+                        {/* 2.7 Active Calibration Interactive Rubberband Lines */}
+                        {activeCalibration && (
+                          <g className="calibration-rubberband-preview pointer-events-none">
+                            {/* Rubberband line for Maṇibandha (Step 2: from Point 1 to cursor) */}
+                            {activeCalibration.type === 'manibandha' && activeCalibration.tempPoint && calibCursorPos && (
+                              <line
+                                x1={activeCalibration.tempPoint.x}
+                                y1={activeCalibration.tempPoint.y}
+                                x2={calibCursorPos.x}
+                                y2={calibCursorPos.y}
+                                stroke="#f59e0b"
+                                strokeWidth="2.0"
+                                strokeDasharray="3,2"
+                                opacity="0.8"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
+
+                            {/* Rubberband line for Life Line (Step 2: from L0 to cursor) */}
+                            {activeCalibration.type === 'life' && activeCalibration.tempPoint && calibCursorPos && (
+                              <>
+                                <line
+                                  x1={activeCalibration.tempPoint.x}
+                                  y1={activeCalibration.tempPoint.y}
+                                  x2={calibCursorPos.x}
+                                  y2={calibCursorPos.y}
+                                  stroke="#0284c7"
+                                  strokeWidth="1.8"
+                                  strokeDasharray="2.5,2"
+                                  opacity="0.8"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                                {/* Preview baseline chord from L0 to MK if Kendra exists */}
+                                {calibrationGeometry.mk && (
+                                  <line
+                                    x1={activeCalibration.tempPoint.x}
+                                    y1={activeCalibration.tempPoint.y}
+                                    x2={calibrationGeometry.mk.x}
+                                    y2={calibrationGeometry.mk.y}
+                                    stroke="#0284c7"
+                                    strokeWidth="1.2"
+                                    strokeDasharray="2,2"
+                                    opacity="0.5"
+                                    vectorEffect="non-scaling-stroke"
+                                  />
+                                )}
+                              </>
+                            )}
+
+                            {/* Rubberband line for Fate Line (from MK to cursor on Saturn Mount) */}
+                            {activeCalibration.type === 'fate' && calibrationGeometry.mk && calibCursorPos && (
+                              <line
+                                x1={calibrationGeometry.mk.x}
+                                y1={calibrationGeometry.mk.y}
+                                x2={calibCursorPos.x}
+                                y2={calibCursorPos.y}
+                                stroke="#d97706"
+                                strokeWidth="1.8"
+                                strokeDasharray="3,2"
+                                opacity="0.8"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
+                          </g>
+                        )}
+
+                        {/* 2.6. 18+6 Cadence Finger-Base Projections (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
+                        {agingMethod === '18-6-cadence' && (() => {
+                          const pointsToRender = activeCalibration?.type === 'cadence'
+                            ? activeCalibration.points || []
+                            : calibAnchors?.cadence_points || [];
+
+                          if (pointsToRender.length === 0 && !calibCursorPos) return null;
+
+                          // Find Heart Line drawing if present to calculate intersections
+                          const heartDrawing = visibleDrawings.find((d) => d.lineCategory === 'line_heart') || 
+                            (activeAgingDrawing?.lineCategory === 'line_heart' ? activeAgingDrawing : null);
+                          const heartPts = heartDrawing?.points;
+
+                          return (
+                            <g className="cadence-18-6-overlay">
+                              {pointsToRender.map((pt, idx) => {
+                                const age = CADENCE_AGES[idx];
+                                if (!pt || age === undefined) return null;
+                                const isGap = age === 24 || age === 48 || age === 72;
+                                const strokeColor = isGap ? '#f59e0b' : '#f43f5e';
+
+                                // Find intersection with Heart Line
+                                let intersection: Point2D | null = null;
+                                if (heartPts && heartPts.length >= 2) {
+                                  for (let i = 0; i < heartPts.length - 1; i++) {
+                                    const pA = heartPts[i];
+                                    const pB = heartPts[i + 1];
+                                    const minX = Math.min(pA.x, pB.x);
+                                    const maxX = Math.max(pA.x, pB.x);
+                                    if (pt.x >= minX - 0.05 && pt.x <= maxX + 0.05 && Math.abs(pB.x - pA.x) > 0.001) {
+                                      const t = (pt.x - pA.x) / (pB.x - pA.x);
+                                      const iy = pA.y + t * (pB.y - pA.y);
+                                      if (iy >= pt.y - 1) {
+                                        intersection = { x: pt.x, y: iy };
+                                        break;
+                                      }
+                                    }
+                                  }
+                                }
+
+                                const endY = intersection ? Math.min(95, intersection.y + 2.5) : Math.min(95, pt.y + 14);
+
+                                return (
+                                  <g key={`cadence-svg-${idx}`}>
+                                    {/* Vertical downward projection line */}
+                                    <line
+                                      x1={pt.x}
+                                      y1={pt.y}
+                                      x2={pt.x}
+                                      y2={endY}
+                                      stroke={strokeColor}
+                                      strokeWidth={isGap ? '1.2' : '1.8'}
+                                      strokeDasharray={intersection ? '3,1.5' : '2.5,2'}
+                                      opacity="0.85"
+                                      vectorEffect="non-scaling-stroke"
+                                    />
+
+                                    {/* Arrowhead / tick if no intersection */}
+                                    {!intersection && (
+                                      <>
+                                        <line
+                                          x1={pt.x - 0.8}
+                                          y1={endY - 0.8}
+                                          x2={pt.x}
+                                          y2={endY}
+                                          stroke={strokeColor}
+                                          strokeWidth="1.4"
+                                          strokeLinecap="round"
+                                          vectorEffect="non-scaling-stroke"
+                                        />
+                                        <line
+                                          x1={pt.x + 0.8}
+                                          y1={endY - 0.8}
+                                          x2={pt.x}
+                                          y2={endY}
+                                          stroke={strokeColor}
+                                          strokeWidth="1.4"
+                                          strokeLinecap="round"
+                                          vectorEffect="non-scaling-stroke"
+                                        />
+                                      </>
+                                    )}
+
+                                    {/* Intersection mark on the Heart Line */}
+                                    {intersection && (
+                                      <g>
+                                        <circle
+                                          cx={intersection.x}
+                                          cy={intersection.y}
+                                          r="0.9"
+                                          fill={strokeColor}
+                                          stroke="#ffffff"
+                                          strokeWidth="0.3"
+                                        />
+                                        {/* Cross tick across the heart line */}
+                                        <line
+                                          x1={intersection.x - 1.4}
+                                          y1={intersection.y}
+                                          x2={intersection.x + 1.4}
+                                          y2={intersection.y}
+                                          stroke={strokeColor}
+                                          strokeWidth="1.2"
+                                          vectorEffect="non-scaling-stroke"
+                                        />
+                                        {/* Age badge on the Heart Line */}
+                                        <rect
+                                          x={intersection.x - 1.8}
+                                          y={intersection.y + 0.8}
+                                          width="3.6"
+                                          height="1.8"
+                                          rx="0.5"
+                                          fill="#1c1917"
+                                          stroke={strokeColor}
+                                          strokeWidth="0.25"
+                                        />
+                                        <text
+                                          x={intersection.x}
+                                          y={intersection.y + 2.05}
+                                          fill="#fecdd3"
+                                          fontSize="0.95"
+                                          fontWeight="bold"
+                                          textAnchor="middle"
+                                          style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                        >
+                                          {age}
+                                        </text>
+                                      </g>
+                                    )}
+                                  </g>
+                                );
+                              })}
+
+                              {/* Live preview line for active cadence tapping */}
+                              {activeCalibration?.type === 'cadence' && calibCursorPos && (
+                                <g>
+                                  <line
+                                    x1={calibCursorPos.x}
+                                    y1={calibCursorPos.y}
+                                    x2={calibCursorPos.x}
+                                    y2={Math.min(95, calibCursorPos.y + 14)}
+                                    stroke="#f43f5e"
+                                    strokeWidth="1.5"
+                                    strokeDasharray="2,2"
+                                    opacity="0.75"
+                                    vectorEffect="non-scaling-stroke"
+                                  />
+                                </g>
+                              )}
+                            </g>
+                          );
+                        })()}
 
                         {/* 3. Geometric Axial Grid */}
                         {showArvindJiAxialGrid && (() => {
@@ -2837,8 +3751,8 @@ export default function HandCanvas({
                         setDraggingNode('palm_start');
                       }}
                     >
-                      <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-md hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <div className="w-3 h-3 rounded-full bg-blue-500/70 border border-white/80 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full" />
                       </div>
                     </div>
 
@@ -2859,8 +3773,8 @@ export default function HandCanvas({
                         setDraggingNode('palm_end');
                       }}
                     >
-                      <div className="w-4.5 h-4.5 rounded-full bg-indigo-600 border-2 border-white shadow-md hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                      <div className="w-3 h-3 rounded-full bg-indigo-600/70 border border-white/80 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full animate-pulse" />
                       </div>
                     </div>
 
@@ -2881,8 +3795,8 @@ export default function HandCanvas({
                         setDraggingNode('finger_end');
                       }}
                     >
-                      <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-md hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <div className="w-3 h-3 rounded-full bg-emerald-500/70 border border-white/80 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full" />
                       </div>
                     </div>
 
@@ -2903,8 +3817,8 @@ export default function HandCanvas({
                         setDraggingNode('width_start');
                       }}
                     >
-                      <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-md hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <div className="w-3 h-3 rounded-full bg-amber-500/70 border border-white/80 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full" />
                       </div>
                     </div>
 
@@ -2925,10 +3839,382 @@ export default function HandCanvas({
                         setDraggingNode('width_end');
                       }}
                     >
-                      <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-md hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <div className="w-3 h-3 rounded-full bg-amber-500/70 border border-white/80 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full" />
                       </div>
                     </div>
+                  </>
+                )}
+
+                {/* Persistent Maṇibandha Rekhā 50% Kendra Midpoint Dot (Aging tab or when tracing lines) */}
+                {activeView !== 'd1_chart' && (mode === 'aging' || mode === 'draw') && manibandhaData && showDrawings && (
+                  <div
+                    className="absolute pointer-events-none z-20"
+                    style={{
+                      left: `${manibandhaData.midpoint.x}%`,
+                      top: `${manibandhaData.midpoint.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full bg-amber-500/70 border border-white/80 shadow-xs flex items-center justify-center"
+                      title={`Maṇibandha Kendra (50% Midpoint: ${manibandhaData.midpoint.x.toFixed(1)}%, ${manibandhaData.midpoint.y.toFixed(1)}%)`}
+                    >
+                      <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Calibration Interactive Circular Markers (Smaller & Translucent HTML Overlay Circles - Only on Aging tab) */}
+                {mode === 'aging' && activeCalibration && (
+                  <>
+                    {/* Step 2 Temporary Point 1 Indicator */}
+                    {activeCalibration.tempPoint && (
+                      <div
+                        className="absolute pointer-events-none z-30"
+                        style={{
+                          left: `${activeCalibration.tempPoint.x}%`,
+                          top: `${activeCalibration.tempPoint.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            activeCalibration.type === 'manibandha'
+                              ? 'bg-amber-500/70 border border-white/80'
+                              : 'bg-sky-500/70 border border-white/80'
+                          } shadow-xs flex items-center justify-center`}
+                        >
+                          <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2 Live Midpoint Dot Preview */}
+                    {activeCalibration.tempPoint && calibCursorPos && (
+                      <div
+                        className="absolute pointer-events-none z-30"
+                        style={{
+                          left: `${(activeCalibration.tempPoint.x + calibCursorPos.x) / 2}%`,
+                          top: `${(activeCalibration.tempPoint.y + calibCursorPos.y) / 2}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      >
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            activeCalibration.type === 'manibandha'
+                              ? 'bg-amber-400/65 border border-white/70'
+                              : 'bg-sky-400/65 border border-white/70'
+                          } shadow-xs`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Step 2 Cursor Point Dot Preview */}
+                    {activeCalibration.tempPoint && calibCursorPos && (
+                      <div
+                        className="absolute pointer-events-none z-30"
+                        style={{
+                          left: `${calibCursorPos.x}%`,
+                          top: `${calibCursorPos.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            activeCalibration.type === 'manibandha'
+                              ? 'bg-amber-500/70 border border-white/80'
+                              : 'bg-sky-500/70 border border-white/80'
+                          } shadow-xs`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Fate Calibration (Step 1: MK -> Saturn Root) */}
+                    {activeCalibration.type === 'fate' && calibrationGeometry.mk && calibCursorPos && (
+                      <>
+                        <div
+                          className="absolute pointer-events-none z-30"
+                          style={{
+                            left: `${calibrationGeometry.mk.x}%`,
+                            top: `${calibrationGeometry.mk.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/70 border border-white/80 shadow-xs flex items-center justify-center">
+                            <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
+                          </div>
+                        </div>
+                        <div
+                          className="absolute pointer-events-none z-30"
+                          style={{
+                            left: `${(calibrationGeometry.mk.x + calibCursorPos.x) / 2}%`,
+                            top: `${(calibrationGeometry.mk.y + calibCursorPos.y) / 2}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-amber-400/65 border border-white/70 shadow-xs" />
+                        </div>
+                        <div
+                          className="absolute pointer-events-none z-30"
+                          style={{
+                            left: `${calibCursorPos.x}%`,
+                            top: `${calibCursorPos.y}%`,
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        >
+                          <div className="w-2.5 h-2.5 rounded-full bg-purple-500/70 border border-white/80 shadow-xs" />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Cadence active tapping points preview */}
+                    {activeCalibration.type === 'cadence' && activeCalibration.points && (
+                      <>
+                        {activeCalibration.points.map((pt, idx) => {
+                          const age = CADENCE_AGES[idx];
+                          const isGap = age === 24 || age === 48 || age === 72;
+                          return (
+                            <div
+                              key={`cadence-tapping-pt-${idx}`}
+                              className="absolute pointer-events-none z-30"
+                              style={{
+                                left: `${pt.x}%`,
+                                top: `${pt.y}%`,
+                                transform: 'translate(-50%, -50%)',
+                              }}
+                            >
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full ${
+                                  isGap
+                                    ? 'bg-amber-500/75 ring-1 ring-amber-300/60'
+                                    : 'bg-rose-500/75 ring-1 ring-rose-300/60'
+                                } border border-white/85 shadow-xs flex items-center justify-center`}
+                              >
+                                <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
+                              </div>
+                              <div
+                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${
+                                  isGap
+                                    ? 'bg-amber-950/90 text-amber-300 border-amber-500/40'
+                                    : 'bg-stone-900/90 text-rose-300 border-rose-500/40'
+                                } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs border leading-tight`}
+                              >
+                                {age}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    {/* Cadence active tapping cursor preview */}
+                    {activeCalibration.type === 'cadence' && calibCursorPos && (
+                      <div
+                        className="absolute pointer-events-none z-30"
+                        style={{
+                          left: `${calibCursorPos.x}%`,
+                          top: `${calibCursorPos.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-rose-400/80 border border-white/90 shadow-xs animate-ping" />
+                        <div
+                          className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-rose-950/90 text-rose-200 border border-rose-400/50 text-[8px] font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs"
+                        >
+                          Age {CADENCE_AGES[(activeCalibration.step || 1) - 1]}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 30-Midpoint Master Calibration Draggable Anchor Handles (Small & Translucent) */}
+                {activeView !== 'd1_chart' && (mode === 'aging' || mode === 'draw') && !activeCalibration && calibAnchors && (
+                  <>
+                    {/* Life Line Origin Anchor (L0) - Only on Aging tab for 30-Midpoint method */}
+                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.life_start && (
+                      <div
+                        className="absolute cursor-move z-30 group"
+                        style={{
+                          left: `${calibAnchors.life_start.x}%`,
+                          top: `${calibAnchors.life_start.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('life_start');
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('life_start');
+                        }}
+                        title="Life Line Origin (Age 0) - Drag to fine-tune"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-sky-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                          <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                        </div>
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/80 text-[8px] text-sky-300 font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border border-sky-500/30">
+                          L0
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mercury Crease Sandhi Anchor (ME) - Only on Aging tab for 30-Midpoint method */}
+                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.mercury_sandhi && (
+                      <div
+                        className="absolute cursor-move z-30 group"
+                        style={{
+                          left: `${calibAnchors.mercury_sandhi.x}%`,
+                          top: `${calibAnchors.mercury_sandhi.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('mercury_sandhi');
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('mercury_sandhi');
+                        }}
+                        title="Mercury Crease (Level of Age 30) - Drag to fine-tune"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-sky-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                          <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                        </div>
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/80 text-[8px] text-sky-300 font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border border-sky-500/30">
+                          ME
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Saturn Mount / Middle Finger Base Joint Anchor (S75/80) - Only on Aging tab for 30-Midpoint method */}
+                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.saturn_root && (
+                      <div
+                        className="absolute cursor-move z-30 group"
+                        style={{
+                          left: `${calibAnchors.saturn_root.x}%`,
+                          top: `${calibAnchors.saturn_root.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('saturn_root');
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('saturn_root');
+                        }}
+                        title={`Saturn Finger Root (Fate Age ${calibrationGeometry.maxAge}) - Drag to fine-tune`}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-purple-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                          <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                        </div>
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-stone-900/80 text-[8px] text-purple-300 font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border border-purple-500/30">
+                          S{calibrationGeometry.maxAge}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Maṇibandha Bracelet Edges (Wrist L & Wrist R) */}
+                    {calibAnchors.manibandha_start && (
+                      <div
+                        className="absolute cursor-move z-30 group"
+                        style={{
+                          left: `${calibAnchors.manibandha_start.x}%`,
+                          top: `${calibAnchors.manibandha_start.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('manibandha_start');
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('manibandha_start');
+                        }}
+                        title="Maṇibandha Left End - Drag to adjust"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                          <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                        </div>
+                      </div>
+                    )}
+
+                    {calibAnchors.manibandha_end && (
+                      <div
+                        className="absolute cursor-move z-30 group"
+                        style={{
+                          left: `${calibAnchors.manibandha_end.x}%`,
+                          top: `${calibAnchors.manibandha_end.y}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('manibandha_end');
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setDraggingCalibNode('manibandha_end');
+                        }}
+                        title="Maṇibandha Right End - Drag to adjust"
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                          <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 18+6 Cadence Finger-Base Draggable Anchor Handles (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
+                    {mode === 'aging' && agingMethod === '18-6-cadence' && calibAnchors.cadence_points && (
+                      <>
+                        {calibAnchors.cadence_points.map((pt, idx) => {
+                          const age = CADENCE_AGES[idx];
+                          if (!pt || age === undefined) return null;
+                          const isGap = age === 24 || age === 48 || age === 72;
+
+                          return (
+                            <div
+                              key={`cadence-handle-${idx}`}
+                              className="absolute cursor-move z-30 group"
+                              style={{
+                                left: `${pt.x}%`,
+                                top: `${pt.y}%`,
+                                transform: 'translate(-50%, -50%)',
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                setDraggingCalibNode(`cadence_${idx}`);
+                              }}
+                              onTouchStart={(e) => {
+                                e.stopPropagation();
+                                setDraggingCalibNode(`cadence_${idx}`);
+                              }}
+                              title={`18+6 Cadence Age ${age} (Drag to adjust finger base position)`}
+                            >
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full ${
+                                  isGap
+                                    ? 'bg-amber-500/75 ring-1 ring-amber-300/60'
+                                    : 'bg-rose-500/75 ring-1 ring-rose-300/60'
+                                } border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform`}
+                              >
+                                <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                              </div>
+                              <div
+                                className={`absolute -top-3.5 left-1/2 -translate-x-1/2 ${
+                                  isGap
+                                    ? 'bg-amber-950/90 text-amber-300 border-amber-500/40'
+                                    : 'bg-stone-900/90 text-rose-300 border-rose-500/40'
+                                } text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none border leading-tight`}
+                              >
+                                {age}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
                   </>
                 )}
 
@@ -2938,7 +4224,7 @@ export default function HandCanvas({
                   visiblePins.map((pin) => (
                     <div
                       key={pin.id}
-                      className="absolute annotation-pin-trigger group z-20"
+                      className={`absolute annotation-pin-trigger group z-20 ${activeCalibration ? 'pointer-events-none' : ''}`}
                       style={{
                         left: `${pin.x}%`,
                         top: `${pin.y}%`,
@@ -3011,17 +4297,17 @@ export default function HandCanvas({
                           }}
                           title={
                             manibandhaData
-                              ? 'Maṇibandha Kendra (Wrist Midpoint) - Locked to traced wrist crease'
-                              : 'Wrist Base (Age 75) - Drag to align'
+                              ? 'Maṇibandha Kendra (Midpoint) - Locked to traced Maṇibandha Rekhā'
+                              : 'Maṇibandha Base (Age 75) - Drag to align'
                           }
                         >
                           <div
-                            className={`w-5 h-5 rounded-full ${manibandhaData
-                              ? 'bg-amber-500 ring-2 ring-amber-300'
-                              : 'bg-amber-600'
-                              } border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform`}
+                            className={`w-3.5 h-3.5 rounded-full ${manibandhaData
+                              ? 'bg-amber-500/75 ring-1 ring-amber-300/60'
+                              : 'bg-amber-600/75'
+                              } border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform`}
                           >
-                            <span className="text-[9px] font-bold text-white leading-none">
+                            <span className="text-[7.5px] font-bold text-white leading-none">
                               {manibandhaData ? 'MK' : '75'}
                             </span>
                           </div>
@@ -3047,8 +4333,8 @@ export default function HandCanvas({
                       }}
                       title="Center Midpoint (Age 30) - Drag to align"
                     >
-                      <div className="w-5 h-5 rounded-full bg-amber-500 border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform">
-                        <span className="text-[9px] font-bold text-white leading-none">30</span>
+                      <div className="w-3.5 h-3.5 rounded-full bg-amber-500/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <span className="text-[7.5px] font-bold text-white leading-none">30</span>
                       </div>
                     </div>
 
@@ -3070,8 +4356,8 @@ export default function HandCanvas({
                       }}
                       title="Saturn Mount Base (Age 80) - Drag to align"
                     >
-                      <div className="w-5 h-5 rounded-full bg-amber-700 border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform">
-                        <span className="text-[9px] font-bold text-white leading-none">80</span>
+                      <div className="w-3.5 h-3.5 rounded-full bg-amber-700/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <span className="text-[7.5px] font-bold text-white leading-none">80</span>
                       </div>
                     </div>
 
@@ -3093,8 +4379,8 @@ export default function HandCanvas({
                       }}
                       title="Jupiter/Saturn Cleft - Drag to align diagonal axis"
                     >
-                      <div className="w-4.5 h-4.5 rounded-full bg-purple-600 border-2 border-white shadow-lg hover:scale-125 flex items-center justify-center transition-transform">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                      <div className="w-3 h-3 rounded-full bg-purple-600/75 border border-white/85 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                        <div className="w-1 h-1 bg-white/90 rounded-full" />
                       </div>
                     </div>
                   </>
@@ -3208,7 +4494,24 @@ export default function HandCanvas({
                       <select
                         className="w-full bg-stone-800 border border-stone-700 text-stone-100 rounded-lg px-3 py-2 text-xs font-semibold focus:outline-hidden focus:border-amber-500 cursor-pointer"
                         value={activeAgingDrawing?.id || palmDrawings[0]?.id || ''}
-                        onChange={(e) => setSelectedAgingDrawingId(e.target.value)}
+                        onChange={(e) => {
+                          const drawingId = e.target.value;
+                          setSelectedAgingDrawingId(drawingId);
+                          const d = drawings.find((item) => item.id === drawingId);
+                          if (d?.lineCategory) {
+                            if (d.lineCategory === 'line_heart') {
+                              setAgingMethod('18-6-cadence');
+                            } else if (d.lineCategory === 'line_fate') {
+                              setAgingMethod('30-midpoint');
+                            } else if (d.lineCategory === 'line_marriage') {
+                              setAgingMethod('mercury-56');
+                            } else if (d.lineCategory === 'line_life') {
+                              if (agingMethod === '18-6-cadence' || agingMethod === 'mercury-56') {
+                                setAgingMethod('30-midpoint');
+                              }
+                            }
+                          }
+                        }}
                       >
                         {palmDrawings.map((d, i) => (
                           <option key={d.id} value={d.id}>
@@ -3233,7 +4536,8 @@ export default function HandCanvas({
                             <option value="line_heart">Heart Line (Hṛdaya Rekhā)</option>
                             <option value="line_head">Head Line (Mastiska Rekhā)</option>
                             <option value="line_sun">Sun Line (Sūrya Rekhā)</option>
-                            <option value="line_manibandha">Wrist Crease (Maṇibandha Rekhā)</option>
+                            <option value="line_mercury">Mercury Line (Budha Rekhā)</option>
+                            <option value="line_marriage">Marriage Line (Vivāha Rekhā)</option>
                             <option value="other">Other Crease</option>
                           </select>
                         </div>
@@ -3244,6 +4548,7 @@ export default function HandCanvas({
                         onClick={() => {
                           returnToAgingAfterTraceRef.current = true;
                           setAgingLineCategory('line_life');
+                          setShowDrawings(true);
                           setMode('draw');
                         }}
                         className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white rounded-lg text-xs font-semibold transition-all cursor-pointer border border-stone-700/60 shadow-xs"
@@ -3262,6 +4567,7 @@ export default function HandCanvas({
                         onClick={() => {
                           returnToAgingAfterTraceRef.current = true;
                           setAgingLineCategory('line_life');
+                          setShowDrawings(true);
                           setMode('draw');
                         }}
                         className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95"
@@ -3276,130 +4582,319 @@ export default function HandCanvas({
                   )}
                 </div>
 
-                {/* Dedicated Maṇibandha Rekhā & Kendra Section */}
-                <div className="space-y-2 pt-3 border-t border-stone-800/80">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Target className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="text-[11px] font-bold text-stone-200 whitespace-nowrap">
-                        Wrist Baseline (Maṇibandha)
-                      </span>
-                    </div>
-                    {manibandhaData ? (
-                      <span className="shrink-0 px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        50% Locked
-                      </span>
-                    ) : (
-                      <span className="shrink-0 text-[10px] text-stone-400 whitespace-nowrap">Not Traced</span>
-                    )}
-                  </div>
-
-                  {manibandhaData ? (
-                    <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl space-y-3">
-                      <div className="space-y-2 text-[10px]">
-                        <div className="bg-stone-800/80 p-3 rounded-lg border border-stone-700/60 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-stone-300 font-medium">Kendra Midpoint (50%):</span>
-                            <span className="font-mono text-amber-300 font-bold text-[11px]">
-                              {manibandhaData.midpoint.x.toFixed(1)}%, {manibandhaData.midpoint.y.toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between pt-1 border-t border-stone-700/50">
-                            <span className="text-stone-400 font-medium">Wrist Crease Arc Length:</span>
-                            <span className="font-mono text-stone-300">{manibandhaData.length.toFixed(1)}%</span>
-                          </div>
+                {/* Method-Specific Calibration Suite */}
+                <div className="space-y-3 pt-3 border-t border-stone-800/80">
+                  {agingMethod === '30-midpoint' ? (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Target className="w-4 h-4 text-amber-400" />
+                          <span className="text-xs font-bold text-stone-200">
+                            30-Midpoint Calibration
+                          </span>
                         </div>
-                        <p className="text-[10px] text-stone-400 leading-normal pt-0.5">
-                          ✨ Anchors Base Age 75 (Life), Age 0 (Fate), and central axis alignment.
+                        <span className="text-[10px] text-amber-300 font-semibold bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30">
+                          Tap-to-Plot
+                        </span>
+                      </div>
+
+                      {/* 1. Maṇibandha Base Anchor (Prerequisite) */}
+                      <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-stone-200">
+                            1. Maṇibandha (Wrist Base)
+                          </span>
+                          {manibandhaData ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Kendra Locked
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-amber-400 font-medium">Prerequisite</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-400 leading-tight">
+                          Tap left &amp; right edges of the 1st wrist bracelet. The 50% midpoint establishes Age {vedicData?.max_age ?? 75} (Life) &amp; Age 0 (Fate).
                         </p>
-                        <div className="flex items-center gap-2 my-1 pt-1">
+                        <div className="flex items-center gap-2 pt-1">
                           <button
                             type="button"
                             onClick={() => {
-                              returnToAgingAfterTraceRef.current = true;
-                              setAgingLineCategory('line_manibandha');
-                              setMode('draw');
+                              setActiveCalibration({ type: 'manibandha', step: 1 });
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 hover:text-white rounded-lg text-xs font-semibold border border-stone-700 transition cursor-pointer active:scale-95 shadow-xs"
+                            className="flex-1 py-1.5 px-3 bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 rounded-lg text-xs font-semibold border border-amber-500/40 transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5"
                           >
-                            <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                            Re-trace Wrist
+                            <Target className="w-3.5 h-3.5 text-amber-400" />
+                            {manibandhaData ? 'Re-tap (2 Taps)' : 'Tap 2 Points to Set'}
                           </button>
+                          {manibandhaData && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const clean = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+                                onChangeDrawings(clean);
+                                pushHistory(clean, pins);
+                                clearAgingCalibration(['manibandha_start', 'manibandha_end']);
+                              }}
+                              className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                              title="Clear Maṇibandha"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 2. Life Line Calibration */}
+                      <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-stone-200">
+                            2. Life Line 30-Midpoint
+                          </span>
+                          {calibAnchors?.life_start && calibAnchors?.mercury_sandhi ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              Calibrated
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-stone-400">Not Set</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-400 leading-tight">
+                          Tap Life Line origin (thumb) and outer Mercury crease. Automatically plots Age 30 and binary halving scale (7.5 to 52.5).
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
                           <button
                             type="button"
+                            disabled={!manibandhaData}
                             onClick={() => {
-                              if (!manibandhaDrawing) return;
-                              const updated = drawings.filter((d) => d.id !== manibandhaDrawing.id);
-                              onChangeDrawings(updated);
-                              pushHistory(updated, pins);
+                              setActiveCalibration({ type: 'life', step: 1 });
                             }}
-                            className="py-2 px-3 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95 shadow-xs"
-                            title="Clear Wrist Crease"
+                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${
+                              !manibandhaData
+                                ? 'bg-stone-800/40 text-stone-500 border-stone-700 cursor-not-allowed'
+                                : 'bg-sky-600/30 hover:bg-sky-600/45 text-sky-200 border-sky-500/40'
+                            }`}
+                            title={!manibandhaData ? 'Set Maṇibandha first' : 'Calibrate Life Line'}
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-sky-400" />
+                            {calibAnchors?.life_start ? 'Re-tap (2 Taps)' : 'Calibrate Life Line (2 Taps)'}
+                          </button>
+                          {calibAnchors?.life_start && (
+                            <button
+                              type="button"
+                              onClick={() => clearAgingCalibration(['life_start', 'mercury_sandhi'])}
+                              className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                              title="Clear Life Anchors"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Fate Line Calibration */}
+                      <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-stone-200">
+                            3. Fate Line (Saturn Axis)
+                          </span>
+                          {calibAnchors?.saturn_root ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              Calibrated
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-stone-400">Not Set</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-stone-400 leading-tight">
+                          Tap Saturn middle finger root. Automatically plots Age 0 at Maṇibandha, Age 30 midpoint, and binary halving scale up to Age {vedicData?.max_age ?? 75}.
+                        </p>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            disabled={!manibandhaData}
+                            onClick={() => {
+                              setActiveCalibration({ type: 'fate', step: 1 });
+                            }}
+                            className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 ${
+                              !manibandhaData
+                                ? 'bg-stone-800/40 text-stone-500 border-stone-700 cursor-not-allowed'
+                                : 'bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 border-amber-500/40'
+                            }`}
+                            title={!manibandhaData ? 'Set Maṇibandha first' : 'Calibrate Fate Line'}
+                          >
+                            <Target className="w-3.5 h-3.5 text-amber-400" />
+                            {calibAnchors?.saturn_root ? 'Re-tap (1 Tap)' : 'Calibrate Fate Line (1 Tap)'}
+                          </button>
+                          {calibAnchors?.saturn_root && (
+                            <button
+                              type="button"
+                              onClick={() => clearAgingCalibration(['saturn_root'])}
+                              className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                              title="Clear Fate Anchor"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Display Toggles */}
+                      <div className="space-y-1.5 pt-2 border-t border-stone-800">
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                          <input
+                            type="checkbox"
+                            checked={showLifeCalibrationGrid}
+                            onChange={(e) => setShowLifeCalibrationGrid(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-sky-500 cursor-pointer"
+                          />
+                          <span>Show Life Line T-Frame &amp; Aging Scale</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                          <input
+                            type="checkbox"
+                            checked={showFateCalibrationGrid}
+                            onChange={(e) => setShowFateCalibrationGrid(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
+                          />
+                          <span>Show Fate Line Saturn Axis &amp; Aging Scale</span>
+                        </label>
+                      </div>
+                    </>
+                  ) : agingMethod === '18-6-cadence' ? (
+                    <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-stone-200">
+                          18 + 6 Cadence Calibration (8 Finger Base Points)
+                        </span>
+                        {calibAnchors?.cadence_points?.length === 8 ? (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            8 Points Calibrated
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-stone-400">Not Set</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-400 leading-tight">
+                        Tap 8 points along the base of the fingers from Mercury to Jupiter (Ages 0, 18, 24, 42, 48, 66, 72, 90). Each point projects a straight line downwards to show where it meets the Heart Line.
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveCalibration({ type: 'cadence', step: 1, points: [] });
+                          }}
+                          className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 bg-rose-600/30 hover:bg-rose-600/45 text-rose-200 border-rose-500/40"
+                          title="Tap 8 points sequentially across the finger bases"
+                        >
+                          <Target className="w-3.5 h-3.5 text-rose-400" />
+                          {calibAnchors?.cadence_points?.length === 8 ? 'Re-tap 8 Points' : 'Tap 8 Points (0 → 90)'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const isRight = activeView === 'right_palm';
+                            updateAgingCalibration({
+                              cadence_points: getDefaultCadencePoints(isRight),
+                            });
+                          }}
+                          className="py-1.5 px-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg text-xs font-medium border border-stone-600 transition cursor-pointer active:scale-95 shadow-xs"
+                          title="Apply standard default finger base points and fine-tune by dragging"
+                        >
+                          Preset 8 Points
+                        </button>
+                        {calibAnchors?.cadence_points && (
+                          <button
+                            type="button"
+                            onClick={() => clearAgingCalibration(['cadence_points'])}
+                            className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                            title="Clear 8 Cadence Points"
                           >
                             Clear
                           </button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-stone-800/40 border border-stone-700/60 rounded-xl space-y-3">
-                      <p className="text-[11px] text-stone-300/90 leading-relaxed">
-                        Trace the 1st bracelet across the wrist. The 50% midpoint will be automatically plotted to anchor Age 0 &amp; Age 75.
+                    <div className="p-3 bg-stone-800/40 border border-stone-700/50 rounded-xl text-[11px] text-stone-300 space-y-2">
+                      <div className="font-semibold text-amber-400 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          Classical Line Traversal Scale
+                        </span>
+                        {manibandhaData && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Wrist Kendra Locked
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-stone-400 leading-normal text-[10px]">
+                        For {AGING_METHODS[agingMethod]?.title || 'this method'}, trace the line on the palm using the <strong className="text-stone-200">Trace</strong> tool. Age intervals and tick markers compute automatically along the polyline.
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          returnToAgingAfterTraceRef.current = true;
-                          setAgingLineCategory('line_manibandha');
-                          setMode('draw');
-                        }}
-                        className="w-full flex items-center justify-center gap-2 my-2 py-2 px-3 bg-amber-600/25 hover:bg-amber-600/40 text-amber-200 border border-amber-500/35 rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
-                      >
-                        <Target className="w-3.5 h-3.5 text-amber-400" />
-                        Trace Wrist Crease (Maṇibandha)
-                      </button>
+                      <div className="pt-1 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveCalibration({ type: 'manibandha', step: 1 })}
+                          className="flex-1 py-1 px-2.5 bg-amber-600/20 hover:bg-amber-600/35 text-amber-200 rounded-lg text-[10.5px] font-semibold border border-amber-500/30 transition cursor-pointer active:scale-95 flex items-center justify-center gap-1"
+                        >
+                          <Target className="w-3 h-3 text-amber-400" />
+                          {manibandhaData ? 'Re-tap Wrist Midpoint' : 'Tap Wrist Bracelet Base'}
+                        </button>
+                        {manibandhaData && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const clean = drawings.filter((d) => !(d.view === activeView && d.lineCategory === 'line_manibandha'));
+                              onChangeDrawings(clean);
+                              pushHistory(clean, pins);
+                              clearAgingCalibration(['manibandha_start', 'manibandha_end']);
+                            }}
+                            className="py-1 px-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-[10.5px] font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Lifespan Scale Setting */}
-                <div className="flex items-center justify-between pt-3 border-t border-stone-800/80">
-                  <span className="text-[11px] text-stone-300">Max Lifespan (deśa-kāla):</span>
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min="50"
-                      max="120"
-                      className="w-14 bg-stone-800 border border-stone-700 text-stone-100 rounded px-1.5 py-0.5 text-xs text-center font-bold"
-                      value={vedicData?.max_age ?? 75}
-                      onChange={(e) => handleUpdateMaxAge(parseInt(e.target.value, 10) || 75)}
-                    />
-                    <span className="text-[10px] text-stone-400">yrs</span>
+                {/* Max Lifespan (deśa-kāla) Configurable Setting */}
+                <div className="pt-2.5 border-t border-stone-800 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-stone-300 font-medium">Max Lifespan (deśa-kāla):</span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min="50"
+                        max="120"
+                        className="w-14 bg-stone-800 border border-stone-700 text-amber-400 rounded px-1.5 py-0.5 text-xs text-center font-bold focus:border-amber-500 focus:outline-none"
+                        value={vedicData?.max_age ?? 75}
+                        onChange={(e) => handleUpdateMaxAge(parseInt(e.target.value, 10) || 75)}
+                      />
+                      <span className="text-[10px] text-stone-400 font-medium">yrs</span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Feature Toggles */}
-                <div className="space-y-2 pt-3 border-t border-stone-800/80">
-                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
-                    <input
-                      type="checkbox"
-                      checked={showAllMethodsComparison}
-                      onChange={(e) => setShowAllMethodsComparison(e.target.checked)}
-                      className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
-                    />
-                    <span>Compare All 3 Scales (Gold / Blue / Purple)</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
-                    <input
-                      type="checkbox"
-                      checked={showArvindJiAxialGrid}
-                      onChange={(e) => setShowArvindJiAxialGrid(e.target.checked)}
-                      className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
-                    />
-                    <span>Axial Grid (30-75-80 Geometry)</span>
-                  </label>
+                  <div className="flex items-center gap-1">
+                    {[70, 75, 80, 84, 90, 100].map((ageVal) => {
+                      const isSelected = (vedicData?.max_age ?? 75) === ageVal;
+                      return (
+                        <button
+                          key={ageVal}
+                          type="button"
+                          onClick={() => handleUpdateMaxAge(ageVal)}
+                          className={`flex-1 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                            isSelected
+                              ? 'bg-amber-600 text-white shadow-xs font-bold'
+                              : 'bg-stone-800/80 hover:bg-stone-750 text-stone-400 hover:text-stone-200 border border-stone-700/60'
+                          }`}
+                          title={ageVal === 75 ? '75 yrs (Classical Default)' : `${ageVal} yrs`}
+                        >
+                          {ageVal}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Marker Density Toggle */}
@@ -3556,12 +5051,29 @@ export default function HandCanvas({
               </div>
             )}
 
+            {/* Aging Calibration Floating Top Banner */}
+            {mode === 'aging' && activeCalibration && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 backdrop-blur-md border border-cyan-500/70 text-cyan-200 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-3">
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                  {getCalibrationPrompt()}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveCalibration(null)}
+                  className="bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white px-2 py-0.5 rounded text-[11px] font-medium border border-stone-600 cursor-pointer ml-1 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
             {/* Aging Trace Mode Floating Hint */}
             {mode === 'draw' && returnToAgingAfterTraceRef.current && (
               <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-stone-900/95 backdrop-blur-md border border-amber-500/50 text-amber-200 px-4 py-2 rounded-full text-xs font-semibold shadow-2xl flex items-center gap-2">
                 <span>
                   {agingLineCategory === 'line_manibandha'
-                    ? '✏️ Trace along the first wrist crease (Maṇibandha) — 50% Kendra midpoint will be automatically plotted'
+                    ? '✏️ Trace along the first bracelet (Maṇibandha) — 50% Kendra midpoint will be automatically plotted'
                     : '✏️ Click & drag on the palm to trace the line — release to plot aging scale'}
                 </span>
                 <button

@@ -430,6 +430,7 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
               isUploading={isUploading}
               hasChanges={hasUnsavedChanges}
               onChangeActiveView={setActiveView}
+              activeView={activeView}
             />
           </div>
         </div>

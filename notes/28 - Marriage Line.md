@@ -1,9 +1,4 @@
----
-title: Vivāha Rekhā (Marriage Line) — Class Notes
-tags: [palmistry, hasta-samudrika, marriage-line, class-notes]
----
-
-# Vivāha Rekhā (Marriage Line) — Class Notes
+# Vivāha Rekhā (Marriage Line)
 
 > [!NOTE] Reading conventions
 > - "Saturn" is written where the transcript reads "Sunny" (see Open items).
@@ -215,7 +210,7 @@ tags: [palmistry, hasta-samudrika, marriage-line, class-notes]
 | 13 | Line reaches the **Sun mount** | Name, fame, prosperity after marriage | Rare; good if it **does not cut across the sun line/mount, else it means problem due to woman (line from ME Mount cutting Sun line/mount)** |
 | 14 | A line **crosses/cuts** the marriage line | Third-party influence that is trouble-some or mental state that cause trouble in marriage | See below |
 | 15 | **Zigzag** (rare) | Good-bad phases; |  |
-| 16 | >-< Shaped Line | **Divorce indication** | This is not the only divorce indication; many more to come |
+| 16 | >--< Shaped Line | **Divorce indication** | This is not the only divorce indication; many more to come |
 | 17 | Line **hooks downward** | A problem that **will never be solved** | Opposite of the upward hook |
 
 > [!CAUTION] Mars line vs marriage branch

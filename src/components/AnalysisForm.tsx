@@ -20,6 +20,7 @@ interface AnalysisFormProps {
   isUploading: boolean;
   hasChanges: boolean;
   onChangeActiveView?: (view: HandView) => void;
+  activeView?: HandView;
 }
 
 import { HAND_TYPES, HAND_TYPE_DETAILS } from '@/lib/content/handTypes';
@@ -58,6 +59,18 @@ export const getDetectedYogas = (vedicData: VedicData): Array<{ name: string; ic
   }
   if (vedicData.line_fate && vedicData.line_head && vedicData.line_mercury_present === true) {
     detectedYogas.push({ name: 'Dhana kī Koṭhī (Money Room)', icon: '🏛️', desc: 'Triangle formed by Fate, Head, and Mercury lines (Note 27 §9.5) — capacity to store and grow wealth.' });
+  }
+  if (vedicData.line_marriage?.formations?.includes('Gentle Upward Curve / Upward Branches')) {
+    detectedYogas.push({ name: 'Happy Marital Union (Vivāha Shubha Yoga)', icon: '💍', desc: 'Gentle upward curving marriage line or upward branches — indication of marital harmony, happiness, and mutual elevation (Lecture 28 §5 #6).' });
+  }
+  if (vedicData.line_marriage?.formations?.includes('Triangle on Line')) {
+    detectedYogas.push({ name: 'Vivāha Trikoṇa (Triangle on Marriage Line)', icon: '🔺', desc: 'Rare and highly auspicious mark on the Vivāha Rekhā — elevated marital blessing and status (Lecture 28 §5 #12).' });
+  }
+  if (vedicData.line_marriage?.formations?.includes('Reaching Sun Mount') || vedicData.line_marriage?.reaches_sun_mount) {
+    detectedYogas.push({ name: 'Sun-Linked Marriage Yoga', icon: '🌟', desc: 'Marriage line extending into Sun Mount — spouse brings royal honor, public recognition, fame, and wealth (Lecture 28 §5.3).' });
+  }
+  if (vedicData.line_marriage?.formations?.includes('Sharp Upward Hook')) {
+    detectedYogas.push({ name: 'Nirvivāha Yoga (Lifelong Bachelorhood)', icon: '🚫', desc: 'Sharp upward hook on Vivāha Rekhā — classical aversion to marriage or lifelong celibacy (Lecture 28 §5 #1).' });
   }
   return detectedYogas;
 };
@@ -190,6 +203,21 @@ const generateReportMarkdown = (profile: HandProfile, vedic: VedicData): string 
     if (vedic.line_mercury_joins_moon) md += `- Line of Intuition: Reaches Moon Mount (prophetic dreams, strong gut instinct)\n`;
     if (vedic.line_mercury_single_vertical) md += `- Single Vertical Line on Mount: Dhana Lābha (sudden windfall sign)\n`;
   }
+
+  if (vedic.line_marriage) {
+    const m = vedic.line_marriage;
+    md += `### Marriage Line (Vivāha Rekhā / Śīla-guṇa Rekhā)\n`;
+    if (m.quality) md += `- Line Quality: ${m.quality}\n`;
+    if (m.estimated_age) md += `- Estimated Timing: ~Age ${m.estimated_age} (Mercury 0–56 scale)\n`;
+    if (m.secondary_lines_count) md += `- Affection/Attraction Lines: ${m.secondary_lines_count} lines\n`;
+    if (m.has_parasite_line_on_life) md += `- Upajīvī Rekhā Alert: Parasite line on Life Line indicates third-party domestic stress\n`;
+    if (m.formations && m.formations.length > 0) md += `- Structural Formations: ${m.formations.join(', ')}\n`;
+    if (m.venus_line_cutting) md += `- Venus Line Conflict: Direct line from Venus cuts Vivāha Rekhā (severe martial hazard)\n`;
+    if (m.reaches_sun_mount) md += `- Sun Mount Connection: Reaches Sun Mount (fame/prosperity through marriage)\n`;
+    if (m.cuts_sun_mount) md += `- Sun Mount Conflict: Cuts across Sun mount/line (scandal/trouble through spouse)\n`;
+    if (m.crosses_heart_line) md += `- Heart Line Impact: Cuts Heart Line (sorrowful termination warning)\n`;
+    if (m.notes) md += `- Clinical Notes: ${m.notes}\n`;
+  }
   md += `\n`;
 
   // Age events
@@ -245,6 +273,7 @@ export default function AnalysisForm({
   isUploading,
   hasChanges,
   onChangeActiveView,
+  activeView,
 }: AnalysisFormProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'samudrika' | 'nails' | 'mounts' | 'lines' | 'age' | 'pins' | 'tags' | 'report'>('profile');
   const [newTag, setNewTag] = useState('');
@@ -691,12 +720,25 @@ export default function AnalysisForm({
                   Uploading image view...
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3 mt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
                 {(['right_palm', 'right_back', 'left_palm', 'left_back'] as const).map((view) => {
                   const url = profile.images[view];
+                  const isActive = activeView === view;
                   return (
-                    <div key={view} className="border border-stone-200 rounded-lg p-2 bg-stone-50 text-center flex flex-col justify-between h-28 relative">
-                      <span className="text-[10px] font-bold text-stone-500 block truncate mb-1">
+                    <div
+                      key={view}
+                      onClick={() => {
+                        if (url && onChangeActiveView) {
+                          onChangeActiveView(view);
+                        }
+                      }}
+                      className={`border rounded-lg p-2 text-center flex flex-col justify-between h-28 relative transition-all ${
+                        isActive
+                          ? 'border-accent-gold ring-2 ring-accent-gold/30 bg-amber-50/40 shadow-xs'
+                          : 'border-stone-200 bg-stone-50 hover:bg-stone-100/80'
+                      } ${url && onChangeActiveView ? 'cursor-pointer' : ''}`}
+                    >
+                      <span className={`text-[10px] font-bold block truncate mb-1 ${isActive ? 'text-accent-gold' : 'text-stone-500'}`}>
                         {HAND_VIEW_LABELS[view]}
                       </span>
                       {url ? (
@@ -706,8 +748,11 @@ export default function AnalysisForm({
                           {isAdmin && (
                             <button
                               type="button"
-                              onClick={() => setPhotoToRemove(view)}
-                              className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPhotoToRemove(view);
+                              }}
+                              className="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold transition-all shadow cursor-pointer z-10"
                               title="Delete photo (Admin Only)"
                             >
                               ×
@@ -1703,7 +1748,7 @@ export default function AnalysisForm({
                 <Activity className="w-4 h-4 text-teal-500" />
                 Mercury Finger (Budh / Little) — Aṅguli Analysis
               </h4>
-              <p className="text-[10px] text-stone-500 leading-normal">Mercury controls communication, business acumen, writing, and diplomacy. Benchmark is the uppermost joint/crease line (sandhi rekhā) of the Sun finger (Notes 08 &amp; 10): reaching = normal/balanced; above = gifted oratory &amp; commerce; below = timid speech / slower logic filtering.</p>
+              <p className="text-[10px] text-stone-500 leading-normal">Mercury controls communication, business acumen, writing, and diplomacy. Benchmark is the uppermost joint/crease line (sandhi rekhā) of the Sun finger: reaching = normal/balanced; above = gifted oratory &amp; commerce; below = timid speech / slower logic filtering.</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
                 <div className="form-group">
                   <label className="form-label text-xs">Length (ref: 1st joint of Sun)</label>
@@ -1919,23 +1964,63 @@ export default function AnalysisForm({
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label text-xs">Finger Joints (Knots)</label>
+                  <label className="form-label text-xs">Finger Joints (Knots / Back of Palm — Dārśanika Hasta)</label>
                   <select
                     className="form-input bg-white border border-stone-200 text-xs"
-                    value={vedicData.finger_knots || ''}
-                    onChange={(e) => updateVedicField('finger_knots', e.target.value)}
+                    value={vedicData.knots_back_of_hand || vedicData.finger_knots || ''}
+                    onChange={(e) => {
+                      updateVedicField('knots_back_of_hand', e.target.value);
+                      updateVedicField('finger_knots', e.target.value);
+                    }}
                   >
                     <option value="">Select Joints...</option>
-                    <option value="Smooth">Smooth & Tapering</option>
-                    <option value="Jupiter & Saturn Knots">Knots on Jupiter & Saturn only</option>
-                    <option value="Fully Philosophical (Knotty)">Fully Knotty (Philosophical/Message deliverer)</option>
-                    <option value="Crooked Fingers">Crooked Fingers (Amplified planet energy)</option>
+                    <option value="Smooth / None">Smooth & Tapering (Intuitive, swift)</option>
+                    <option value="Jupiter Knots">Jupiter Knots (Teaching / Wisdom / Philosophy)</option>
+                    <option value="Saturn Knots">Saturn Knots (Duty / Karma / Scientific Research)</option>
+                    <option value="Sun Knots">Sun Knots (Artistic / Aesthetic Philosophy)</option>
+                    <option value="Mercury Knots">Mercury Knots (Commercial Logic / Analytical)</option>
+                    <option value="All Knotty (Philosophical / Dārśanika)">All Knotty (Deep Philosophical Thinker / Researcher)</option>
                   </select>
+                </div>
+
+                <div className="form-group col-span-2">
+                  <label className="form-label text-xs flex items-center justify-between">
+                    <span>Crooked Fingers (Tēḍhī-Mēḍhī — Distinct from Knotty Hand, Lecture 28 §2.7)</span>
+                    <span className="text-[10px] text-stone-500 font-normal">cleverness / amplified tension</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {(['Saturn', 'Sun', 'Mercury', 'Jupiter'] as const).map((finger) => {
+                      const list = vedicData.crooked_fingers || [];
+                      const isCrooked = list.includes(finger);
+                      return (
+                        <label
+                          key={finger}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold cursor-pointer transition-all ${isCrooked
+                            ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
+                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
+                            }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            checked={isCrooked}
+                            onChange={(e) => {
+                              const updated = e.target.checked
+                                ? [...list, finger]
+                                : list.filter((f) => f !== finger);
+                              updateVedicField('crooked_fingers', updated);
+                            }}
+                          />
+                          <span>{finger} Finger</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
               {/* Dynamic Modifiers interpretation based on lecture */}
-              {(vedicData.skin_texture || vedicData.nail_shape || vedicData.finger_knots) && (
+              {(vedicData.skin_texture || vedicData.nail_shape || vedicData.finger_knots || vedicData.knots_back_of_hand || (vedicData.crooked_fingers && vedicData.crooked_fingers.length > 0)) && (
                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs space-y-1.5 leading-relaxed">
                   <span className="font-bold text-stone-800 uppercase tracking-wider block text-[9px]">Dorsal Modification Profile:</span>
 
@@ -1962,13 +2047,24 @@ export default function AnalysisForm({
                     </p>
                   )}
 
-                  {vedicData.finger_knots && (
+                  {(vedicData.knots_back_of_hand || vedicData.finger_knots) && (
                     <p className="text-stone-600 font-medium border-t border-stone-200/50 pt-1.5">
-                      <strong>Finger Joints:</strong> {
-                        vedicData.finger_knots === 'Fully Philosophical (Knotty)' ? '📖 Knots increase philosophical depth in that finger\'s specific domain (strongest if on Jupiter); crookedness without knots indicates cunning/shrewdness — can bring wrong decisions, exaggerated ego, or only fear-based (not genuine) respect from others.' :
-                          vedicData.finger_knots === 'Jupiter & Saturn Knots' ? '🪐 Knots localized on Jupiter and Saturn restrict philosophical contemplation specifically to wisdom, ambition, and focus.' :
-                            vedicData.finger_knots === 'Crooked Fingers' ? '⚡ Crookedness without knots indicates cunning/shrewdness — can bring wrong decisions, exaggerated ego, or only fear-based (not genuine) respect from others.' :
-                              'Smooth joints indicate swift, intuitive thinking without heavy analytical filters.'
+                      <strong>Knots (Back of Hand):</strong> {
+                        (vedicData.knots_back_of_hand?.includes('All Knotty') || vedicData.finger_knots === 'Fully Philosophical (Knotty)')
+                          ? '📖 Raised joints across all fingers mark a true Dārśanika Hasta — deep, philosophical thinker, patient analyst, and researcher (Lecture 28 §2.7).'
+                          : vedicData.knots_back_of_hand && vedicData.knots_back_of_hand !== 'Smooth / None'
+                            ? `📖 Knots localized on ${vedicData.knots_back_of_hand} restrict analytical depth and research specifically to that planet\'s portfolio.`
+                            : 'Smooth joints allow swift, intuitive decisions without analytical bottlenecks.'
+                      }
+                    </p>
+                  )}
+
+                  {vedicData.crooked_fingers && vedicData.crooked_fingers.length > 0 && (
+                    <p className="text-amber-800 font-medium border-t border-amber-200/50 pt-1.5">
+                      <strong>Crooked Fingers (Tēḍhī-Mēḍhī):</strong> {
+                        vedicData.crooked_fingers.includes('Saturn')
+                          ? '⚡ Crooked Saturn Finger: Implies career path obstacles or requiring tactical cleverness to survive/advance. Do not confuse with knotty knuckles (Lecture 28 §2.5, §2.7).'
+                          : `⚡ Crookedness in ${vedicData.crooked_fingers.join(', ')}: Planet\'s natural flow is amplified or prone to eccentric/unconventional expression.`
                       }
                     </p>
                   )}
@@ -2598,7 +2694,7 @@ export default function AnalysisForm({
                   <span className="text-[10px] font-semibold text-stone-400">Between Moon &amp; Venus at Maṇibandha</span>
                 </div>
                 <div className="p-2 bg-purple-50/70 border border-purple-200/60 rounded-xl text-xs text-purple-900 font-medium leading-relaxed">
-                  🔱 <strong>Core Teaching (Notes 20-22):</strong> Seat of Moksha and spirituality (ādhyātma). <strong>90% of genuine complete Fish signs (Matsya Chinha) appear here</strong> at the base of the Fate Line or end of the Life Line. Gives spiritual renown, fame, and deep research capability (not liquid cash).
+                  🔱 <strong>Core Teaching:</strong> Seat of Moksha and spirituality (ādhyātma). <strong>90% of genuine complete Fish signs (Matsya Chinha) appear here</strong> at the base of the Fate Line or end of the Life Line. Gives spiritual renown, fame, and deep research capability (not liquid cash).
                 </div>
 
                 {(() => {
@@ -2650,7 +2746,7 @@ export default function AnalysisForm({
                         <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-xl text-[11px] space-y-1.5 leading-relaxed text-stone-700">
                           {ketuData.signs.includes('Fish 🐟') && (
                             <p className="text-purple-900 font-semibold">
-                              🐟 <strong>Fish on Ketū (Notes 20-22):</strong> Power, name/fame, spiritual growth, researcher-type insight — does NOT bring money.
+                              🐟 <strong>Fish on Ketū :</strong> Power, name/fame, spiritual growth, researcher-type insight — does NOT bring money.
                             </p>
                           )}
                           {ketuData.signs.includes('Conch (Śaṅkha) 🐚') && (
@@ -2842,7 +2938,7 @@ export default function AnalysisForm({
           return (
             <div className="space-y-5">
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-medium leading-relaxed">
-                📖 <strong>Key Sign Rules (Notes 19-27):</strong> Cross on Jupiter = marriage/education (good). Cross elsewhere = disease/obstacle. Star on Moon = suicidal tendency. Square anywhere = protection. Island on any line = struggle for that duration. Diamond Chain at line end = wish fulfilment (doubles power).
+                📖 <strong>Key Sign Rules:</strong> Cross on Jupiter = marriage/education (good). Cross elsewhere = disease/obstacle. Star on Moon = suicidal tendency. Square anywhere = protection. Island on any line = struggle for that duration. Diamond Chain at line end = wish fulfilment (doubles power).
               </div>
 
               {LINE_CONFIGS.map((line) => {
@@ -3064,10 +3160,264 @@ export default function AnalysisForm({
                 )}
               </div>
 
+              {/* ─── Vivāha Rekhā (Marriage Line) — Lecture 28 ─── */}
+              <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                  <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+                    💍 Vivāha Rekhā (Marriage Line / Śīla-guṇa Rekhā)
+                  </h4>
+                  <span className="text-[10px] font-semibold text-pink-700 bg-pink-50 px-2 py-0.5 rounded-full border border-pink-200">
+                    Mercury Mount (Budha Parvata) • Lecture 28
+                  </span>
+                </div>
+
+                {/* Consultation Principle / Ethical Warning */}
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-amber-950">
+                    <span>⚠️</span> Palmist Ethics &amp; Deśa-Kāla Principle (Lecture 28 §4):
+                  </p>
+                  <p className="text-[11px] text-amber-800">
+                    • <strong>Never declare an extramarital affair</strong> from the hand — palm lines register emotional impressions, attractions, or past crushes.<br />
+                    • <strong>No line ≠ no marriage</strong> (indicates low romantic dependency or practical detachment).<br />
+                    • <strong>Multiple lines ≠ multiple spouses</strong> (reflects deep infatuations, broken engagements, or sequential relationship negotiations).
+                  </p>
+                </div>
+
+                {(() => {
+                  const mData = vedicData.line_marriage || {
+                    quality: '',
+                    formations: [],
+                    estimated_age: '',
+                    has_parasite_line_on_life: false,
+                    secondary_lines_count: '',
+                    venus_line_cutting: false,
+                    reaches_sun_mount: false,
+                    cuts_sun_mount: false,
+                    crosses_heart_line: false,
+                    notes: '',
+                  };
+
+                  const updateMarriageField = <K extends keyof typeof mData>(field: K, value: typeof mData[K]) => {
+                    updateVedicField('line_marriage', { ...mData, [field]: value });
+                  };
+
+                  const toggleFormation = (formName: string) => {
+                    const current = mData.formations || [];
+                    const normalized = current.map((f) => (f === '>< Divorce Indication' ? '>--< Divorce Indication' : f));
+                    const next = normalized.includes(formName)
+                      ? normalized.filter((f) => f !== formName)
+                      : [...normalized, formName];
+                    updateMarriageField('formations', next);
+                  };
+
+                  const VIVAHA_FORMATIONS = [
+                    { name: 'Sharp Upward Hook', desc: 'No marriage / lifelong bachelorhood / aversion to marriage (Lecture 28 §5 #1)', icon: '🚫' },
+                    { name: 'Cut by Vertical Line', desc: 'Sudden break or partner accidental danger (Lecture 28 §5 #2)', icon: '⚡' },
+                    { name: 'Continues after Vertical Cut', desc: 'Trouble weathered; smooth line = resolved; dark line = trouble escalates (Lecture 28 §5 #3)', icon: '🔄' },
+                    { name: 'Dropping toward Heart Line', desc: 'Dull married life; low emotional connection; emotional burden / heartbreak (Lecture 28 §5 #4)', icon: '💔' },
+                    { name: 'Cutting Heart Line', desc: 'Worst sorrowful termination; sorrowful end of married life (Lecture 28 §5 #4)', icon: '⚡' },
+                    { name: 'Short Downward Branches', desc: 'Normal ups and downs (found in 50%+ of hands) (Lecture 28 §5 #5)', icon: '〰️' },
+                    { name: 'Gentle Upward Curve / Upward Branches', desc: 'Happy, auspicious married life (cross-check Guru/Mars in female, Venus in male) (Lecture 28 §5 #6)', icon: '✨' },
+                    { name: 'Circle / Dot at End', desc: 'Spouse mortality / death indication (Lecture 28 §5 #8)', icon: '⭕' },
+                    { name: 'Small Island', desc: 'Acute, sudden crisis felt with high shock value (felt more than big island) (Lecture 28 §5.1)', icon: '⚠️' },
+                    { name: 'Large Island', desc: 'Chronic ongoing struggle normalized from day one (Lecture 28 §5.1)', icon: '⚠️' },
+                    { name: 'Fork at Start', desc: 'Distraction, hesitation, or dual parental/cultural interference in beginning (Lecture 28 §5.2)', icon: '🌱' },
+                    { name: 'Fork at End', desc: 'Gradual loss of interest / emotional estrangement in twilight years (Lecture 28 §5.2)', icon: '🥀' },
+                    { name: 'Fork in Middle', desc: 'Upward branch = good growth; downward branch = bad friction (Lecture 28 §5.2)', icon: '🌿' },
+                    { name: 'Triangle on Line', desc: 'Extremely auspicious and rare blessing in marital life (Lecture 28 §5 #12)', icon: '🔺' },
+                    { name: 'Reaching Sun Mount', desc: 'Name, fame, and wealth gained after marriage (Lecture 28 §5.3)', icon: '🌟' },
+                    { name: 'Cutting Sun Mount/Line', desc: 'Scandal, defamation, or financial dispute due to a woman/spouse (Lecture 28 §5.3)', icon: '⚠️' },
+                    { name: 'Line from Venus Mount Cutting', desc: 'Extreme domestic violence or spousal harm risk — check Mars & Thumb (Lecture 28 §5.6)', icon: '⚔️' },
+                    { name: '>--< Divorce Indication', desc: 'Classical >--< (bifurcated on both entry and exit) separation sign indicating divorce (Lecture 28 §5 #16)', icon: '⚡' },
+                    { name: 'Downward Hook', desc: 'Permanent unresolved marital deadlock (Lecture 28 §5 #17)', icon: '⚓' },
+                  ];
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Line Quality */}
+                      <div className="form-group">
+                        <label className="form-label text-xs font-semibold text-stone-800">Line Quality (Vivāha Rekhā Svabhāva)</label>
+                        <select
+                          className="form-input bg-white border border-stone-200 text-xs"
+                          value={mData.quality || ''}
+                          onChange={(e) => updateMarriageField('quality', e.target.value as any)}
+                        >
+                          <option value="">Select Quality...</option>
+                          <option value="Normal (Healthy)">Normal / Balanced (Indicative of a happy married life)</option>
+                          <option value="Faint/Thin (Detached)">Faint / Not Visible (Emotionally detached / low romantic commitment)</option>
+                          <option value="Dark/Heavy (Rigid/Burdened)">Dark / Heavy — Gaḍhī (Orthodox, rigid, controlling; domestic burdens)</option>
+                          <option value="Broken Repeatedly">Broken Repeatedly (Cyclical good/trouble phases)</option>
+                          <option value="Zigzag">Zigzag (Rare; fluctuating relationship dynamics)</option>
+                          <option value="Absent">Absent (Self-contained / practical; not necessarily no marriage)</option>
+                        </select>
+                      </div>
+
+                      {/* Parasite Line Alert when Dark Line */}
+                      {mData.quality === 'Dark/Heavy (Rigid/Burdened)' && (
+                        <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-900 space-y-1">
+                          <p className="font-bold flex items-center gap-1">
+                            <span>🔍</span> Check Life Line for Parasite Line (Lecture 28 §4.1):
+                          </p>
+                          <p className="text-[11px] text-rose-800">
+                            A very dark marriage line indicates high pressure and orthodox rigidity. Check if an <em>Upajīvī Rekhā</em> (parasite line) runs alongside the Life Line in this age sector (e.g. sick elder, dependent in-laws straining the marital bond).
+                          </p>
+                          <label className="flex items-center gap-2 cursor-pointer pt-1 font-semibold text-xs text-rose-950">
+                            <input
+                              type="checkbox"
+                              className="rounded text-rose-600 focus:ring-rose-500"
+                              checked={mData.has_parasite_line_on_life || false}
+                              onChange={(e) => updateMarriageField('has_parasite_line_on_life', e.target.checked)}
+                            />
+                            <span>Parasite Line present alongside Life Line</span>
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Age Calibration on Mercury Mount (0–56 scale) */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="form-group">
+                          <label className="form-label text-xs">
+                            Estimated Marriage Age (0–56 Scale)
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              max="56"
+                              step="0.5"
+                              placeholder="e.g. 24"
+                              className="form-input text-xs pr-14"
+                              value={mData.estimated_age ?? ''}
+                              onChange={(e) =>
+                                updateMarriageField(
+                                  'estimated_age',
+                                  e.target.value === '' ? '' : parseFloat(e.target.value)
+                                )
+                              }
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-stone-400">
+                              years
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-stone-500 mt-1">
+                            Heart Line = 0 • Midpoint ≈ 28 yrs • Base Crease = 56 yrs (Lecture 28 §4.2)
+                          </p>
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label text-xs">
+                            Affection / Attraction Lines Count
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="6"
+                            placeholder="e.g. 1 (primary) or 2+"
+                            className="form-input text-xs"
+                            value={mData.secondary_lines_count ?? ''}
+                            onChange={(e) =>
+                              updateMarriageField(
+                                'secondary_lines_count',
+                                e.target.value === '' ? '' : parseInt(e.target.value)
+                              )
+                            }
+                          />
+                          <p className="text-[10px] text-stone-500 mt-1">
+                            Primary = darkest/longest line; extra lines = crushes / negotiations
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Heart Line Linkage Synthesis */}
+                      <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-1.5 text-xs">
+                        <span className="font-bold text-stone-800 text-[10px] uppercase tracking-wider block">
+                          ❤️ Heart Line Synergy (Lecture 28 §5.7):
+                        </span>
+                        {vedicData.line_heart?.terminus?.includes('Saturn') ? (
+                          <p className="text-stone-700">
+                            <strong>Arranged Marriage Inclination:</strong> Heart Line terminates under Saturn Mount. Loves with the intellect/head, practical, minds own business.
+                          </p>
+                        ) : vedicData.line_heart?.terminus?.includes('Jupiter') ? (
+                          <p className="text-stone-700">
+                            <strong>Love Marriage Inclination:</strong> Heart Line curves up to Jupiter Mount. High romantic idealism and devotion; stronger in Fire and Water hands.
+                          </p>
+                        ) : (
+                          <p className="text-stone-500 italic">
+                            Trace the Heart Line terminus to evaluate Love vs. Arranged marriage alignment.
+                          </p>
+                        )}
+                        <p className="text-[10px] text-stone-600 border-t border-stone-200/60 pt-1.5 leading-relaxed">
+                          {profile.gender?.toLowerCase() === 'female' ? (
+                            <span>
+                              👩 <strong>Female Hand Focus:</strong> Cross-verify <strong>Jupiter Mount</strong> (Guru / Pati-kāraka) for husband's status/dharma and <strong>Mars Mount</strong> (Māṅgalya) for domestic peace.
+                            </span>
+                          ) : profile.gender?.toLowerCase() === 'male' ? (
+                            <span>
+                              👨 <strong>Male Hand Focus:</strong> Cross-verify <strong>Venus Mount</strong> (Śukra / Patnī-kāraka) for wife's affection, domestic harmony, and vitality.
+                            </span>
+                          ) : (
+                            <span>
+                              ⚖️ <strong>Gender Cross-Checks (Lecture 28 §5):</strong> Female → inspect Jupiter &amp; Mars mounts; Male → inspect Venus mount.
+                            </span>
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Formations Checklist (17 Formations) */}
+                      <div className="space-y-2">
+                        <label className="form-label text-xs font-semibold text-stone-800">
+                          17 Classical Formations (Lecture 28 §5)
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {VIVAHA_FORMATIONS.map(({ name, desc, icon }) => {
+                            const isChecked = mData.formations?.includes(name) || (name === '>--< Divorce Indication' && mData.formations?.includes('>< Divorce Indication')) || false;
+                            return (
+                              <label
+                                key={name}
+                                className={`flex items-start gap-2 p-2 rounded-lg border cursor-pointer transition-all ${isChecked
+                                  ? 'bg-pink-50 border-pink-300 text-pink-950 font-medium shadow-2xs'
+                                  : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100/70'
+                                  }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="rounded text-pink-600 focus:ring-pink-500 mt-0.5 shrink-0"
+                                  checked={isChecked}
+                                  onChange={() => toggleFormation(name)}
+                                />
+                                <div className="space-y-0.5 min-w-0">
+                                  <div className="font-semibold text-xs flex items-center gap-1.5">
+                                    <span>{icon}</span>
+                                    <span>{name}</span>
+                                  </div>
+                                  <p className="text-[10px] text-stone-500 leading-tight">
+                                    {desc}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Marriage Notes */}
+                      <div className="form-group">
+                        <textarea
+                          className="form-input h-16 resize-none text-xs"
+                          placeholder="Marriage line notes — partner nature, timing verification with client events, health/parasite cross-checks..."
+                          value={mData.notes || ''}
+                          onChange={(e) => updateMarriageField('notes', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Special Yogas (Notes 19-27) */}
               <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
-                  ✨ Special Yogas &amp; Combined Signs (Notes 19-27)
+                  ✨ Special Yogas &amp; Combined Signs
                 </h4>
                 <div className="space-y-2 text-xs">
                   {[
@@ -3101,7 +3451,7 @@ export default function AnalysisForm({
               {/* Left vs Right comparison */}
               <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3 shadow-sm">
                 <h4 className="font-bold text-sm text-stone-900 flex items-center gap-2 border-b border-stone-100 pb-2">
-                  🤲 Left vs Right Hand Comparison (Notes 01, 06, 22)
+                  🤲 Left vs Right Hand Comparison
                 </h4>
                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-700 font-medium leading-relaxed">
                   <strong>Left hand (pūrvārjita karma):</strong> What was brought at birth — destiny, inherited patterns.<br />

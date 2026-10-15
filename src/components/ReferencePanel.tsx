@@ -127,8 +127,24 @@ export default function ReferencePanel({ isOpen, onClose }: ReferencePanelProps)
                 <p className="text-stone-600 text-xs mt-1">Vertical line from base towards middle finger. Signifies destiny, career success, external influences, and major adjustments in life direction.</p>
               </div>
               <div>
-                <strong className="text-stone-900 font-bold">Sun/Apollo Line</strong>
-                <p className="text-stone-600 text-xs mt-1">Vertical line parallel to Fate line under ring finger. Confirms talent, sudden fortune, artistic achievements, and public recognition.</p>
+                <strong className="text-stone-900 font-bold">Sun / Apollo Line (Sūrya Rekhā)</strong>
+                <p className="text-stone-600 text-xs mt-1">Vertical line under ring finger. Confirms creative talent, sudden fortune, artistic achievements, and public recognition.</p>
+              </div>
+              <div>
+                <strong className="text-stone-900 font-bold">Mercury Line (Budha Rekhā / Healer Line)</strong>
+                <p className="text-stone-600 text-xs mt-1">Runs upward toward Mercury Mount. Absence is favorable for vitality; starting above Heart Line denotes natural healing/commercial gifts (Note 27).</p>
+              </div>
+              <div className="p-2 bg-pink-50/60 rounded-lg border border-pink-200/60">
+                <strong className="text-pink-950 font-bold flex items-center gap-1.5 text-xs">
+                  💍 Marriage Line (Vivāha Rekhā / Śīla-guṇa Rekhā) — Lecture 28
+                </strong>
+                <p className="text-stone-700 text-xs mt-1 leading-relaxed">
+                  Located on Mercury Mount, enters inward from percussion edge. Calibrated on <strong>0–56 year scale</strong> (Heart Line = 0, base joint of little finger = 56).<br />
+                  • <strong>Quality:</strong> Balanced = healthy; Faint = emotionally detached; Dark/Heavy = orthodox/burdened (check Life Line for parasite line).<br />
+                  • <strong>Upward Hook:</strong> Lifelong aversion / no marriage.<br />
+                  • <strong>Down toward Heart:</strong> Emotional burden / sorrow (worst if cutting Heart Line).<br />
+                  • <strong>Heart Line Link:</strong> Terminating under Saturn = arranged / practical; reaching Jupiter = love / devotional.
+                </p>
               </div>
             </div>
           </div>

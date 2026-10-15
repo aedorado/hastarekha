@@ -35,7 +35,7 @@ export interface Drawing {
   color: string;
   thickness: number;
   label?: string;
-  lineCategory?: 'line_life' | 'line_fate' | 'line_head' | 'line_heart' | 'line_sun' | 'line_mercury' | 'line_manibandha' | 'other';
+  lineCategory?: 'line_life' | 'line_fate' | 'line_head' | 'line_heart' | 'line_sun' | 'line_mercury' | 'line_marriage' | 'line_manibandha' | 'other';
 }
 
 // ─── Mount sign type ───
@@ -55,6 +55,22 @@ export interface LineAnalysisData {
   signs: string[]; // signs on the line
   features: string[]; // structural features
   age_events: Array<{ age: number; event: string }>;
+  notes: string;
+}
+
+// ─── Lecture 28: Marriage Line (Vivāha Rekhā / Śīla-guṇa Rekhā) ───
+export interface MarriageLineData {
+  quality: '' | 'Normal (Healthy)' | 'Faint/Thin (Detached)' | 'Dark/Heavy (Rigid/Burdened)' | 'Broken Repeatedly' | 'Zigzag' | 'Absent';
+  origin?: string; // typically 'Percussion Edge'
+  terminus?: string; // typically 'Mercury Mount' or 'Sun Mount'
+  formations: string[]; // Upward hook, Vertical cut, Dropping down, Fork at end, Small island, Large island, etc.
+  estimated_age: number | ''; // 0–56 scale
+  has_parasite_line_on_life: boolean; // parasite line alongside Life line causing domestic stress
+  secondary_lines_count: number | ''; // count of faint crush/attraction lines
+  venus_line_cutting: boolean; // line from Venus mount cutting marriage line
+  reaches_sun_mount: boolean; // reaches sun mount (fame through marriage)
+  cuts_sun_mount: boolean; // cuts across sun line/mount (trouble through spouse)
+  crosses_heart_line: boolean; // branches or line cutting Heart line (sorrow)
   notes: string;
 }
 
@@ -80,6 +96,9 @@ export interface VedicData {
   nail_shape: 'Wide/Small' | 'Long/Small' | 'Wide/Big' | 'Square' | 'Beautiful' | '';
   skin_texture: 'Soft/Moisturized' | 'Medium' | 'Hard/Stiff' | 'Rough' | 'Thin-skinned (Nerves visible)' | '';
   finger_knots: 'Smooth' | 'Jupiter & Saturn Knots' | 'Fully Philosophical (Knotty)' | 'Crooked Fingers' | '';
+  // Lecture 28 §2.7: Separating back-of-hand knots from crooked fingers
+  knots_back_of_hand: '' | 'Smooth / None' | 'Jupiter Knots' | 'Saturn Knots' | 'Sun Knots' | 'Mercury Knots' | 'All Knotty (Philosophical / Dārśanika)';
+  crooked_fingers: string[]; // e.g. ['Saturn', 'Sun', 'Mercury', 'Jupiter']
   measurements: {
     palm_start: { x: number; y: number };
     palm_end: { x: number; y: number };
@@ -175,9 +194,14 @@ export interface VedicData {
   line_mercury_single_vertical: boolean; // sudden money gain on mercury mount
   line_mercury_data: LineAnalysisData | null;
 
-  // ─── Age Calculation (Notes 20, 22, 27) ───
-  age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg' | '18-6-cadence';
+  // ─── Lecture 28: Marriage Line (Vivāha Rekhā / Śīla-guṇa Rekhā) ───
+  line_marriage: MarriageLineData | null;
+
+  // ─── Age Calculation (Notes 20, 22, 27, 28) ───
+  age_method: '' | '30-midpoint' | 'cheiro-98' | 'shadamsha-72' | 'three-line-avg' | '18-6-cadence' | 'mercury-56';
   max_age?: number; // customizable maximum lifespan scale (default 75 for India deśa-kāla)
+  aging_calibration?: AgingCalibrationAnchors | null;
+  aging_calibrations?: Partial<Record<HandView, AgingCalibrationAnchors>> | null;
 
   // ─── Life × Fate Line Junction Timing (Notes 21, 22, 23) ───
   // Where the Fate Line crosses the Life Line reveals family-support / independence windows.
@@ -185,6 +209,20 @@ export interface VedicData {
 
   // ─── Left vs Right Hand Comparison (Notes 01, 06, 22) ───
   lh_vs_rh_notes: string;
+}
+
+export interface Point2D {
+  x: number;
+  y: number;
+}
+
+export interface AgingCalibrationAnchors {
+  manibandha_start?: Point2D | null; // Tap 1: left of wrist bracelet
+  manibandha_end?: Point2D | null;   // Tap 2: right of wrist bracelet
+  life_start?: Point2D | null;        // Tap 1: thumb side origin (Age 0)
+  mercury_sandhi?: Point2D | null;    // Tap 2: outer crease under Mercury finger
+  saturn_root?: Point2D | null;       // Tap 1: base joint of middle (Saturn) finger (Age 75)
+  cadence_points?: Point2D[] | null;  // 8 points for 18+6 cadence method: [0, 18, 24, 42, 48, 66, 72, 90]
 }
 
 export const parseVedicData = (notesField: string): VedicData => {
@@ -210,6 +248,8 @@ export const parseVedicData = (notesField: string): VedicData => {
     nail_shape: '',
     skin_texture: '',
     finger_knots: '',
+    knots_back_of_hand: '',
+    crooked_fingers: [],
     measurements: null,
     thumb_type: '',
     thumb_second_phalange: '',
@@ -276,9 +316,13 @@ export const parseVedicData = (notesField: string): VedicData => {
     line_mercury_joins_moon: false,
     line_mercury_single_vertical: false,
     line_mercury_data: null,
+    // Marriage Line (Lecture 28)
+    line_marriage: null,
     // Age
     age_method: '',
     max_age: 75,
+    aging_calibration: null,
+    aging_calibrations: {},
     life_fate_junctions: [],
     // Comparison
     lh_vs_rh_notes: '',
@@ -317,6 +361,11 @@ export const serializeVedicData = (data: VedicData): string => {
 
 export const getVedicInterpretations = (vedic: VedicData): string[] => {
   const readings: string[] = [];
+
+  // 0. Nature-First Hierarchy (Lecture 28 §2.4)
+  if (vedic.hand_tattva || vedic.thumb_willpower || vedic.thumb_first_phalange_length) {
+    readings.push('🧭 Nature-First Reading Framework (Lecture 28 §2.4): Hand type sets ~60% baseline temperament → modified by Thumb top phalange (willpower/decisions) & Mercury (communication) before evaluating marriage, career, or health.');
+  }
 
   // 1. Tattva (Lecture 02)
   if (vedic.hand_tattva) {
@@ -368,23 +417,33 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     }
   }
 
-  // 5. Jupiter Finger (Lecture 08)
+  // 5. Jupiter Finger & Tilt (Lecture 08 & Lecture 28 §2.2)
   if (vedic.jupiter_length === 'Long') {
     readings.push('♃ Long Jupiter: Authoritative, dominating, ego in knowledge domain.');
   } else if (vedic.jupiter_length === 'Short') {
     readings.push('♃ Short Jupiter: Insists "I know this" despite lacking real knowledge; dominating/egotistic without substance (defame-yoga tendency); poor judgment of right vs. wrong; avoids responsibility; can be timid/cowardly and ill-mannered.');
   }
-
-  // 6. Saturn Tilt (Lecture 09)
-  if (vedic.saturn_tilt === 'Toward Jupiter') {
-    readings.push('🪐 Saturn Tilt → Jupiter: High desire to learn before acting (philosophical).');
-  } else if (vedic.saturn_tilt === 'Toward Sun') {
-    readings.push('🪐 Saturn Tilt → Sun: Confidence decreases, hard work increases. Fear of wrongdoing/defamation reduces risk-taking (eases only if Sun finger is very long and thumb/Jupiter are strong). Positive: good personal/professional balance.');
+  if (vedic.jupiter_tilt === 'Toward Saturn') {
+    readings.push('♃→🪐 Jupiter Tilt → Saturn (Guru-Śani Yuti): Research enters knowledge; acquires wisdom patiently without haste; strict adherence to rules/regulations; never forces own views onto others (8th house depth).');
+  } else if (vedic.jupiter_tilt === 'Toward Thumb') {
+    readings.push('♃→👍 Jupiter Tilt → Thumb: Dominating personal will, ego-assertion, and high administrative self-confidence.');
   }
 
-  // 7. Sun Finger (Lecture 09)
+  // 6. Saturn Tilt (Lecture 09 & Lecture 28 §2.2, §2.5)
+  if (vedic.saturn_tilt === 'Toward Jupiter') {
+    readings.push('🪐→♃ Saturn Tilt → Jupiter (Śani-Guru Yuti): Buddhi-viveka and dharmic wisdom infused into work (karma); positive reframing — even when hardships arrive, the native finds constructive spiritual benefit.');
+  } else if (vedic.saturn_tilt === 'Toward Sun') {
+    readings.push('🪐→☀️ Saturn Tilt → Sun: Karma aligned with government, public honor, and fame achieved through relentless professional duty.');
+  }
+
+  // 7. Sun Finger & Tilt (Lecture 09 & Lecture 28 §2.5)
   if (vedic.sun_length === 'Long') {
     readings.push('☀️ Long Sun: Risk-taker, acts before thinking, creative recognition drive.');
+  }
+  if (vedic.sun_tilt === 'Toward Saturn') {
+    readings.push('☀️→🪐 Sun Tilt → Saturn: Highly auspicious for career endurance and professional results; however, name and fame arrive late with effort, with minor defame sensitivity or health strain.');
+  } else if (vedic.sun_tilt === 'Toward Mercury') {
+    readings.push('☀️→☿ Sun Tilt → Mercury: Commercialized creativity — monetizes creative talents, fluent communication in arts and enterprise.');
   }
 
   // 8. Mercury Pinky (Lecture 10)
@@ -408,9 +467,24 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     readings.push('🌬️ Wide Finger Gaps: Highly generous, quick to spend or help.');
   }
 
-  // 11. Knots (Lecture 10)
-  if (vedic.finger_knots === 'Fully Philosophical (Knotty)') {
-    readings.push('📖 Knotty Fingers: Deep analytical filters; philosophical depth in that specific finger\'s domain (strongest if on Jupiter).');
+  // 11. Knots vs. Crooked Fingers (Lecture 10 & Lecture 28 §2.7)
+  if (vedic.knots_back_of_hand) {
+    if (vedic.knots_back_of_hand.includes('All Knotty') || vedic.knots_back_of_hand.includes('Philosophical')) {
+      readings.push('📖 Dārśanika Hasta (Knotty Joints on Back of Palm): Raised knuckle joints mark a deep philosophical thinker, analyst, and patient researcher.');
+    } else if (vedic.knots_back_of_hand !== 'Smooth / None') {
+      readings.push(`📖 Knotty Knuckles (${vedic.knots_back_of_hand}): Philosophical, questioning, and investigative mindset specifically active in that planetary domain.`);
+    }
+  } else if (vedic.finger_knots === 'Fully Philosophical (Knotty)') {
+    readings.push('📖 Knotty Fingers: Deep analytical filters; philosophical depth in that specific finger\'s domain.');
+  }
+
+  if (vedic.crooked_fingers && vedic.crooked_fingers.length > 0) {
+    if (vedic.crooked_fingers.includes('Saturn')) {
+      readings.push('⚡ Crooked Saturn Finger (Tēḍhī-Mēḍhī): Distortions in career path or career where tactical cleverness must be deployed; distinct from philosophical knotty joints.');
+    }
+    vedic.crooked_fingers.filter(f => f !== 'Saturn').forEach(f => {
+      readings.push(`⚡ Crooked ${f} Finger: Planetary energy flow amplified, strained, or prone to eccentric expression.`);
+    });
   } else if (vedic.finger_knots === 'Crooked Fingers') {
     readings.push('⚡ Crooked Fingers: Planetary energy highly amplified or distorted.');
   }
@@ -579,8 +653,8 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     if (vedic.line_life.features?.includes('Supportive / Mars Line (Devata Raksha)')) {
       readings.push('🛡️ Mars Line (Devatā Rakṣā): Divine guardian angel line — shields against grave illness and danger.');
     }
-    if (vedic.line_life.features?.includes('Fork at end towards Moon')) {
-      readings.push('✈️ Life Line Fork to Moon: Long-distance travel, foreign relocation or changing lands in twilight years.');
+    if (vedic.line_life.features?.includes('Fork at end towards Moon') || vedic.line_life.features?.includes('Split Life Line (Dual Branches)')) {
+      readings.push('✈️ Split Life Line (Dual Branches - Lecture 28 §3): Inward + outward branches indicate dual residences, frequent long-distance travel, and multitasker nature; ending of a branch around 50–60 indicates relocation (Moon influence).');
     }
     if (vedic.line_life.signs?.includes('Island')) {
       readings.push('⚠️ Island on Life Line: Temporary period of health debility or prolonged confinement/struggle.');
@@ -678,7 +752,109 @@ export const getVedicInterpretations = (vedic: VedicData): string[] => {
     readings.push(`🧬 ${vedic.simian_type}: Sharp, practical, and stubborn — balances heart and mind well when the line quality is good; can become irritable, anxious, or suspicious when unbalanced.`);
   }
 
-  // 19. Karmic Hand Comparison (Lectures 01, 06, 22)
+  // ─── 19. Vivāha Rekhā / Marriage Line (Lecture 28 §4, §5, §5.7) ───
+  if (vedic.line_marriage) {
+    const m = vedic.line_marriage;
+
+    // Quality
+    if (m.quality === 'Normal (Healthy)') {
+      readings.push('💍 Vivāha Rekhā (Balanced/Normal): Auspicious indicator of healthy, emotionally balanced, and fulfilling marital bonding.');
+    } else if (m.quality === 'Faint/Thin (Detached)') {
+      readings.push('💍 Vivāha Rekhā (Faint/Thin): Low emotional/romantic attachment; marriage approached with spiritual detachment or practical independence.');
+    } else if (m.quality === 'Dark/Heavy (Rigid/Burdened)') {
+      readings.push('💍 Vivāha Rekhā (Dark/Heavy — Gaḍhī): Orthodox, rigid, or controlling domestic approach; high pressure/burdens on married life. Check Life Line for parasite lines from dependent relatives.');
+    } else if (m.quality === 'Broken Repeatedly') {
+      readings.push('⚡ Vivāha Rekhā (Broken Repeatedly): Intermittent phases of marital harmony alternating with domestic friction.');
+    } else if (m.quality === 'Zigzag') {
+      readings.push('〰️ Vivāha Rekhā (Zigzag): Unpredictable fluctuations in domestic harmony.');
+    } else if (m.quality === 'Absent') {
+      readings.push('💍 Vivāha Rekhā (Absent): Does NOT indicate bachelorhood (per deśa-kāla-paristhiti); reflects lack of emotional romantic dependency or a self-contained relationship approach.');
+    }
+
+    // Parasite Line linkage (Lecture 28 §4.1)
+    if (m.has_parasite_line_on_life) {
+      readings.push('⚠️ Parasite Line (Upajīvī Rekhā) on Life Line: Dependent relatives, ailing family members, or in-laws are causing direct domestic strain on marital life.');
+    }
+
+    // Secondary lines (Lecture 28 §4)
+    if (typeof m.secondary_lines_count === 'number' && m.secondary_lines_count > 1) {
+      readings.push(`💞 Multiple Relationship Lines (${m.secondary_lines_count} lines): Reflects intense past attractions, crushes, or relationship negotiations — does NOT indicate multiple marriages.`);
+    }
+
+    // Age on Mercury Mount (Lecture 28 §4.2)
+    if (typeof m.estimated_age === 'number' && m.estimated_age > 0) {
+      readings.push(`⏳ Vivāha Rekhā Timing: Approximately age ${m.estimated_age} (calibrated on the 0–56 Mercury mount vertical scale; Heart Line = 0, Base joint = 56).`);
+    }
+
+    // Formations (Lecture 28 §5)
+    const forms = m.formations || [];
+    if (forms.includes('Sharp Upward Hook')) {
+      readings.push('🚫 Upward Hook on Marriage Line: Classical sign of lifelong aversion to marriage, bachelorhood, or insurmountable obstacles to marriage.');
+    }
+    if (forms.includes('Cut by Vertical Line')) {
+      readings.push('⚠️ Vertical Line Cutting Marriage Line: Sudden break or unexpected crisis in marriage; monitor spouse health/accidental risk.');
+    }
+    if (forms.includes('Continues after Vertical Cut')) {
+      readings.push('🔄 Marriage Line Continues after Cut: Resolution of marital crisis; partnership endures through the storm.');
+    }
+    if (forms.includes('Dropping toward Heart Line')) {
+      readings.push('💔 Marriage Line Drooping toward Heart Line: Low emotional vitality, dull/disappointing marriage, emotional burden, or heartbreak.');
+    }
+    if (forms.includes('Cutting Heart Line') || m.crosses_heart_line) {
+      readings.push('⚡ Marriage Line Cutting Heart Line: Worst sorrowful termination; intense grief or emotional breakdown from marital collapse.');
+    }
+    if (forms.includes('Short Downward Branches')) {
+      readings.push('〰️ Short Downward Branches: Normal domestic ups and downs (found in 50%+ of palms); manageable if not touching Heart Line.');
+    }
+    if (forms.includes('Gentle Upward Curve / Upward Branches')) {
+      readings.push('✨ Gentle Upward Curve/Branches: Auspicious, happy married life and mutual elevation.');
+    }
+    if (forms.includes('Circle / Dot at End')) {
+      readings.push('⭕ Circle at End of Marriage Line: Spouse mortality warning / bereavement marker.');
+    }
+    if (forms.includes('Small Island')) {
+      readings.push('⚠️ Small Island on Marriage Line: Sudden acute marital crisis experienced with intense contrast after a smooth phase.');
+    }
+    if (forms.includes('Large Island')) {
+      readings.push('⚠️ Large Island on Marriage Line: Chronic ongoing friction normalized from the beginning of married life.');
+    }
+    if (forms.includes('Fork at Start')) {
+      readings.push('🌱 Fork at Start of Marriage Line: Initial hesitation, delays, or family distractions before marital stabilization.');
+    }
+    if (forms.includes('Fork at End')) {
+      readings.push('🥀 Fork at End of Marriage Line: Loss of interest, divergent paths, or emotional estrangement in later years.');
+    }
+    if (forms.includes('Fork in Middle')) {
+      readings.push('🌿 Fork in Middle of Marriage Line: Bifurcation of energy — upward branch promotes growth, downward branch brings friction.');
+    }
+    if (forms.includes('Triangle on Line')) {
+      readings.push('🔺 Triangle on Marriage Line: Highly fortunate, rare blessing in marital life.');
+    }
+    if (forms.includes('Reaching Sun Mount') || m.reaches_sun_mount) {
+      readings.push('🌟 Marriage Line Reaching Sun Mount: Marriage brings elevated social status, name, fame, and wealth.');
+    }
+    if (forms.includes('Cutting Sun Mount/Line') || m.cuts_sun_mount) {
+      readings.push('⚠️ Marriage Line Cutting Sun Mount/Line: Scandal, reputational attack, or financial loss through spouse/woman.');
+    }
+    if (forms.includes('Line from Venus Mount Cutting') || m.venus_line_cutting) {
+      readings.push('⚔️ Venus Line Cutting Marriage Line: Extreme spousal discord; potential for domestic violence or partner harm (verify with Mars and Thumb).');
+    }
+    if (forms.includes('>--< Divorce Indication') || forms.includes('>< Divorce Indication')) {
+      readings.push('⚡ >--< Formation on Marriage Line: Classical indicator of divorce or legal separation (bifurcated on both ends).');
+    }
+    if (forms.includes('Downward Hook')) {
+      readings.push('⚓ Downward Hook on Marriage Line: Permanent unresolved marital deadlock.');
+    }
+
+    // Heart Line Linkage Synthesis (Lecture 28 §5.7)
+    if (vedic.line_heart?.terminus?.includes('Saturn')) {
+      readings.push('💍 Marriage Synergy: Heart line terminates under Saturn — practical, calculative love ("loves with the head"); strong arranged-marriage alignment.');
+    } else if (vedic.line_heart?.terminus?.includes('Jupiter')) {
+      readings.push('❤️ Marriage Synergy: Heart line reaches Jupiter Mount — idealistic romantic devotion; high love-marriage alignment (boosted in Fire/Water hands).');
+    }
+  }
+
+  // 20. Karmic Hand Comparison (Lectures 01, 06, 22)
   if (vedic.lh_vs_rh_notes && vedic.lh_vs_rh_notes.trim().length > 0) {
     readings.push(`⚖️ Left vs Right Hand Synthesis: ${vedic.lh_vs_rh_notes.trim()}`);
   }

@@ -14,7 +14,8 @@ export type AgingMethod =
   | 'cheiro-98'
   | 'shadamsha-72'
   | 'three-line-avg'
-  | '18-6-cadence';
+  | '18-6-cadence'
+  | 'mercury-56';
 
 export type LineCategory =
   | 'line_life'
@@ -23,6 +24,7 @@ export type LineCategory =
   | 'line_heart'
   | 'line_sun'
   | 'line_mercury'
+  | 'line_marriage'
   | 'line_manibandha'
   | 'other';
 
@@ -103,13 +105,55 @@ export const AGING_METHODS: Record<AgingMethod, AgingMethodInfo> = {
     id: '18-6-cadence',
     title: '18 + 6 Cadence Method',
     sanskritName: 'Hṛdaya/Mastiska Krama (हृदय/मस्तिष्क क्रम)',
-    defaultLifespan: 70,
+    defaultLifespan: 90,
     description:
-      'Heart & Head Line method. Blocks of 18 active years separated by 6-year transition gaps (18, 24, 42, 48, 66, 72). Up to age ~50-70.',
+      'Heart Line finger base method (Lecture 27 §6). 8 finger base points (0, 18, 24, 42, 48, 66, 72, 90) projecting downward straight lines to date event intersections along the Heart Line.',
     lectureReference: 'Lecture 27 §6, §7',
     color: '#e11d48', // rose-600
     applicableLines: ['line_heart', 'line_head'],
   },
+  'mercury-56': {
+    id: 'mercury-56',
+    title: 'Mercury Mount 56-Year Scale',
+    sanskritName: 'Budha Vivāha Kāla (बुध विवाह काल)',
+    defaultLifespan: 56,
+    description:
+      'Lecture 28 §4.2: Mercury mount timing scale for Vivāha Rekhā. Heart Line level = 0 years; base joint of Mercury finger (sandhi rekhā) = 56 years (earlier 50). Midpoint ≈ 28 years.',
+    lectureReference: 'Lecture 28 §4.2',
+    color: '#ec4899', // pink-500
+    applicableLines: ['line_marriage'],
+  },
+};
+
+export const CADENCE_AGES = [0, 18, 24, 42, 48, 66, 72, 90] as const;
+export type CadenceAge = (typeof CADENCE_AGES)[number];
+
+export const getDefaultCadencePoints = (isRightPalm: boolean): Point2D[] => {
+  if (isRightPalm) {
+    // Right palm: Pinky (Mercury) on right (x ~79), Index (Jupiter) on left (x ~26)
+    return [
+      { x: 79, y: 29 }, // Age 0: Percussion edge under Mercury
+      { x: 71, y: 22 }, // Age 18: Mercury/Sun cleft
+      { x: 64, y: 20 }, // Age 24: Sun base crease
+      { x: 55, y: 18 }, // Age 42: Sun/Saturn cleft
+      { x: 48, y: 18 }, // Age 48: Saturn base crease
+      { x: 40, y: 19 }, // Age 66: Saturn/Jupiter cleft
+      { x: 34, y: 21 }, // Age 72: Jupiter base crease
+      { x: 26, y: 25 }, // Age 90: Jupiter radial edge
+    ];
+  } else {
+    // Left palm: Pinky (Mercury) on left (x ~21), Index (Jupiter) on right (x ~74)
+    return [
+      { x: 21, y: 29 }, // Age 0: Percussion edge under Mercury
+      { x: 29, y: 22 }, // Age 18: Mercury/Sun cleft
+      { x: 36, y: 20 }, // Age 24: Sun base crease
+      { x: 45, y: 18 }, // Age 42: Sun/Saturn cleft
+      { x: 52, y: 18 }, // Age 48: Saturn base crease
+      { x: 60, y: 19 }, // Age 66: Saturn/Jupiter cleft
+      { x: 66, y: 21 }, // Age 72: Jupiter base crease
+      { x: 74, y: 25 }, // Age 90: Jupiter radial edge
+    ];
+  }
 };
 
 export const LINE_LABELS: Record<LineCategory, string> = {
@@ -119,7 +163,8 @@ export const LINE_LABELS: Record<LineCategory, string> = {
   line_heart: 'Heart Line (Hṛdaya Rekhā)',
   line_sun: 'Sun Line (Sūrya Rekhā)',
   line_mercury: 'Mercury Line (Budha Rekhā)',
-  line_manibandha: 'Wrist Crease (Maṇibandha Rekhā)',
+  line_marriage: 'Marriage Line (Vivāha Rekhā / Śīla-guṇa Rekhā)',
+  line_manibandha: 'Maṇibandha Rekhā (मणिबन्ध)',
   other: 'Other Crease',
 };
 
@@ -301,6 +346,10 @@ export function getFractionForAge(
       return Math.min(1, numCycles * cycleFrac);
     }
 
+    case 'mercury-56': {
+      return Math.min(1, age / 56);
+    }
+
     default:
       return Math.min(1, age / maxAge);
   }
@@ -344,6 +393,10 @@ export function getAgeForFraction(
     case '18-6-cadence': {
       // Approx 3 full 24-year cycles (72 yrs)
       return parseFloat((t * 72).toFixed(1));
+    }
+
+    case 'mercury-56': {
+      return parseFloat((t * 56).toFixed(1));
     }
 
     default:
@@ -501,18 +554,19 @@ export function computeAgeTicks(
     }
 
     case '18-6-cadence': {
-      // 18+6 cadence: 18, 24, 42, 48, 66, 72 (Lecture 27 §6)
-      // Represented over line span
+      // 18+6 cadence milestones: 0, 18, 24, 42, 48, 66, 72, 90 (Lecture 27 §6)
       const cadenceMilestones: Array<{ age: number; isMajor: boolean; desc: string }> = [
+        { age: 0, isMajor: false, desc: 'Percussion edge under Mercury (Age 0)' },
         { age: 18, isMajor: true, desc: 'End of 1st 18-yr block' },
         { age: 24, isMajor: false, desc: 'End of 1st 6-yr transition gap' },
         { age: 42, isMajor: true, desc: 'End of 2nd 18-yr block' },
         { age: 48, isMajor: false, desc: 'End of 2nd 6-yr transition gap' },
         { age: 66, isMajor: true, desc: 'End of 3rd 18-yr block' },
         { age: 72, isMajor: false, desc: 'End of 3rd 6-yr transition gap' },
+        { age: 90, isMajor: true, desc: 'End of 4th 18-yr block (Jupiter base)' },
       ];
 
-      const maxCadence = 72;
+      const maxCadence = 90;
       for (const cm of cadenceMilestones) {
         const fraction = cm.age / maxCadence;
         if (fraction <= 1.0) {
@@ -530,6 +584,39 @@ export function computeAgeTicks(
               description: cm.desc,
             });
           }
+        }
+      }
+      break;
+    }
+
+    case 'mercury-56': {
+      // Lecture 28 §4.2: Mercury Mount scale (0 to 56 years)
+      // Heart Line level = 0, Mercury base joint = 56. Midpoint ≈ 28.
+      const milestones: Array<{ age: number; fraction: number; isMajor: boolean; desc: string }> = [
+        { age: 0, fraction: 0, isMajor: true, desc: 'Heart Line Level (Age 0)' },
+        { age: 14, fraction: 0.25, isMajor: false, desc: 'Quarter Mark (Age 14)' },
+        { age: 21, fraction: 21 / 56, isMajor: false, desc: 'Early Twenties (Age 21)' },
+        { age: 28, fraction: 0.5, isMajor: true, desc: 'Midpoint (Age 28 - Classic Mid)' },
+        { age: 35, fraction: 35 / 56, isMajor: false, desc: 'Mid Thirties (Age 35)' },
+        { age: 42, fraction: 0.75, isMajor: true, desc: 'Three-Quarter Mark (Age 42)' },
+        { age: 49, fraction: 49 / 56, isMajor: false, desc: 'Late Forties (Age 49)' },
+        { age: 56, fraction: 1.0, isMajor: true, desc: 'Mercury Finger Base Crease (Age 56)' },
+      ];
+
+      for (const m of milestones) {
+        const geom = getPointAndNormalAtFraction(points, m.fraction, dimensions);
+        if (geom) {
+          ticks.push({
+            age: m.age,
+            fraction: m.fraction,
+            point: geom.point,
+            normal: geom.normal,
+            label: `${m.age}`,
+            isMajor: m.isMajor,
+            method: 'mercury-56',
+            color: methodInfo.color,
+            description: m.desc,
+          });
         }
       }
       break;
