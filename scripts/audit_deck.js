@@ -6,6 +6,7 @@ const files = [
   { name: 'Lecture 19', file: '19-symbols-life-line-01.ts' },
   { name: 'Lecture 20', file: '20-symbols-life-line-02.ts' },
   { name: 'Lecture 21', file: '21-symbols-life-line-03.ts' },
+  { name: 'Lecture 27', file: '27-aging-mercury-line.ts' },
 ];
 
 console.log('=== HASTAREKHA CURATED LEARNING DECKS AUDIT ===\n');

@@ -1,17 +1,9 @@
 # Sun Mount (Sūrya Parvat) — Palmistry Class Notes
 
-> [!INFO] Session context
-> Live palmistry class. Teacher is teaching from her nanad's (sister-in-law's) house in Jaipur. Students present/mentioned: Arvind ji, Pritu (Pritu ji), Anuradha ji (from Saharanpur, raised partly in Jagadhri, living in Banaras 35 years), Jivesh, Ravindra ji (joined late due to slow internet), Madam Khader (referenced at the very start).
-
 ---
 
 ## Opening Discussion — On Learning Palmistry
 
-> [!QUOTE] Teacher's opening remark
-> A student was told her photo had been shared in the group; her Sun mount was noted to be roughly in the centre of the palm, with a slight shift toward Mercury.
-
-- [!WARNING] Common mistake — A student cannot expect to read her **own** hand accurately this early. Self-prediction requires that the rekhāen (lines) and chinh (signs/marks) first be learned properly — **"itni jaldi nahi kar paoge"** (you won't be able to do it this quickly).
-- **Palmistry (Hastarekha Śāstra) is described as a very slow subject.**
 - [!SUCCESS] Basic requirement before any prediction: understanding the **quality of the hand** itself (e.g., fire-hand/nature) — this must be learned before attempting career, marriage, etc. predictions.
 
 ### On leaders/ministers and the hand
@@ -39,7 +31,7 @@
 
 ### On Learning Timeline
 - [!TIP] Just as astrology (Jyotiṣa) has roughly a 6-month course, **palmistry requires about 1 to 1.5 years of practice — even after the initial learning/course is complete** — to become capable of prediction from lines.
-- **Speaker emphasized repeatedly:** Palmistry is a *very* slow subject ("bahut hi slow subject hai") — the more hands one examines, the more practice/skill builds.
+- **Emphasized repeatedly:** Palmistry is a *very* slow subject — the more hands one examines, the more practice/skill builds.
 
 ---
 
