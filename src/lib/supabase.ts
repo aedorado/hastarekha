@@ -223,6 +223,8 @@ export interface AgingCalibrationAnchors {
   mercury_sandhi?: Point2D | null;    // Tap 2: outer crease under Mercury finger
   saturn_root?: Point2D | null;       // Tap 1: base joint of middle (Saturn) finger (Age 75)
   cadence_points?: Point2D[] | null;  // 8 points for 18+6 cadence method: [0, 18, 24, 42, 48, 66, 72, 90]
+  mercury_heart_level?: Point2D | null; // Tap 1: Heart Line level on outer percussion (Age 0)
+  mercury_base?: Point2D | null;        // Tap 2: Root crease under Mercury finger (Age 56)
 }
 
 export const parseVedicData = (notesField: string): VedicData => {

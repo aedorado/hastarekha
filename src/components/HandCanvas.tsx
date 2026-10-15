@@ -225,17 +225,21 @@ export default function HandCanvas({
 
   // ─── 30-Midpoint Master & Cadence Calibration State ───
   const [activeCalibration, setActiveCalibration] = useState<{
-    type: 'manibandha' | 'life' | 'fate' | 'cadence';
+    type: 'manibandha' | 'life' | 'fate' | 'cadence' | 'mercury';
     step: number;
     tempPoint?: Point2D | null;
     points?: Point2D[];
   } | null>(null);
   const [calibCursorPos, setCalibCursorPos] = useState<Point2D | null>(null);
   const [draggingCalibNode, setDraggingCalibNode] = useState<
-    'manibandha_start' | 'manibandha_end' | 'life_start' | 'mercury_sandhi' | 'saturn_root' | string | null
+    'manibandha_start' | 'manibandha_end' | 'life_start' | 'mercury_sandhi' | 'saturn_root' | 'mercury_heart_level' | 'mercury_base' | string | null
   >(null);
   const [showLifeCalibrationGrid, setShowLifeCalibrationGrid] = useState(true);
   const [showFateCalibrationGrid, setShowFateCalibrationGrid] = useState(true);
+  const [showMercuryCalibrationScale, setShowMercuryCalibrationScale] = useState(true);
+  const [isolateActiveAgingLine, setIsolateActiveAgingLine] = useState(true);
+  const [showCadenceRays, setShowCadenceRays] = useState(true);
+  const [showCadenceIntersections, setShowCadenceIntersections] = useState(true);
   const [hoveredAgeData, setHoveredAgeData] = useState<{
     age: number;
     point: Point2D;
@@ -816,6 +820,22 @@ export default function HandCanvas({
         setAxialGrid((prev) => ({ ...prev, [draggingAxialNode]: coords }));
         return;
       }
+      if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
+        const p0 = calibAnchors.mercury_heart_level;
+        const p56 = calibAnchors.mercury_base;
+        const nearest = getNearestPointOnPolyline([p0, p56], coords);
+        const hoverThreshold = Math.max(5.5, 9.0 / zoom);
+        if (nearest && nearest.distance < hoverThreshold) {
+          const age = parseFloat((nearest.fraction * 56).toFixed(1));
+          setHoveredAgeData({
+            age,
+            point: nearest.point,
+            fraction: nearest.fraction,
+            label: age === 28 ? 'Age 28 (Marriage Midpoint)' : `Age ~${age} yrs`,
+          });
+          return;
+        }
+      }
       if (activeAgingDrawing && activeAgingDrawing.points.length > 1) {
         const nearest = getNearestPointOnPolyline(activeAgingDrawing.points, coords);
         const hoverThreshold = Math.max(4.5, 7.0 / zoom);
@@ -988,6 +1008,22 @@ export default function HandCanvas({
         if (draggingAxialNode) {
           setAxialGrid((prev) => ({ ...prev, [draggingAxialNode]: coords }));
           return;
+        }
+        if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
+          const p0 = calibAnchors.mercury_heart_level;
+          const p56 = calibAnchors.mercury_base;
+          const nearest = getNearestPointOnPolyline([p0, p56], coords);
+          const hoverThreshold = Math.max(6.0, 9.5 / zoom);
+          if (nearest && nearest.distance < hoverThreshold) {
+            const age = parseFloat((nearest.fraction * 56).toFixed(1));
+            setHoveredAgeData({
+              age,
+              point: nearest.point,
+              fraction: nearest.fraction,
+              label: age === 28 ? 'Age 28 (Marriage Midpoint)' : `Age ~${age} yrs`,
+            });
+            return;
+          }
         }
         if (activeAgingDrawing && activeAgingDrawing.points.length > 1) {
           const nearest = getNearestPointOnPolyline(activeAgingDrawing.points, coords);
@@ -1222,12 +1258,30 @@ export default function HandCanvas({
           isOpen: true,
           age: hoveredAgeData.age,
           point: hoveredAgeData.point,
-          lineCategory: lineToUse?.lineCategory || agingLineCategory,
-          sign: 'Triangle △ (Property / Shield)',
-          note: '',
+          lineCategory: agingMethod === 'mercury-56' ? 'line_marriage' : (lineToUse?.lineCategory || agingLineCategory),
+          sign: agingMethod === 'mercury-56' ? 'Marriage Event / Union (Vivāha)' : 'Triangle △ (Property / Shield)',
+          note: agingMethod === 'mercury-56' ? `Marriage / Vivāha timing at age ${hoveredAgeData.age}` : '',
         });
         setHoveredAgeData(null);
         return;
+      }
+      if (agingMethod === 'mercury-56' && calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base) {
+        const coords = getPointCoords(e.clientX, e.clientY);
+        const p0 = calibAnchors.mercury_heart_level;
+        const p56 = calibAnchors.mercury_base;
+        const nearest = getNearestPointOnPolyline([p0, p56], coords);
+        if (nearest && nearest.distance < 6.5) {
+          const age = parseFloat((nearest.fraction * 56).toFixed(1));
+          setAgeEventModal({
+            isOpen: true,
+            age,
+            point: nearest.point,
+            lineCategory: 'line_marriage',
+            sign: 'Marriage Event / Union (Vivāha)',
+            note: `Vivāha Rekhā mark at age ${age}`,
+          });
+          return;
+        }
       }
       if (lineToUse && lineToUse.points.length > 1) {
         const coords = getPointCoords(e.clientX, e.clientY);
@@ -1374,9 +1428,13 @@ export default function HandCanvas({
         setAgingLineCategory(lifeOrFate.lineCategory || 'line_life');
       }
     } else if (method === 'mercury-56') {
-      const marriageD = visibleDrawings.find((d) => d.lineCategory === 'line_marriage');
+      const marriageD = visibleDrawings.find(
+        (d) => d.lineCategory === 'line_marriage' || d.lineCategory === 'line_mercury'
+      );
       if (marriageD) {
         setSelectedAgingDrawingId(marriageD.id);
+        setAgingLineCategory(marriageD.lineCategory || 'line_marriage');
+      } else {
         setAgingLineCategory('line_marriage');
       }
     }
@@ -1409,19 +1467,6 @@ export default function HandCanvas({
     onChangeDrawings(updated);
     pushHistory(updated, pins);
     setAgingLineCategory(category);
-
-    // Auto-select canonical method for line category to prevent intermingling
-    if (category === 'line_heart') {
-      setAgingMethod('18-6-cadence');
-    } else if (category === 'line_fate') {
-      setAgingMethod('30-midpoint');
-    } else if (category === 'line_marriage') {
-      setAgingMethod('mercury-56');
-    } else if (category === 'line_life') {
-      if (agingMethod === '18-6-cadence' || agingMethod === 'mercury-56') {
-        setAgingMethod('30-midpoint');
-      }
-    }
   };
 
   const handleSaveAgeEvent = () => {
@@ -1565,6 +1610,9 @@ export default function HandCanvas({
     null;
   const lineToClassify = (currentSelectedDrawing && currentSelectedDrawing.lineCategory !== 'line_manibandha' ? currentSelectedDrawing : null) || activeAgingDrawing;
 
+  // All classical aging methods available in system
+  const allAgingMethods = useMemo(() => Object.values(AGING_METHODS), []);
+
   // ─── 30-Midpoint Master Calibration (Vedic Aging) Handlers ───
   const calibAnchors: AgingCalibrationAnchors | null = useMemo(() => {
     if (vedicData?.aging_calibrations?.[activeView]) {
@@ -1689,6 +1737,28 @@ export default function HandCanvas({
         return;
       }
 
+      if (type === 'mercury') {
+        if (step === 1) {
+          setActiveCalibration({ type: 'mercury', step: 2, tempPoint: coords });
+        } else {
+          const p1 = tempPoint!;
+          const p2 = coords;
+          // In screen coords, Y=0 is top (fingers) and Y=100 is bottom (wrist).
+          // Heart line level on percussion is lower on palm (larger Y) = Age 0
+          // Mercury finger root crease is higher on palm (smaller Y) = Age 56
+          const heartLevel = p1.y >= p2.y ? p1 : p2;
+          const fingerBase = p1.y >= p2.y ? p2 : p1;
+
+          updateAgingCalibration({
+            mercury_heart_level: heartLevel,
+            mercury_base: fingerBase,
+          });
+          setActiveCalibration(null);
+          setCalibCursorPos(null);
+        }
+        return;
+      }
+
       if (type === 'cadence') {
         const prevPoints = activeCalibration.points || [];
         const nextPoints = [...prevPoints, coords];
@@ -1714,6 +1784,11 @@ export default function HandCanvas({
   const getCalibrationPrompt = () => {
     if (!activeCalibration) return '';
     const { type, step } = activeCalibration;
+    if (type === 'mercury') {
+      return step === 1
+        ? '📍 Tap 1 of 2: Tap Heart Line level on outer palm percussion (Age 0)'
+        : '📍 Tap 2 of 2: Tap root crease of Mercury (little) finger (Age 56)';
+    }
     if (type === 'cadence') {
       const stepIdx = (step as number) - 1;
       const age = CADENCE_AGES[stepIdx] ?? 0;
@@ -1972,7 +2047,7 @@ export default function HandCanvas({
     const placedBadges: typeof items = [];
 
     for (const item of items) {
-      if (item.tick.isMajor) {
+      if (item.tick.isMajor || item.tick.age === 0 || item.tick.age === 28 || item.tick.age === 56) {
         item.showLabel = true;
         placedBadges.push(item);
       }
@@ -3084,7 +3159,7 @@ export default function HandCanvas({
                         )}
 
                         {/* 2.5 Life Line 30-Midpoint T-Frame Calibration Overlay */}
-                        {agingMethod === '30-midpoint' && showLifeCalibrationGrid && calibrationGeometry.lifeStart && calibrationGeometry.mk && (
+                        {agingMethod === '30-midpoint' && showLifeCalibrationGrid && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibrationGeometry.lifeStart && calibrationGeometry.mk && (
                           <g className="life-calibration-grid">
                             {/* Baseline chord connecting Life origin (0) to Maṇibandha Kendra (75) */}
                             <line
@@ -3190,7 +3265,7 @@ export default function HandCanvas({
                         )}
 
                         {/* 2.6 Fate Line Saturn Axis & 30-Midpoint Calibration Overlay */}
-                        {agingMethod === '30-midpoint' && showFateCalibrationGrid && calibrationGeometry.saturnRoot && calibrationGeometry.mk && (
+                        {agingMethod === '30-midpoint' && showFateCalibrationGrid && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_fate') && calibrationGeometry.saturnRoot && calibrationGeometry.mk && (
                           <g className="fate-calibration-grid">
                             {/* Vertical Axis from Maṇibandha Kendra (0) to Saturn Root (75) */}
                             <line
@@ -3327,11 +3402,26 @@ export default function HandCanvas({
                                 vectorEffect="non-scaling-stroke"
                               />
                             )}
+
+                            {/* Rubberband line for Mercury 56-Year Scale (Step 2: from Point 1 to cursor) */}
+                            {activeCalibration.type === 'mercury' && activeCalibration.tempPoint && calibCursorPos && (
+                              <line
+                                x1={activeCalibration.tempPoint.x}
+                                y1={activeCalibration.tempPoint.y}
+                                x2={calibCursorPos.x}
+                                y2={calibCursorPos.y}
+                                stroke="#f59e0b"
+                                strokeWidth="2.0"
+                                strokeDasharray="3,2"
+                                opacity="0.85"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            )}
                           </g>
                         )}
 
                         {/* 2.6. 18+6 Cadence Finger-Base Projections (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
-                        {agingMethod === '18-6-cadence' && (() => {
+                        {agingMethod === '18-6-cadence' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_heart' || activeAgingDrawing?.lineCategory === 'line_head') && (() => {
                           const pointsToRender = activeCalibration?.type === 'cadence'
                             ? activeCalibration.points || []
                             : calibAnchors?.cadence_points || [];
@@ -3375,20 +3465,22 @@ export default function HandCanvas({
                                 return (
                                   <g key={`cadence-svg-${idx}`}>
                                     {/* Vertical downward projection line */}
-                                    <line
-                                      x1={pt.x}
-                                      y1={pt.y}
-                                      x2={pt.x}
-                                      y2={endY}
-                                      stroke={strokeColor}
-                                      strokeWidth={isGap ? '1.2' : '1.8'}
-                                      strokeDasharray={intersection ? '3,1.5' : '2.5,2'}
-                                      opacity="0.85"
-                                      vectorEffect="non-scaling-stroke"
-                                    />
+                                    {showCadenceRays && (
+                                      <line
+                                        x1={pt.x}
+                                        y1={pt.y}
+                                        x2={pt.x}
+                                        y2={endY}
+                                        stroke={strokeColor}
+                                        strokeWidth={isGap ? '1.2' : '1.8'}
+                                        strokeDasharray={intersection ? '3,1.5' : '2.5,2'}
+                                        opacity="0.85"
+                                        vectorEffect="non-scaling-stroke"
+                                      />
+                                    )}
 
                                     {/* Arrowhead / tick if no intersection */}
-                                    {!intersection && (
+                                    {showCadenceRays && !intersection && (
                                       <>
                                         <line
                                           x1={pt.x - 0.8}
@@ -3414,7 +3506,7 @@ export default function HandCanvas({
                                     )}
 
                                     {/* Intersection mark on the Heart Line */}
-                                    {intersection && (
+                                    {showCadenceIntersections && intersection && (
                                       <g>
                                         <circle
                                           cx={intersection.x}
@@ -3478,6 +3570,177 @@ export default function HandCanvas({
                                   />
                                 </g>
                               )}
+                            </g>
+                          );
+                        })()}
+
+                        {/* 2.8. Mercury Mount 56-Year Timing Scale (Lecture 28 §4.2: 0..56 yrs) */}
+                        {agingMethod === 'mercury-56' && showMercuryCalibrationScale && (() => {
+                          const p0 = calibAnchors?.mercury_heart_level;
+                          const p56 = calibAnchors?.mercury_base;
+
+                          if (!p0 || !p56) return null;
+
+                          const dx = p56.x - p0.x;
+                          const dy = p56.y - p0.y;
+                          const len = Math.hypot(dx, dy) || 1;
+
+                          // Compute perpendicular unit normal pointing inward towards the palm center (x ≈ 50%)
+                          let nx = -dy / len;
+                          let ny = dx / len;
+                          if (p0.x > 50 && nx > 0) {
+                            nx = -nx;
+                            ny = -ny;
+                          } else if (p0.x < 50 && nx < 0) {
+                            nx = -nx;
+                            ny = -ny;
+                          }
+
+                          // Classical milestones on 0..56 scale (Lecture 28 §4.2)
+                          const milestones = [
+                            { age: 0, frac: 0, isMajor: true, label: '0' },
+                            { age: 14, frac: 14 / 56, isMajor: false, label: '14' },
+                            { age: 21, frac: 21 / 56, isMajor: false, label: '21' },
+                            { age: 28, frac: 28 / 56, isMajor: true, label: '28' },
+                            { age: 35, frac: 35 / 56, isMajor: false, label: '35' },
+                            { age: 42, frac: 42 / 56, isMajor: true, label: '42' },
+                            { age: 49, frac: 49 / 56, isMajor: false, label: '49' },
+                            { age: 56, frac: 1.0, isMajor: true, label: '56' },
+                          ];
+
+                          return (
+                            <g className="mercury-56-scale-overlay">
+                              {/* Main vertical scale axis */}
+                              <line
+                                x1={p0.x}
+                                y1={p0.y}
+                                x2={p56.x}
+                                y2={p56.y}
+                                stroke="#f59e0b"
+                                strokeWidth="2.2"
+                                vectorEffect="non-scaling-stroke"
+                                strokeLinecap="round"
+                                style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.5))' }}
+                              />
+
+                              {/* Clickable transparent hit area along the scale */}
+                              <line
+                                x1={p0.x}
+                                y1={p0.y}
+                                x2={p56.x}
+                                y2={p56.y}
+                                stroke="transparent"
+                                strokeWidth="14"
+                                vectorEffect="non-scaling-stroke"
+                                className="cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const coords = getPointCoords(e.clientX, e.clientY);
+                                  const nearest = getNearestPointOnPolyline([p0, p56], coords);
+                                  if (nearest) {
+                                    const age = parseFloat((nearest.fraction * 56).toFixed(1));
+                                    setAgeEventModal({
+                                      isOpen: true,
+                                      age,
+                                      point: nearest.point,
+                                      lineCategory: 'line_marriage',
+                                      sign: 'Marriage Event / Union (Vivāha)',
+                                      note: `Vivāha Rekhā mark at age ${age}`,
+                                    });
+                                    setHoveredAgeData(null);
+                                  }
+                                }}
+                              >
+                                <title>Click anywhere on Mercury Mount scale to log marriage event</title>
+                              </line>
+
+                              {/* Ticks and Age Badges */}
+                              {milestones.map((m) => {
+                                const pt = { x: p0.x + m.frac * dx, y: p0.y + m.frac * dy };
+                                const tickLen = m.isMajor ? 3.0 : 1.8;
+                                const x2 = pt.x + nx * tickLen;
+                                const y2 = pt.y + ny * tickLen;
+                                const textX = pt.x + nx * (tickLen + 1.6);
+                                const textY = pt.y + ny * (tickLen + 1.6);
+                                const isMidpoint = m.age === 28;
+
+                                return (
+                                  <g
+                                    key={`mercury-tick-${m.age}`}
+                                    className="cursor-pointer hover:opacity-90"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setAgeEventModal({
+                                        isOpen: true,
+                                        age: m.age,
+                                        point: pt,
+                                        lineCategory: 'line_marriage',
+                                        sign: isMidpoint ? 'Average Marriage Milestone (Vivāha Midpoint)' : 'Marriage Event / Union (Vivāha)',
+                                        note: `Mercury 56-yr scale: Vivāha event timing at age ${m.age}`,
+                                      });
+                                      setHoveredAgeData(null);
+                                    }}
+                                  >
+                                    {/* Perpendicular tick line extending into mount */}
+                                    <line
+                                      x1={pt.x}
+                                      y1={pt.y}
+                                      x2={x2}
+                                      y2={y2}
+                                      stroke={isMidpoint ? '#f59e0b' : m.isMajor ? '#fbbf24' : '#d97706'}
+                                      strokeWidth={m.isMajor ? '2.0' : '1.2'}
+                                      vectorEffect="non-scaling-stroke"
+                                      strokeLinecap="round"
+                                    />
+                                    {/* Anchor dot on axis */}
+                                    <circle
+                                      cx={pt.x}
+                                      cy={pt.y}
+                                      r={isMidpoint ? 0.9 : m.isMajor ? 0.75 : 0.45}
+                                      fill={isMidpoint ? '#f59e0b' : '#d97706'}
+                                      stroke="#ffffff"
+                                      strokeWidth="0.25"
+                                    />
+                                    {/* Horizontal alignment guide across Mercury mount */}
+                                    {isMidpoint && (
+                                      <line
+                                        x1={pt.x}
+                                        y1={pt.y}
+                                        x2={pt.x + nx * 10}
+                                        y2={pt.y}
+                                        stroke="#f59e0b"
+                                        strokeWidth="1.0"
+                                        strokeDasharray="2,2"
+                                        opacity="0.6"
+                                        vectorEffect="non-scaling-stroke"
+                                      />
+                                    )}
+                                    {/* Age Badge */}
+                                    <rect
+                                      x={textX - (isMidpoint ? 2.5 : 2.0)}
+                                      y={textY - 1.1}
+                                      width={isMidpoint ? 5.0 : 4.0}
+                                      height="2.2"
+                                      rx="0.5"
+                                      fill={isMidpoint ? '#b45309' : '#1c1917'}
+                                      stroke={isMidpoint ? '#fbbf24' : '#f59e0b'}
+                                      strokeWidth={isMidpoint ? '0.35' : '0.2'}
+                                      opacity="0.95"
+                                    />
+                                    <text
+                                      x={textX}
+                                      y={textY + 0.55}
+                                      fill={isMidpoint ? '#ffffff' : '#fef08a'}
+                                      fontSize={isMidpoint ? '1.1' : '0.95'}
+                                      fontWeight="bold"
+                                      textAnchor="middle"
+                                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                    >
+                                      {m.label}
+                                    </text>
+                                  </g>
+                                );
+                              })}
                             </g>
                           );
                         })()}
@@ -3880,13 +4143,18 @@ export default function HandCanvas({
                       >
                         <div
                           className={`w-2.5 h-2.5 rounded-full ${
-                            activeCalibration.type === 'manibandha'
+                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
                               ? 'bg-amber-500/70 border border-white/80'
                               : 'bg-sky-500/70 border border-white/80'
                           } shadow-xs flex items-center justify-center`}
                         >
                           <div className="w-0.5 h-0.5 rounded-full bg-white/90" />
                         </div>
+                        {activeCalibration.type === 'mercury' && (
+                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8px] font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
+                            Age 0
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -3902,11 +4170,16 @@ export default function HandCanvas({
                       >
                         <div
                           className={`w-2 h-2 rounded-full ${
-                            activeCalibration.type === 'manibandha'
+                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
                               ? 'bg-amber-400/65 border border-white/70'
                               : 'bg-sky-400/65 border border-white/70'
                           } shadow-xs`}
                         />
+                        {activeCalibration.type === 'mercury' && (
+                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-stone-900 border border-amber-300 text-[8px] font-extrabold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
+                            Age 28
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -3922,11 +4195,16 @@ export default function HandCanvas({
                       >
                         <div
                           className={`w-2.5 h-2.5 rounded-full ${
-                            activeCalibration.type === 'manibandha'
+                            activeCalibration.type === 'manibandha' || activeCalibration.type === 'mercury'
                               ? 'bg-amber-500/70 border border-white/80'
                               : 'bg-sky-500/70 border border-white/80'
-                          } shadow-xs`}
+                          } shadow-xs animate-ping`}
                         />
+                        {activeCalibration.type === 'mercury' && (
+                          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-200 border border-amber-400/50 text-[8px] font-bold px-1 py-0.2 rounded whitespace-nowrap shadow-xs">
+                            Age 56
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -4033,7 +4311,7 @@ export default function HandCanvas({
                 {activeView !== 'd1_chart' && (mode === 'aging' || mode === 'draw') && !activeCalibration && calibAnchors && (
                   <>
                     {/* Life Line Origin Anchor (L0) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.life_start && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibAnchors.life_start && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4061,7 +4339,7 @@ export default function HandCanvas({
                     )}
 
                     {/* Mercury Crease Sandhi Anchor (ME) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.mercury_sandhi && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_life') && calibAnchors.mercury_sandhi && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4089,7 +4367,7 @@ export default function HandCanvas({
                     )}
 
                     {/* Saturn Mount / Middle Finger Base Joint Anchor (S75/80) - Only on Aging tab for 30-Midpoint method */}
-                    {mode === 'aging' && agingMethod === '30-midpoint' && calibAnchors.saturn_root && (
+                    {mode === 'aging' && agingMethod === '30-midpoint' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_fate') && calibAnchors.saturn_root && (
                       <div
                         className="absolute cursor-move z-30 group"
                         style={{
@@ -4166,7 +4444,7 @@ export default function HandCanvas({
                     )}
 
                     {/* 18+6 Cadence Finger-Base Draggable Anchor Handles (Ages 0, 18, 24, 42, 48, 66, 72, 90) */}
-                    {mode === 'aging' && agingMethod === '18-6-cadence' && calibAnchors.cadence_points && (
+                    {mode === 'aging' && agingMethod === '18-6-cadence' && (!isolateActiveAgingLine || activeAgingDrawing?.lineCategory === 'line_heart' || activeAgingDrawing?.lineCategory === 'line_head') && calibAnchors.cadence_points && (
                       <>
                         {calibAnchors.cadence_points.map((pt, idx) => {
                           const age = CADENCE_AGES[idx];
@@ -4213,6 +4491,84 @@ export default function HandCanvas({
                             </div>
                           );
                         })}
+                      </>
+                    )}
+
+                    {/* Mercury Mount 56-Year Scale Draggable Anchor Handles (Age 0 and Age 56) */}
+                    {mode === 'aging' && agingMethod === 'mercury-56' && showMercuryCalibrationScale && (
+                      <>
+                        {/* Age 0 Anchor (Heart Line Level on Percussion) */}
+                        {calibAnchors.mercury_heart_level && (
+                          <div
+                            className="absolute cursor-move z-30 group"
+                            style={{
+                              left: `${calibAnchors.mercury_heart_level.x}%`,
+                              top: `${calibAnchors.mercury_heart_level.y}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setDraggingCalibNode('mercury_heart_level');
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              setDraggingCalibNode('mercury_heart_level');
+                            }}
+                            title="Heart Line Level (Age 0) - Drag to fine-tune"
+                          >
+                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80 ring-1 ring-amber-300/70 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                              <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                            </div>
+                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none leading-tight">
+                              0
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Age 56 Anchor (Mercury Finger Base Joint Crease) */}
+                        {calibAnchors.mercury_base && (
+                          <div
+                            className="absolute cursor-move z-30 group"
+                            style={{
+                              left: `${calibAnchors.mercury_base.x}%`,
+                              top: `${calibAnchors.mercury_base.y}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              setDraggingCalibNode('mercury_base');
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                              setDraggingCalibNode('mercury_base');
+                            }}
+                            title="Mercury Finger Root Crease (Age 56) - Drag to fine-tune"
+                          >
+                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80 ring-1 ring-amber-300/70 border border-white/90 shadow-xs hover:scale-125 flex items-center justify-center transition-transform">
+                              <div className="w-0.5 h-0.5 bg-white/90 rounded-full" />
+                            </div>
+                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-950/90 text-amber-300 border border-amber-500/40 text-[8.5px] font-bold px-1.5 py-0.2 rounded whitespace-nowrap shadow-xs pointer-events-none leading-tight">
+                              56
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Classical Midpoint Indicator (Age 28) */}
+                        {calibAnchors.mercury_heart_level && calibAnchors.mercury_base && (
+                          <div
+                            className="absolute pointer-events-none z-30"
+                            style={{
+                              left: `${(calibAnchors.mercury_heart_level.x + calibAnchors.mercury_base.x) / 2}%`,
+                              top: `${(calibAnchors.mercury_heart_level.y + calibAnchors.mercury_base.y) / 2}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-amber-400 border border-white/90 shadow-xs" />
+                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-stone-900 border border-amber-300 text-[8.5px] font-extrabold px-1.5 py-0.2 rounded whitespace-nowrap shadow-md leading-tight">
+                              28
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                   </>
@@ -4465,14 +4821,14 @@ export default function HandCanvas({
                     value={agingMethod}
                     onChange={(e) => handleSelectAgingMethod(e.target.value as AgingMethod)}
                   >
-                    <option value="30-midpoint">30-Midpoint (Class Standard)</option>
-                    <option value="cheiro-98">Cheiro Saptāṁśa (98 yrs, 14 parts)</option>
-                    <option value="shadamsha-72">Ṣaḍaṁśa (72 yrs, 12 parts)</option>
-                    <option value="three-line-avg">Three-Line Average (100y scale)</option>
-                    <option value="18-6-cadence">18 + 6 Cadence (Heart & Head)</option>
+                    {allAgingMethods.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.title}
+                      </option>
+                    ))}
                   </select>
                   <p className="text-[10px] text-stone-400 italic leading-tight pt-0.5">
-                    {AGING_METHODS[agingMethod].description}
+                    {AGING_METHODS[agingMethod]?.description}
                   </p>
                 </div>
 
@@ -4482,11 +4838,22 @@ export default function HandCanvas({
                     <label className="text-[11px] font-bold text-stone-300">
                       Line to Age
                     </label>
-                    {activeAgingDrawing && (
-                      <span className="text-[10px] text-amber-400 font-mono">
-                        {calculatePolylineLength(activeAgingDrawing.points).toFixed(1)}% length
-                      </span>
-                    )}
+                    {activeAgingDrawing && (() => {
+                      let span = 0;
+                      for (let i = 1; i < activeAgingDrawing.points.length; i++) {
+                        const dx = activeAgingDrawing.points[i].x - activeAgingDrawing.points[i - 1].x;
+                        const dy = activeAgingDrawing.points[i].y - activeAgingDrawing.points[i - 1].y;
+                        span += Math.sqrt(dx * dx + dy * dy);
+                      }
+                      return (
+                        <span
+                          className="text-[10px] text-amber-400 font-mono"
+                          title="Traced polyline length as a percentage of palm span"
+                        >
+                          {Math.round(span)}% palm span
+                        </span>
+                      );
+                    })()}
                   </div>
 
                   {palmDrawings.length > 0 ? (
@@ -4499,17 +4866,7 @@ export default function HandCanvas({
                           setSelectedAgingDrawingId(drawingId);
                           const d = drawings.find((item) => item.id === drawingId);
                           if (d?.lineCategory) {
-                            if (d.lineCategory === 'line_heart') {
-                              setAgingMethod('18-6-cadence');
-                            } else if (d.lineCategory === 'line_fate') {
-                              setAgingMethod('30-midpoint');
-                            } else if (d.lineCategory === 'line_marriage') {
-                              setAgingMethod('mercury-56');
-                            } else if (d.lineCategory === 'line_life') {
-                              if (agingMethod === '18-6-cadence' || agingMethod === 'mercury-56') {
-                                setAgingMethod('30-midpoint');
-                              }
-                            }
+                            setAgingLineCategory(d.lineCategory);
                           }
                         }}
                       >
@@ -4542,6 +4899,21 @@ export default function HandCanvas({
                           </select>
                         </div>
                       )}
+                      {/* Active Line Isolation Toggle */}
+                      <div className="pt-1.5 pb-0.5">
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white select-none">
+                          <input
+                            type="checkbox"
+                            checked={isolateActiveAgingLine}
+                            onChange={(e) => setIsolateActiveAgingLine(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
+                          />
+                          <span className="font-semibold text-stone-200">Focus Active Line Only</span>
+                        </label>
+                        <p className="text-[9.5px] text-stone-400 pl-5 leading-tight">
+                          Hides markers from other lines to prevent intermingling.
+                        </p>
+                      </div>
 
                       <button
                         type="button"
@@ -4813,6 +5185,86 @@ export default function HandCanvas({
                             Clear
                           </button>
                         )}
+                      </div>
+
+                      {/* Cadence Display Toggles */}
+                      <div className="space-y-1.5 pt-2 border-t border-stone-800">
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                          <input
+                            type="checkbox"
+                            checked={showCadenceRays}
+                            onChange={(e) => setShowCadenceRays(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-rose-500 cursor-pointer"
+                          />
+                          <span>Show Finger Projection Rays</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                          <input
+                            type="checkbox"
+                            checked={showCadenceIntersections}
+                            onChange={(e) => setShowCadenceIntersections(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-rose-500 cursor-pointer"
+                          />
+                          <span>Show Heart Line Age Badges</span>
+                        </label>
+                      </div>
+                    </div>
+                  ) : agingMethod === 'mercury-56' ? (
+                    <div className="p-3 bg-stone-800/50 border border-stone-700/60 rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-amber-400 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          Mercury Mount 56-Year Timing (0–56 yrs)
+                        </span>
+                        {calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base ? (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            56-Yr Scale Active
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-stone-400">Not Calibrated</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-stone-400 leading-tight">
+                        Lecture 28 §4.2: Classical scale for dating marriage (Vivāha Rekhā) &amp; relationship unions along the outer percussion edge under the Mercury (little) finger.
+                        Age 0 at Heart Line level, Age 28 midpoint, and Age 56 at the finger root crease. Move cursor over scale to see exact age.
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveCalibration({ type: 'mercury', step: 1 });
+                          }}
+                          className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition cursor-pointer active:scale-95 shadow-xs flex items-center justify-center gap-1.5 bg-amber-600/30 hover:bg-amber-600/45 text-amber-200 border-amber-500/40"
+                          title="Tap 2 points: Heart Line level (Age 0) then Mercury root crease (Age 56)"
+                        >
+                          <Target className="w-3.5 h-3.5 text-amber-400" />
+                          {calibAnchors?.mercury_heart_level && calibAnchors?.mercury_base
+                            ? 'Re-tap (2 Taps: 0 → 56)'
+                            : 'Tap 2 Points (0 → 56)'}
+                        </button>
+                        {calibAnchors?.mercury_heart_level && (
+                          <button
+                            type="button"
+                            onClick={() => clearAgingCalibration(['mercury_heart_level', 'mercury_base'])}
+                            className="py-1.5 px-2.5 bg-red-500/15 hover:bg-red-500/25 text-red-300 rounded-lg text-xs font-semibold border border-red-500/30 transition cursor-pointer active:scale-95"
+                            title="Clear Mercury Scale"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Display Toggles */}
+                      <div className="space-y-1.5 pt-2 border-t border-stone-800">
+                        <label className="flex items-center gap-2 cursor-pointer text-[11px] text-stone-300 hover:text-white">
+                          <input
+                            type="checkbox"
+                            checked={showMercuryCalibrationScale}
+                            onChange={(e) => setShowMercuryCalibrationScale(e.target.checked)}
+                            className="rounded bg-stone-800 border-stone-700 text-amber-500 cursor-pointer"
+                          />
+                          <span>Show 56-Yr Scale Axis &amp; Age Ticks</span>
+                        </label>
                       </div>
                     </div>
                   ) : (

@@ -77,7 +77,7 @@ export const AGING_METHODS: Record<AgingMethod, AgingMethodInfo> = {
       'Cheiro research method. Total lifespan taken as 98 (divided into 14 equal parts of 7 years: 7, 14, 21... 98). Maximum prediction horizon 7 years.',
     lectureReference: 'Lecture 27 §3',
     color: '#2563eb', // blue-600
-    applicableLines: ['line_life', 'line_heart'],
+    applicableLines: ['line_life', 'line_heart', 'line_fate', 'line_head'],
   },
   'shadamsha-72': {
     id: 'shadamsha-72',
@@ -88,7 +88,7 @@ export const AGING_METHODS: Record<AgingMethod, AgingMethodInfo> = {
       'Classical Indian method. Lifespan of 70-72 divided into 12 equal parts of 6 years (6, 12, 18, 24... 72). Traditionally read on Heart Line, later Life Line.',
     lectureReference: 'Lecture 27 §2',
     color: '#9333ea', // purple-600
-    applicableLines: ['line_life', 'line_heart'],
+    applicableLines: ['line_life', 'line_heart', 'line_fate', 'line_head'],
   },
   'three-line-avg': {
     id: 'three-line-avg',
@@ -606,11 +606,19 @@ export function computeAgeTicks(
       for (const m of milestones) {
         const geom = getPointAndNormalAtFraction(points, m.fraction, dimensions);
         if (geom) {
+          // Ensure normal vector points inward toward the palm center (so tick and badge never clip outside screen)
+          let normal = { ...geom.normal };
+          if (geom.point.x > 50 && normal.x > 0) {
+            normal = { x: -normal.x, y: -normal.y };
+          } else if (geom.point.x < 50 && normal.x < 0) {
+            normal = { x: -normal.x, y: -normal.y };
+          }
+
           ticks.push({
             age: m.age,
             fraction: m.fraction,
             point: geom.point,
-            normal: geom.normal,
+            normal,
             label: `${m.age}`,
             isMajor: m.isMajor,
             method: 'mercury-56',
