@@ -5,23 +5,7 @@
 
 ---
 
-## 1. Course Logistics and Introductions
-
-- The teacher greeted returning and new students; a round of brief self-introductions was taken (students named: Himakshi, Konkona, Madhu, Preetu, Anuradha, Dravin, Arvind).
-- Several students were long-time students of "Guruji" across multiple courses (Numerology, Astrology, etc.); this was noted as their first palmistry course with this teacher.
-
-> [!NOTE] Course Format
-> - Recordings will be sent by email/available on the course **website** (login required); process to be explained separately. Previously some students received course content via YouTube — this will now move to the website.
-> - Students should join the class WhatsApp/course group for updates on recordings, book references, and any login issues (issues should be messaged to the group, not personally).
-> - The class will run **twice a week**, at the same time (student flagged a scheduling note: Wednesday/Friday listed, but Thursday conflicts with their Tarot class — teacher said she would check and confirm in the group).
-> - Course duration: **six months**, deliberately paced slowly so the subject is absorbed properly, without rushing.
-
-> [!TIP] Notes
-> The teacher has her own notes (in Hindi) which she will share gradually — but she encouraged students to **make their own notes alongside the class**, since palmistry has too many lines/hand variations to capture in any single fixed note set. Palmistry is **more practical than theoretical**.
-
----
-
-## 2. What Palmistry Actually Is
+## 1. What Palmistry Actually Is
 
 - Popularly, "hastarekhā (palmistry)" sounds like it means reading only the lines on the hand. But that is not the full picture.
 
@@ -31,7 +15,7 @@
 > [!EXAMPLE] Everyday Analogy
 > Just as noticing someone's nails looking yellow, dry, or pale might prompt a question about their health (the way a doctor would ask), the skin and structure of the hand carry similar information — related to body temperature and other physical factors — before any line is even read.
 
-### 2.1 Palmistry as Part of Sāmudrika Śāstra
+### 1.1 Palmistry as Part of Sāmudrika Śāstra
 
 - Palmistry (**hastarekhā vijñāna / hastarekhā śāstra**) is described as being part of a larger discipline: **sāmudrika śāstra**.
 - **Sāmudrika śāstra** is also called **lakṣaṇa vidyā śāstra** — the "science of physical signs/characteristics."
@@ -39,7 +23,7 @@
 > [!INFO] Definition — Lakṣaṇa Vidyā
 > Making predictions by observing the many physical signs (**lakṣaṇ**) across the entire body — e.g., reading the forehead and its lines, moles/marks (**til**) anywhere on the body, the feet, and even the person's gestures/mannerisms and surrounding events. This entire discipline of prediction-through-physical-signs is called **sāmudrika śāstra**.
 
-### 2.2 Classical Textual References
+### 1.2 Classical Textual References
 
 > [!QUOTE] Source Books Mentioned
 > The teacher referenced two books as proof/reference material:
@@ -50,14 +34,14 @@
 - No single book contains all of sāmudrika śāstra — information is scattered across many texts, including references in the **Garuḍa Purāṇa** and **Vālmīki Rāmāyaṇa**, with different verses (**śloka**) in different places.
 - The teacher will share specific relevant śloka references (as a PDF) and will post recommended palmistry books in the class group, rather than requiring students to buy the Sanskrit reference texts (which are optional/for those interested).
 
-### 2.3 Origin of the Word "Sāmudrika Śāstra"
+### 1.3 Origin of the Word "Sāmudrika Śāstra"
 
 > [!NOTE] Traditional Account
 > This vidyā (knowledge) is said to have been given by **Lord Shiva** to a sage named **Samudra Ṛṣi**. Very little is documented about this sage directly — only scattered references such as "Samudra said this" or "Samudra explained this." Samudra Ṛṣi is credited with **compiling (saṅkalan)** this body of knowledge, which is also called **lakṣaṇa vidyā śāstra**.
 
 ---
 
-## 3. Origins of Palmistry (Historical Note)
+## 2. Origins of Palmistry (Historical Note)
 
 > [!CAUTION] No Definitive Proof of Origin
 > There is no conclusive evidence of exactly where palmistry originated. Some say **China**, others say **India**.
@@ -80,7 +64,7 @@
 
 ---
 
-## 5. Guidelines for Collecting Hand Photos
+## 4. Guidelines for Collecting Hand Photos
 
 > [!IMPORTANT] Why This Matters
 > The class will be highly **practical**, and hand-photo collection will begin from the very first topics covered — so correct photo-taking technique matters from day one.
@@ -101,7 +85,7 @@
 > [!TIP] Take Your Own Hand Photo Too
 > Take a photo of your **own hand** and note the date. As you progress through the course (over 2–3 months), you will start to see your own hand lines gradually change — a good way to observe the concepts being taught in real time.
 
-### 5.1 Enhancing Line Visibility
+### 4.1 Enhancing Line Visibility
 
 > [!TIP] Techniques to Make Lines More Visible
 > - Applying **ink** (e.g., blue ink) and taking a handprint can bring out lines clearly.
@@ -110,24 +94,24 @@
 
 ---
 
-## 6. Do Palm Lines Really Change? (Student Question)
+## 5. Do Palm Lines Really Change? (Student Question)
 
 > [!FAQ] If Lines Change Every Few Months, What Happens to a Past Prediction?
 > The teacher's answer: yes, lines on the **active hand** can and do change as a person's thought process and effort changes — this is part of how remedial effort ("we try to change our own situation") works. This is explained further in the willpower/graphology discussion below.
 
 ---
 
-## 7. Destiny Hand vs. Active Hand — The Core Theory
+## 6. Destiny Hand vs. Active Hand — The Core Theory
 
 > [!IMPORTANT] This Is the Biggest Foundational Theory of the Lecture
 > Once both hands' photos are collected, the next big question is: **which hand do we actually read for prediction?**
 
-### 7.1 The Left Hand — Destiny Hand
+### 6.1 The Left Hand — Destiny Hand
 
 > [!INFO] Definition
 > The **left hand is always called the destiny hand** — comparable to one's **birth chart (janma patrikā)**, which is fixed at the moment of birth and does not change; its planetary periods (**daśā**) are fixed. One's *karma* and mindset changes act like remedies, and **transits** also have an impact, but the chart itself stays fixed. Similarly, the **left hand is always the destiny hand**, regardless of which hand a person actually uses/works with.
 
-### 7.2 The "Active" Hand — Which Hand Is It?
+### 6.2 The "Active" Hand — Which Hand Is It?
 
 > [!INFO] Definition
 > The **active hand** is whichever hand the person predominantly **eats and writes with**. For about 90% of people, this is the right hand, but it can be the left hand for some.
@@ -150,7 +134,7 @@
 > [!TIP] Remedial Application — Hand Care
 > People doing very hard physical labor (e.g., construction work with bricks and stones) tend to have rough, tough hands, reflecting a tougher life. Softer hands correlate with a greater *chance* of comfort/luxury in life (not a 100% guarantee — the actual lines still matter, but it forms a "base platform," similar to how a rāśi/sign forms a base platform in astrology). As a simple **remedy**: keep hands well cared for (manicure, moisturizing/cream especially at night) — this genuinely appears to have some effect. Avoid letting the hands develop knots or repeated cuts; the impact of such marks shows up around meaningful life events, both small and large, and becomes clearer to interpret as one progresses through the course.
 
-### 7.3 How to Determine Active vs. Destiny Hand in Practice
+### 6.3 How to Determine Active vs. Destiny Hand in Practice
 
 > [!TIP] Standard Case
 > If someone clearly eats/writes with one hand, that is the **active hand**; the other is the **destiny hand**.
@@ -174,7 +158,7 @@
 
 ---
 
-## 8. Does Gender Affect Which Hand Is Read?
+## 7. Does Gender Affect Which Hand Is Read?
 
 > [!FAQ] Is the Active/Destiny Hand Rule the Same for Men and Women?
 > **Yes — the same procedure applies to both.**
@@ -185,7 +169,7 @@
 
 ---
 
-## 9. Two Common Myths About Palmistry
+## 8. Two Common Myths About Palmistry
 
 > [!WARNING] Myth 1 — "Don't Read Your Own Hand"
 > Just as astrology has a myth that one shouldn't read one's own birth chart, palmistry has a similar myth about not reading one's own hand. **This is incorrect** — in fact, students are encouraged to **start by studying their own hand**. Worrying that observing your own "negative-looking" lines will somehow make your fate worse is unfounded — negativity only takes hold when a person is already weak within themselves; if there's no inner weakness, there's nothing for it to attach to. Reading your own hand is simply a good way to **learn more effectively**.
