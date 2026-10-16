@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { HandProfile, getDemoProfiles, isSupabaseConfigured } from '@/lib/supabase';
-import { getCachedProfiles, updateProfileInCache } from '@/lib/profilesCache';
+import { getCachedProfile, updateProfileInCache } from '@/lib/profilesCache';
 import AnalysisEditor from '@/components/AnalysisEditor';
 import PageLayout from '@/components/PageLayout';
 
@@ -17,7 +17,7 @@ export default function AnalysisPage() {
 
   useEffect(() => {
     // Instant initial render from client cache
-    const cachedMatch = getCachedProfiles()?.find((p) => p.id === id) || null;
+    const cachedMatch = getCachedProfile(id);
     if (cachedMatch) {
       setProfile(cachedMatch);
       setIsLoading(false);
@@ -29,7 +29,7 @@ export default function AnalysisPage() {
       }
       if (isSupabaseConfigured) {
         try {
-          const res = await fetch(`/api/hands?id=${id}`);
+          const res = await fetch(`/api/hands?id=${id}`, { cache: 'no-store' });
           if (res.ok) {
             const data = await res.json();
             if (data && !data.error) {

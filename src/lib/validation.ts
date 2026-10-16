@@ -2,6 +2,17 @@ import { HandView } from './supabase';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_VIEWS: HandView[] = ['right_palm', 'right_back', 'left_palm', 'left_back', 'd1_chart'];
+const VALID_LINE_CATEGORIES: string[] = [
+  'line_life',
+  'line_fate',
+  'line_head',
+  'line_heart',
+  'line_sun',
+  'line_mercury',
+  'line_marriage',
+  'line_manibandha',
+  'other',
+];
 const MAX_UPLOAD_SIZE = 15 * 1024 * 1024; // 15MB
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
 
@@ -117,7 +128,6 @@ export function validateHandProfilePayload(body: any): ValidationResult<any> {
       });
     }
   }
-
   // Validate Drawings
   let drawings: any[] = [];
   if (Array.isArray(body.drawings)) {
@@ -137,6 +147,11 @@ export function validateHandProfilePayload(body: any): ValidationResult<any> {
           }
         }
       }
+      const lineCategory =
+        typeof d.lineCategory === 'string' && VALID_LINE_CATEGORIES.includes(d.lineCategory)
+          ? d.lineCategory
+          : undefined;
+
       drawings.push({
         id: typeof d.id === 'string' ? d.id.slice(0, 100) : crypto.randomUUID(),
         view: VALID_VIEWS.includes(d.view) ? d.view : 'right_palm',
@@ -144,6 +159,7 @@ export function validateHandProfilePayload(body: any): ValidationResult<any> {
         color: typeof d.color === 'string' ? d.color.slice(0, 50) : '#3b82f6',
         thickness: typeof d.thickness === 'number' ? Math.max(1, Math.min(20, d.thickness)) : 3,
         label: typeof d.label === 'string' ? d.label.slice(0, 100) : undefined,
+        lineCategory,
       });
     }
   }

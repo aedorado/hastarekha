@@ -254,7 +254,9 @@ export default function AnalysisEditor({ initialProfile }: AnalysisEditorProps) 
 
         if (res.ok) {
           const savedData = await res.json().catch(() => null);
-          const updated = (savedData && savedData.data) ? savedData.data : activeProfile;
+          const updated = (savedData && savedData.data)
+            ? savedData.data
+            : (savedData && savedData.id ? savedData : activeProfile);
           updateProfileInCache(updated);
           setLastSavedProfile(updated);
           setActiveProfile(updated);
@@ -590,7 +592,8 @@ function isProfileChanged(initial: HandProfile, active: HandProfile): boolean {
       id.view !== ad.view ||
       normStr(id.color) !== normStr(ad.color) ||
       id.thickness !== ad.thickness ||
-      normStr(id.label) !== normStr(ad.label)
+      normStr(id.label) !== normStr(ad.label) ||
+      normStr(id.lineCategory) !== normStr(ad.lineCategory)
     ) {
       return true;
     }

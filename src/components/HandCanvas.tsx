@@ -1683,6 +1683,9 @@ export default function HandCanvas({
         const updated = [...baseDrawings, newDrawing];
 
         onChangeDrawings(updated);
+        if (profile && onChangeProfile) {
+          onChangeProfile({ ...profile, drawings: updated });
+        }
         pushHistory(updated, pins);
         setSelectedDrawingId(newDrawing.id);
 
@@ -1966,6 +1969,9 @@ export default function HandCanvas({
       d.id === drawingId ? { ...d, lineCategory: category } : d
     );
     onChangeDrawings(updated);
+    if (profile && onChangeProfile) {
+      onChangeProfile({ ...profile, drawings: updated });
+    }
     pushHistory(updated, pins);
     setAgingLineCategory(category);
   };
@@ -1979,6 +1985,9 @@ export default function HandCanvas({
   const handleDeleteDrawing = (id: string) => {
     const next = drawings.filter((d) => d.id !== id);
     onChangeDrawings(next);
+    if (profile && onChangeProfile) {
+      onChangeProfile({ ...profile, drawings: next });
+    }
     pushHistory(next, pins);
     if (hiddenDrawingIds.includes(id)) {
       setHiddenDrawingIds((prev) => prev.filter((x) => x !== id));
